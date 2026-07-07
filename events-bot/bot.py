@@ -105,8 +105,13 @@ def calculate_lunar_extremes():
 if __name__ == "__main__":
     print("Se inițializează sistemul de monitorizare Cosmic Nexus...")
     
-    # Execută verificările
+    send_astronomical_alert(
+        title="SISTEM ONLINE: Test de Conexiune Cloud",
+        description="Structura GitHub Actions funcționează perfect și comunică securizat cu serverul.",
+        color=0x4B0082
+    )
+    
     check_space_weather()
     calculate_lunar_extremes()
     
-    print("Verificări finalizate.")  
+    print("Verificări finalizate.") 
