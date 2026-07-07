@@ -3,12 +3,14 @@ import requests
 import itertools
 from datetime import datetime
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 load_dotenv()
 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-def send_astronomical_alert(title, description, fields=None, image_url=None, color=0x4B0082):
+def send_astronomical_alert(title, description, fields=None, image_url=None, color=0x4B0082, role_id=None):
     """
     Trimite o alertă structurată pe Discord folosind un design premium minimalist.
     """
@@ -24,7 +26,7 @@ def send_astronomical_alert(title, description, fields=None, image_url=None, col
                 "color": color,
                 "timestamp": datetime.utcnow().isoformat(),
                 "footer": {
-                    "text": "Cosmic Nexus | Monitorizare Automatizată"
+                    "text": "Cosmic Nexus | Automated Systems"
                 }
             }
         ]
@@ -36,12 +38,41 @@ def send_astronomical_alert(title, description, fields=None, image_url=None, col
     if image_url:
         payload["embeds"][0]["image"] = {"url": image_url}
 
+    # Adăugăm ping-ul pentru rol (ex: @Deep Space News)
+    if role_id:
+        payload["content"] = f"<@&{role_id}>"
+
     response = requests.post(WEBHOOK_URL, json=payload)
     
-    if response.status_code == 24:
+    # Corectat la codul HTTP 204 specific pentru Webhooks Discord
+    if response.status_code == 204:
         print(f"Alertă trimisă cu succes: {title}")
     else:
         print(f"Eroare la trimiterea alertei: {response.status_code}, {response.text}")
+
+def generate_ai_description(raw_data):
+    """
+    Folosește modelul Gemini pentru a genera o descriere tehnică, în engleză, 
+    pentru un eveniment astronomic.
+    """
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    prompt = f"""
+    Write a highly professional and technical Discord announcement description in English based on this data: {raw_data}.
+    
+    RULES:
+    - Do NOT use any emojis. Maintain a strictly technical and minimalist tone.
+    - Use Markdown formatting (bold text for key parameters, bullet points if necessary).
+    - Provide ONLY the final announcement text. No introductory filler words.
+    - Limit the text to maximum 3 paragraphs. Focus on observational parameters (e.g., FOV, angular separation, magnitude).
+    """
+    
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"Eroare la generarea textului AI: {e}")
+        return "Technical description currently unavailable."
 
 from skyfield.api import load, Topos
 from skyfield.almanac import moon_phases
