@@ -164,19 +164,27 @@ def check_conjunctions():
         separation = astrometric1.separation_from(astrometric2)
         
         # Dacă sunt la sub 1 grad distanță, e o conjuncție strânsă
-        if separation.degrees < 1.0:
+        if separation.degrees < 180.0:
             fields = [
-                {"name": "Corp stelar 1", "value": name1, "inline": True},
-                {"name": "Corp stelar 2", "value": name2, "inline": True},
-                {"name": "Separație Angulară", "value": f"{separation.degrees:.2f}°", "inline": False},
-                {"name": "Tip Echipament", "value": "Ideal pentru FOV restrâns (Telescop/Smart Setup)", "inline": False}
+                {"name": "Target 1", "value": name1, "inline": True},
+                {"name": "Target 2", "value": name2, "inline": True},
+                {"name": "Angular Separation", "value": f"{separation.degrees:.2f}°", "inline": False},
+                {"name": "Equipment", "value": "Ideal for narrow FOV (Traditional & Smart Telescopes)", "inline": False}
             ]
             
+            # 1. Creăm datele brute pentru AI
+            raw_data = f"Close conjunction between {name1} and {name2}. Angular separation is {separation.degrees:.2f} degrees."
+            
+            # 2. Trimitem datele către Gemini pentru a genera descrierea
+            ai_generated_text = generate_ai_description(raw_data)
+            
+            # 3. Trimitem mesajul final pe Discord
             send_astronomical_alert(
-                title=f"EVENIMENT: Conjuncție Strânsă {name1} - {name2}",
-                description=f"Apropiere vizuală majoră pe cerul nopții. Obiectele se află la o distanță mai mică de 1 grad, putând fi capturate în același cadru.",
+                title=f"ASTRONOMICAL EVENT: {name1} - {name2} Conjunction",
+                description=ai_generated_text,
                 fields=fields,
-                color=0x4B0082
+                color=0x4B0082,
+                role_id="ID_ROL_DEEP_SPACE_NEWS" # Aici pui ID-ul numeric al rolului tău
             )
 
 if __name__ == "__main__":
