@@ -1,5 +1,6 @@
 import os
 import requests
+import itertools
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -102,9 +103,55 @@ def calculate_lunar_extremes():
             color=0x4B0082
         )
 
+def check_conjunctions():
+    """
+    Verifică distanța angulară dintre corpurile majore și trimite alerte
+    dacă separația scade sub 1 grad.
+    """
+    ts = load.timescale()
+    t = ts.now()
+    eph = load('de421.bsp')
+    earth = eph['earth']
+    
+    # Definim țintele principale pentru astrofotografie
+    bodies = {
+        'Luna': eph['moon'],
+        'Venus': eph['venus'],
+        'Marte': eph['mars'],
+        'Jupiter': eph['jupiter barycenter'],
+        'Saturn': eph['saturn barycenter']
+    }
+    
+    # Generăm toate perechile posibile (ex: Luna-Venus, Jupiter-Saturn etc.)
+    for (name1, body1), (name2, body2) in itertools.combinations(bodies.items(), 2):
+        
+        # Calculăm poziția aparentă de pe Pământ la momentul curent
+        astrometric1 = earth.at(t).observe(body1).apparent()
+        astrometric2 = earth.at(t).observe(body2).apparent()
+        
+        # Obținem distanța angulară (separația) dintre ele
+        separation = astrometric1.separation_from(astrometric2)
+        
+        # Dacă sunt la sub 1 grad distanță, e o conjuncție strânsă
+        if separation.degrees < 1.0:
+            fields = [
+                {"name": "Corp stelar 1", "value": name1, "inline": True},
+                {"name": "Corp stelar 2", "value": name2, "inline": True},
+                {"name": "Separație Angulară", "value": f"{separation.degrees:.2f}°", "inline": False},
+                {"name": "Tip Echipament", "value": "Ideal pentru FOV restrâns (Telescop/Smart Setup)", "inline": False}
+            ]
+            
+            send_astronomical_alert(
+                title=f"EVENIMENT: Conjuncție Strânsă {name1} - {name2}",
+                description=f"Apropiere vizuală majoră pe cerul nopții. Obiectele se află la o distanță mai mică de 1 grad, putând fi capturate în același cadru.",
+                fields=fields,
+                color=0x4B0082
+            )
+
 if __name__ == "__main__":
     print("Se inițializează sistemul de monitorizare Cosmic Nexus...")
     
+    # Mesaj de test temporar (îl vom șterge când tot sistemul e gata)
     send_astronomical_alert(
         title="SISTEM ONLINE: Test de Conexiune Cloud",
         description="Structura GitHub Actions funcționează perfect și comunică securizat cu serverul.",
@@ -113,5 +160,6 @@ if __name__ == "__main__":
     
     check_space_weather()
     calculate_lunar_extremes()
+    check_conjunctions() # <-- Am activat modulul nou aici
     
-    print("Verificări finalizate.") 
+    print("Verificări finalizate.")
