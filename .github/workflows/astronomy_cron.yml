@@ -2,7 +2,8 @@ name: Astronomy Events Cron
 
 on:
   schedule:
-    - cron: '0 6,18 * * *'
+    # Runs every 3 hours automatically
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,19 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
-        pip install skyfield requests python-dotenv google-genai
+        python -m pip install --upgrade pip
+        pip install -r events-bot/requirements.txt
 
-    - name: Run script
+    - name: Run Cosmic Events Engine
       env:
-        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: python events-bot/bot.py
+        EVENTS_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.EVENTS_BOT_DISCORD_WEBHOOK_URL }}
+        EVENTS_BOT_DISCORD_ROLE_ID: ${{ secrets.EVENTS_BOT_DISCORD_ROLE_ID }}
+        TEST_MODE: "FALSE"
+      run: |
+        cd events-bot
+        python bot.py
