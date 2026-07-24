@@ -1,2 +1,8 @@
 .env
 __pycache__/
+*.bsp
+*.db
+*.json
+events-bot/conjunctions_cache.txt
+events-bot/events_cache.json
+events-bot/events.db

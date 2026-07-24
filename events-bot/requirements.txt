@@ -1,0 +1,5 @@
+skyfield
+sgp4
+requests
+python-dotenv
+google-genai
