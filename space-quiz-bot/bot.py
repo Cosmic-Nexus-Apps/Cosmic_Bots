@@ -405,9 +405,9 @@ def check_daily_quiz():
         f"**{quiz_item['question']}**\n\n"
         f"📌 **MULTIPLE CHOICE OPTIONS:**\n"
         f"{options_str}\n\n"
-        f"🔒 **CORRECT ANSWER & SCIENTIFIC BRIEF (CLICK SPOILER):**\n"
-        f"||**Correct Answer:** {quiz_item['answer']}\n\n"
-        f"📖 **Scientific Explanation:** {quiz_item['explanation']}||\n"
+        f"🔒 **CORRECT ANSWER & SCIENTIFIC BRIEF (CLICK SPOILERS BELOW):**\n"
+        f"||**Correct Answer:** {quiz_item['answer']}||\n"
+        f"||📖 **Scientific Explanation:** {quiz_item['explanation']}|| \n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 
