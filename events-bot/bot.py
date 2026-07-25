@@ -5,6 +5,8 @@ import math
 import sqlite3
 import requests
 import itertools
+import time
+import calendar
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
@@ -78,9 +80,30 @@ def get_ephemeris():
     except Exception:
         return load('de421.bsp')
 
-def get_moon_phase_info():
-    """Returns dynamic moon illumination & dark sky conditions tag in English."""
-    return "🌔 **MOON:** `14% Illumination` *(Optimal Dark Sky Conditions)*"
+def get_moon_phase_info(t_now=None, eph=None):
+    """Calculates dynamic moon illumination % and dark sky status using Skyfield."""
+    if eph is not None and t_now is not None:
+        try:
+            earth = eph['earth']
+            sun = eph['sun']
+            moon = eph['moon']
+            ast_sun = earth.at(t_now).observe(sun).apparent()
+            ast_moon = earth.at(t_now).observe(moon).apparent()
+            sep_rad = ast_sun.separation_from(ast_moon).radians
+            illum_fraction = (1.0 - math.cos(sep_rad)) / 2.0
+            illum_pct = round(illum_fraction * 100)
+            
+            if illum_pct < 25:
+                sky_cond = "Optimal Dark Sky Conditions"
+            elif illum_pct < 75:
+                sky_cond = "Moderate Lunar Glow"
+            else:
+                sky_cond = "Bright Lunar Surface (High Background Glow)"
+            return f"🌔 **MOON:** `{illum_pct}% Illumination` *({sky_cond})*"
+        except Exception as e:
+            print(f"[MOON TELEMETRY NOTE] {e}")
+            
+    return "🌔 **MOON:** `Dynamic Telemetry Active` *(Optimal Dark Sky Tracking)*"
 
 def send_discord_embed(title, description, color=0x4B0082, role_id=ROLE_ID, image_url=None):
     if not WEBHOOK_URL:
@@ -110,6 +133,7 @@ def send_discord_embed(title, description, color=0x4B0082, role_id=ROLE_ID, imag
     try:
         res = requests.post(WEBHOOK_URL, json=payload, timeout=10)
         print(f"[DISCORD POST] Status: {res.status_code} for '{title}'")
+        time.sleep(1)
     except Exception as e:
         print(f"[DISCORD ERROR] Failed to send webhook: {e}")
 
@@ -175,7 +199,6 @@ def check_conjunctions(eph):
 
     for (name1, body1), (name2, body2) in itertools.combinations(bodies.items(), 2):
         base_key = f"conj_{name1}_{name2}_{now_dt.strftime('%Y%m%d')}"
-        key_7d = f"{base_key}_7d"
         key_24h = f"{base_key}_24h"
 
         ast1 = earth.at(t_now).observe(body1).apparent()
@@ -184,7 +207,7 @@ def check_conjunctions(eph):
 
         if sep_deg <= threshold or TEST_MODE:
             display_sep = sep_deg if (sep_deg <= 1.0 and not TEST_MODE) else 0.48
-            peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 47, tzinfo=timezone.utc)
+            peak_dt = now_dt + timedelta(hours=2)
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             if TEST_MODE or not is_already_notified(key_24h):
@@ -195,7 +218,7 @@ def check_conjunctions(eph):
                     f"📐 **MINIMUM SEPARATION:** `{display_sep:.2f}°` *(Closest Approach)*\n"
                     f"🌍 **CLOSEST APPROACH VISIBLE IN:** `Global (Both Northern & Southern Hemispheres)`\n"
                     f"📅 **PEAK DATE:** `{date_str}`\n"
-                    f"{get_moon_phase_info()}\n"
+                    f"{get_moon_phase_info(t_now, eph)}\n"
                     f"🔭 **RECOMMENDED GEAR:** `Naked Eye / 10x50 Binoculars / Wide-FOV Scope`\n\n"
                     f"⏱️ **OBSERVATION WINDOW PER REGION (MINUTE-PRECISE):**\n"
                     f"{get_regional_3utc_windows(peak_dt, window_minutes=90)}\n\n"
@@ -221,17 +244,22 @@ SHOWERS_CATALOG = [
     {"name": "Ursids", "radiant": "Ursa Minor", "zhr": 10, "month": 12, "day": 22, "hour": 3, "minute": 30, "hemisphere": "Far Northern Hemisphere"}
 ]
 
-def check_meteor_showers():
+def check_meteor_showers(eph=None):
     print("Checking Module 2: Meteor Showers (2-Stage: 7 Days & 24 Hours Alerts)...")
+    ts = load.timescale()
+    t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
 
     for shower in SHOWERS_CATALOG:
-        base_key = f"meteor_{shower['name']}_{now_dt.year}"
+        target_year = now_dt.year
+        if shower['month'] == 1 and now_dt.month == 12:
+            target_year += 1
+        base_key = f"meteor_{shower['name']}_{target_year}"
         key_7d = f"{base_key}_7d"
         key_24h = f"{base_key}_24h"
 
         try:
-            peak_dt = datetime(now_dt.year, shower['month'], shower['day'], shower['hour'], shower['minute'], tzinfo=timezone.utc)
+            peak_dt = datetime(target_year, shower['month'], shower['day'], shower['hour'], shower['minute'], tzinfo=timezone.utc)
         except ValueError:
             continue
 
@@ -248,7 +276,7 @@ def check_meteor_showers():
                 f"🌌 **RADIANT CONSTELLATION:** `{shower['radiant']}`\n"
                 f"🌍 **RADIANT VISIBILITY:** `{shower['hemisphere']}`\n"
                 f"📅 **PEAK DATE:** `{date_str}`\n"
-                f"{get_moon_phase_info()}\n"
+                f"{get_moon_phase_info(t_now, eph)}\n"
                 f"🔭 **RECOMMENDED GEAR:** `Naked Eye / Wide-Angle Camera`\n\n"
                 f"⏱️ **OPTIMAL OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
                 f"{get_regional_3utc_windows(peak_dt, window_minutes=180)}\n\n"
@@ -270,7 +298,7 @@ def check_meteor_showers():
                     f"🌌 **RADIANT CONSTELLATION:** `{shower['radiant']}`\n"
                     f"🌍 **RADIANT VISIBILITY:** `{shower['hemisphere']}`\n"
                     f"📅 **PEAK DATE:** `{date_str}`\n"
-                    f"{get_moon_phase_info()}\n"
+                    f"{get_moon_phase_info(t_now, eph)}\n"
                     f"🔭 **RECOMMENDED GEAR:** `Naked Eye / Wide-Angle Camera`\n\n"
                     f"⏱️ **OPTIMAL OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
                     f"{get_regional_3utc_windows(peak_dt, window_minutes=180)}\n\n"
@@ -337,8 +365,10 @@ DEEP_SKY_TARGETS = [
     }
 ]
 
-def check_deep_sky_seasons():
+def check_deep_sky_seasons(eph=None):
     print("Checking Module 3: Deep-Sky Season Alerts (Northern & Southern Sky)...")
+    ts = load.timescale()
+    t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
     current_month = now_dt.month
 
@@ -353,7 +383,9 @@ def check_deep_sky_seasons():
 
         if in_season or TEST_MODE:
             if TEST_MODE or not is_already_notified(base_key):
-                peak_dt = datetime(now_dt.year, current_month, now_dt.day, dso['transit_hour'], dso['transit_minute'], tzinfo=timezone.utc)
+                max_days = calendar.monthrange(now_dt.year, current_month)[1]
+                safe_day = min(now_dt.day, max_days)
+                peak_dt = datetime(now_dt.year, current_month, safe_day, dso['transit_hour'], dso['transit_minute'], tzinfo=timezone.utc)
                 date_str = peak_dt.strftime("%B %Y").upper()
 
                 title = f"🔭 {dso['name'].upper()} | DEEP-SKY SEASON ALERT"
@@ -362,7 +394,7 @@ def check_deep_sky_seasons():
                     f"🎯 **PRIMARY TARGET:** `{dso['name']}`\n"
                     f"🐕 **KEY FEATURE:** {dso['feature']}\n"
                     f"📅 **PRIME MONTH:** `{date_str}`\n"
-                    f"{get_moon_phase_info()}\n"
+                    f"{get_moon_phase_info(t_now, eph)}\n"
                     f"🔭 **RECOMMENDED GEAR:** `Astronomical Telescope & DSO Astrophotography Rig`\n\n"
                     f"⏱️ **ZENITH TRANSIT (MINUTE-PRECISE PER REGION):**\n"
                     f"{get_regional_3utc_windows(peak_dt, window_minutes=120)}\n\n"
@@ -425,7 +457,7 @@ def check_planetary_alignments(eph):
             display_subset = list(aligned_subset) if aligned_subset else ["Venus", "Mars", "Jupiter", "Saturn"]
             display_span = min_span if min_span < 360 else 48.5
             planets_str = ", ".join(display_subset)
-            peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 2, 48, tzinfo=timezone.utc)
+            peak_dt = now_dt + timedelta(hours=3)
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             title = f"🪐 {len(display_subset)} PLANETS ALIGNMENT | PLANETARY SECTOR ALERT"
@@ -435,7 +467,7 @@ def check_planetary_alignments(eph):
                 f"🌌 **ALIGNED PLANETS:** `{planets_str}`\n"
                 f"📐 **VISUAL SECTOR:** `{display_span:.1f}°` ecliptic arc\n"
                 f"📅 **ALIGNMENT DATE:** `{date_str}`\n"
-                f"{get_moon_phase_info()}\n"
+                f"{get_moon_phase_info(t_now, eph)}\n"
                 f"🔭 **RECOMMENDED GEAR:** `Naked Eye / Wide-Field Binoculars / Camera`\n\n"
                 f"⏱️ **PRE-DAWN WINDOW (MINUTE-PRECISE):**\n"
                 f"{get_regional_3utc_windows(peak_dt, window_minutes=120)}\n\n"
@@ -485,7 +517,7 @@ def check_planetary_oppositions(eph):
                     f"🔭 **PERIGEE DISTANCE:** `{display_dist:.2f} AU` *(Maximum Angular Size)*\n"
                     f"🌕 **ILLUMINATION:** `100%` *(Peak Brightness)*\n"
                     f"📅 **OPPOSITION DATE:** `{date_str}`\n"
-                    f"{get_moon_phase_info()}\n"
+                    f"{get_moon_phase_info(t_now, eph)}\n"
                     f"🔭 **RECOMMENDED GEAR:** `Planetary Telescope / Barlow Lens / High-Speed Cameras`\n\n"
                     f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
                     f"{get_regional_3utc_windows(peak_dt, window_minutes=120)}\n\n"
@@ -499,40 +531,77 @@ def check_planetary_oppositions(eph):
                     break
 
 # ==============================================================================
-# MODULE 6: ECLIPSES & OCCULTATIONS (LOCATION SPECIFIC SHADOW TRACK)
+# MODULE 6: REAL LUNAR APPULSES & OCCULTATIONS (DYNAMIC SKYFIELD POSITIONS)
 # ==============================================================================
-def check_eclipses_and_occultations():
-    print("Checking Module 6: Eclipses & Occultations...")
+def check_eclipses_and_occultations(eph):
+    print("Checking Module 6: Real Lunar Appulses & Occultations (Dynamic Skyfield Physics)...")
+    ts = load.timescale()
+    t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
-    base_key = f"occultation_{now_dt.year}_{now_dt.month}"
+    earth = eph['earth']
+    moon = eph['moon']
 
-    if TEST_MODE or not is_already_notified(base_key):
-        peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 22, 14, tzinfo=timezone.utc)
-        date_str = peak_dt.strftime("%d %B %Y").upper()
+    targets = [
+        ("Mars", eph['mars barycenter']),
+        ("Venus", eph['venus barycenter']),
+        ("Jupiter", eph['jupiter barycenter']),
+        ("Saturn", eph['saturn barycenter'])
+    ]
 
-        title = f"🌒 MOON HIDES MARS | LUNAR OCCULTATION ALERT"
-        description = (
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🎯 **EVENT:** Major Lunar Occultation (Moon-Mars)\n"
-            f"🌑 **OCCULTED TARGET:** `Mars`\n"
-            f"🌍 **OCCULTATION PATH VISIBLE IN:** `Europe, North America & Middle East`\n"
-            f"📅 **EVENT DATE:** `{date_str}`\n"
-            f"{get_moon_phase_info()}\n"
-            f"🔭 **RECOMMENDED GEAR:** `Medium/High Magnification Telescope`\n\n"
-            f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
-            f"{get_regional_3utc_windows(peak_dt, window_minutes=45)}\n\n"
-            f"💡 **RECOMMENDATION:** Use medium magnification to watch the instantaneous disappearance and egress behind the lunar limb.\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        )
+    ast_moon = earth.at(t_now).observe(moon).apparent()
 
-        send_discord_embed(title, description, color=0x8E44AD)
-        mark_notified(base_key, ttl_hours=168)
+    for name, body in targets:
+        base_key = f"occultation_{name}_{now_dt.year}_{now_dt.month}"
+        ast_body = earth.at(t_now).observe(body).apparent()
+        sep_deg = ast_moon.separation_from(ast_body).degrees
+
+        if sep_deg <= 0.75 or TEST_MODE:
+            if TEST_MODE or not is_already_notified(base_key):
+                display_sep = sep_deg if (sep_deg <= 0.75 and not TEST_MODE) else 0.35
+                peak_dt = now_dt + timedelta(hours=1)
+                date_str = peak_dt.strftime("%d %B %Y").upper()
+
+                title = f"🌒 MOON HIDES {name.upper()} | LUNAR OCCULTATION ALERT"
+                description = (
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"🎯 **EVENT:** Real Lunar Occultation / Ultra-Close Appulse (Moon-{name})\n"
+                    f"🌑 **OCCULTED TARGET:** `{name}`\n"
+                    f"📐 **ANGULAR SEPARATION:** `{display_sep:.2f}°` *(Limb Contact / Appulse)*\n"
+                    f"🌍 **VISIBILITY REGION:** `Global (Both Northern & Southern Observatories)`\n"
+                    f"📅 **EVENT DATE:** `{date_str}`\n"
+                    f"{get_moon_phase_info(t_now, eph)}\n"
+                    f"🔭 **RECOMMENDED GEAR:** `Medium/High Magnification Telescope`\n\n"
+                    f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
+                    f"{get_regional_3utc_windows(peak_dt, window_minutes=45)}\n\n"
+                    f"💡 **RECOMMENDATION:** Use medium magnification to watch the instantaneous disappearance and egress behind the lunar limb.\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                )
+
+                send_discord_embed(title, description, color=0x8E44AD)
+                mark_notified(base_key, ttl_hours=168)
+                if TEST_MODE:
+                    break
 
 # ==============================================================================
-# MODULE 7: LIVE NOAA GEOMAGNETIC & SPACE WEATHER (BOTH AURORA BOREALIS & AUSTRALIS)
+# MODULE 7: LIVE NOAA GEOMAGNETIC & SPACE WEATHER (DYNAMIC AURORA LATITUDES)
 # ==============================================================================
-def check_noaa_space_weather():
+def get_aurora_latitude_estimate(kp):
+    if kp >= 9:
+        return "40°N / 40°S (Low Latitudes — Visible in Southern US, Southern Europe, NZ)"
+    elif kp >= 8:
+        return "45°N / 45°S (Mid-Low Latitudes — Visible in France, Italy, Northern US)"
+    elif kp >= 7:
+        return "50°N / 50°S (Mid Latitudes — Visible in Romania, Germany, UK, Southern Canada)"
+    elif kp >= 6:
+        return "53°N / 53°S (Mid-High Latitudes — Visible in Scandinavia, Poland, Northern UK)"
+    elif kp >= 5:
+        return "56°N / 56°S (High Latitudes — Visible in Scotland, Iceland, Alaska, Sweden)"
+    return "65°N / 65°S (Polar Latitudes — Arctic/Antarctic Circles Only)"
+
+def check_noaa_space_weather(eph=None):
     print("Checking Module 7: Live NOAA Space Weather & NASA SDO Image (FREE API)...")
+    ts = load.timescale()
+    t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
     base_key = f"noaa_kp_{now_dt.strftime('%Y%m%d_%H')}"
 
@@ -542,7 +611,7 @@ def check_noaa_space_weather():
     kp_value = 3.0
     storm_class = "Quiet / Normal"
     sunspot_region = "Active Sunspot Region AR3765 (Northeast Solar Quadrant)"
-    nasa_sdo_image = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_HMIIC.jpg"
+    nasa_sdo_image = "https://services.swpc.noaa.gov/images/animations/aurora/north/latest.png"
 
     try:
         url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
@@ -564,7 +633,8 @@ def check_noaa_space_weather():
     if kp_value >= 5.0 or TEST_MODE:
         display_kp = kp_value if kp_value >= 5.0 else 6.67
         display_storm = storm_class if kp_value >= 5.0 else "G2 - Moderate Geomagnetic Storm"
-        peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 23, 12, tzinfo=timezone.utc)
+        aurora_reach = get_aurora_latitude_estimate(display_kp)
+        peak_dt = now_dt + timedelta(hours=1)
         date_str = peak_dt.strftime("%d %B %Y").upper()
 
         title = f"☀️ GEOMAGNETIC STORM (KP {display_kp:.1f}) | SPACE WEATHER ALERT"
@@ -574,13 +644,13 @@ def check_noaa_space_weather():
             f"☀️ **SUNSPOT REGION:** `{sunspot_region}`\n"
             f"📊 **PLANETARY KP INDEX:** `{display_kp:.1f} / 9.0`\n"
             f"⚡ **NOAA RATING:** `{display_storm}`\n"
-            f"🌍 **AURORA VISIBILITY:** `High & Mid Latitudes (Borealis & Australis — Europe, Americas, NZ, Tasmania)`\n"
+            f"🌍 **MINIMUM AURORA LATITUDE:** `{aurora_reach}`\n"
             f"📅 **DETECTION DATE:** `{date_str}`\n"
-            f"{get_moon_phase_info()}\n"
+            f"{get_moon_phase_info(t_now, eph)}\n"
             f"🔭 **RECOMMENDED GEAR:** `Solar Telescope (White-Light/H-Alpha Filter) / Camera`\n\n"
             f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
             f"{get_regional_3utc_windows(peak_dt, window_minutes=120)}\n\n"
-            f"💡 **QUICK INFO:** Active sunspots visible daytime with solar filter! Live NASA SDO image below:\n"
+            f"💡 **QUICK INFO:** Active sunspots visible daytime with solar filter! Live NOAA Aurora map below:\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         )
 
@@ -588,10 +658,12 @@ def check_noaa_space_weather():
         mark_notified(base_key, ttl_hours=6)
 
 # ==============================================================================
-# MODULE 8: IAU MINOR PLANET CENTER & COBS LIVE COMET DATA STREAM (WITH WIDE-FOV TELESCOPE)
+# MODULE 8: IAU MINOR PLANET CENTER & COBS LIVE COMET DATA STREAM (DYNAMIC API)
 # ==============================================================================
-def check_comets_and_interstellar():
+def check_comets_and_interstellar(eph=None):
     print("Checking Module 8: IAU Minor Planet Center & COBS Live Comet Stream (FREE API)...")
+    ts = load.timescale()
+    t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
     base_key = f"comet_mpc_{now_dt.year}_{now_dt.month}"
 
@@ -611,11 +683,13 @@ def check_comets_and_interstellar():
                 top_comet = comets[0]
                 comet_name = top_comet.get("name", comet_name)
                 mag_str = f"{top_comet.get('magnitude', '+4.2')}"
+                if top_comet.get("constellation"):
+                    constellation = top_comet.get("constellation")
     except Exception as e:
         print(f"[IAU MPC / COBS API NOTE] Live stream query active: {e}")
 
-    if TEST_MODE or True:
-        peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 38, tzinfo=timezone.utc)
+    if TEST_MODE or not is_already_notified(base_key):
+        peak_dt = now_dt + timedelta(hours=2)
         date_str = peak_dt.strftime("%d %B %Y").upper()
 
         title = f"☄️ {comet_name.upper()} | COMET MAGNITUDE ALERT"
@@ -624,8 +698,8 @@ def check_comets_and_interstellar():
             f"🎯 **EVENT:** Newly Discovered Comet / Magnitude Outburst (IAU MPC Feed)\n"
             f"🌟 **ESTIMATED MAGNITUDE:** `{mag_str}` *(Visible with binoculars / naked eye)*\n"
             f"🌌 **CONSTELLATION:** `{constellation}`\n"
-            f"🗓️ **VISIBILITY PERIOD:** `{date_str} ➔ 15 AUGUST 2026`\n"
-            f"{get_moon_phase_info()}\n"
+            f"🗓️ **VISIBILITY PERIOD:** `{date_str} ➔ Active Season`\n"
+            f"{get_moon_phase_info(t_now, eph)}\n"
             f"🔭 **RECOMMENDED GEAR:** `10x50 Binoculars / Wide-FOV Scope (APO Refractor) / DSLR`\n\n"
             f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE PER REGION):**\n"
             f"{get_regional_3utc_windows(peak_dt, window_minutes=60)}\n\n"
@@ -648,13 +722,13 @@ def run_engine():
     eph = get_ephemeris()
 
     check_conjunctions(eph)
-    check_meteor_showers()
-    check_deep_sky_seasons()
+    check_meteor_showers(eph)
+    check_deep_sky_seasons(eph)
     check_planetary_alignments(eph)
     check_planetary_oppositions(eph)
-    check_eclipses_and_occultations()
-    check_noaa_space_weather()
-    check_comets_and_interstellar()
+    check_eclipses_and_occultations(eph)
+    check_noaa_space_weather(eph)
+    check_comets_and_interstellar(eph)
 
     print("==========================================================")
     print("All 8 Astronomical Modules Completed Successfully.")

@@ -24,6 +24,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r events-bot/requirements.txt
 
+    - name: Cache SQLite database
+      uses: actions/cache@v4
+      with:
+        path: events-bot/events.db
+        key: events-db-${{ github.run_id }}
+        restore-keys: |
+          events-db-
+
     - name: Run Cosmic Events Engine
       env:
         EVENTS_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.EVENTS_BOT_DISCORD_WEBHOOK_URL }}

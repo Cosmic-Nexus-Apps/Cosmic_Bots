@@ -1,0 +1,43 @@
+name: Deep Space & Rocket Launch Cron
+
+on:
+  schedule:
+    # Runs every 6 hours automatically
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-deep-space-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r deep-space-bot/requirements.txt
+
+      - name: Cache SQLite database
+        uses: actions/cache@v4
+        with:
+          path: deep-space-bot/deep_space.db
+          key: deep-space-db-${{ github.run_id }}
+          restore-keys: |
+            deep-space-db-
+
+      - name: Run Deep Space & Launch Engine
+        env:
+          DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL }}
+          DEEP_SPACE_BOT_DISCORD_ROLE_ID: ${{ secrets.DEEP_SPACE_BOT_DISCORD_ROLE_ID }}
+          TEST_MODE: "FALSE"
+        run: |
+          cd deep-space-bot
+          python bot.py
