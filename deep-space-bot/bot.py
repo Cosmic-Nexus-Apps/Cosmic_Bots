@@ -9,11 +9,11 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 
-if sys.stdout and hasattr(sys.stdout, 'buffer'):
-    try:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    except Exception:
-        pass
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 load_dotenv()
 
@@ -124,7 +124,8 @@ def get_regional_3utc_windows(peak_dt, window_minutes=60):
         ])
     ]
 
-    output_lines = []
+    epoch_ts = int(peak_dt.timestamp())
+    output_lines = [f"⏳ **LIVE COUNTDOWN:** <t:{epoch_ts}:R> *(T-0: <t:{epoch_ts}:F>)*"]
 
     for header, tz_list in groups:
         output_lines.append(header)
@@ -432,6 +433,65 @@ def check_deep_space_imagery():
             print(f"[NASA TELESCOPE SEARCH API NOTE] {scope['name']}: {e}")
 
 # ==============================================================================
+# MODULE 3: HUMANS IN SPACE LIVE TRACKER (OPEN-NOTIFY ASTROS API)
+# ==============================================================================
+def check_humans_in_space():
+    print("Checking Module 3: Humans in Space Live Tracking Telemetry...")
+    now_dt = datetime.now(timezone.utc)
+    base_key = f"astros_{now_dt.strftime('%Y%m%d')}"
+
+    if not TEST_MODE and is_already_notified(base_key, ttl_hours=168):
+        return
+
+    total_count = 10
+    craft_groups = {}
+
+    try:
+        url = "http://api.open-notify.org/astros.json"
+        res = requests.get(url, timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            total_count = data.get("number", 10)
+            people = data.get("people", [])
+            for p in people:
+                craft = p.get("craft", "ISS")
+                name = p.get("name", "Astronaut")
+                if craft not in craft_groups:
+                    craft_groups[craft] = []
+                craft_groups[craft].append(name)
+    except Exception as e:
+        print(f"[ASTROS API NOTE] Using default orbital manifest fallback: {e}")
+
+    if not craft_groups:
+        craft_groups = {
+            "ISS (International Space Station)": ["Sunita Williams", "Butch Wilmore", "Nick Hague", "Alexander Gorbunov"],
+            "Tiangong Space Station": ["Ye Guangfu", "Li Cong", "Li Guangsu"]
+        }
+        total_count = sum(len(v) for v in craft_groups.values())
+
+    manifest_lines = []
+    for craft, names in craft_groups.items():
+        manifest_lines.append(f"🛸 **{craft.upper()}:** ({len(names)} Crew)")
+        for n in names:
+            manifest_lines.append(f"  └ 👨‍🚀 `{n}`")
+
+    manifest_text = "\n".join(manifest_lines)
+    date_str = now_dt.strftime("%d %B %Y").upper()
+
+    title = f"👨‍🚀 HUMANS IN SPACE LIVE | {total_count} ASTRONAUTS IN ORBIT"
+    description = (
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🎯 **CURRENT ORBITAL MANIFEST ({date_str}):**\n"
+        f"🌍 **TOTAL HUMANS IN LOW EARTH ORBIT:** `{total_count} Crew Members`\n\n"
+        f"{manifest_text}\n\n"
+        f"💡 **FACT:** These astronauts orbit Earth every 90 minutes at ~28,000 km/h (~17,500 mph).\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    )
+
+    send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/PIA02308/PIA02308~medium.jpg")
+    mark_notified(base_key, ttl_hours=168)
+
+# ==============================================================================
 # MAIN BOT EXECUTION
 # ==============================================================================
 def run_engine():
@@ -442,6 +502,7 @@ def run_engine():
 
     check_upcoming_launches()
     check_deep_space_imagery()
+    check_humans_in_space()
 
     print("==========================================================")
     print("Deep Space & Launch Check Completed Successfully.")

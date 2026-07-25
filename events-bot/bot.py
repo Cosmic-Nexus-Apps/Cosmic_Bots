@@ -12,11 +12,11 @@ from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from skyfield.api import load
 
-if sys.stdout and hasattr(sys.stdout, 'buffer'):
-    try:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    except Exception:
-        pass
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 load_dotenv()
 
@@ -162,7 +162,8 @@ def get_regional_3utc_windows(peak_dt, window_minutes=90):
         ])
     ]
 
-    output_lines = []
+    epoch_ts = int(peak_dt.timestamp())
+    output_lines = [f"⏳ **LIVE COUNTDOWN:** <t:{epoch_ts}:R> *(Peak: <t:{epoch_ts}:F>)*"]
 
     for header, tz_list in groups:
         output_lines.append(header)
@@ -170,8 +171,20 @@ def get_regional_3utc_windows(peak_dt, window_minutes=90):
             loc_p = peak_dt.astimezone(tz_obj)
             loc_s = loc_p - timedelta(minutes=window_minutes)
             loc_e = loc_p + timedelta(minutes=window_minutes)
+
+            p_date_str = loc_p.strftime('%d %B')
+            s_time_str = loc_s.strftime('%H:%M')
+            e_time_str = loc_e.strftime('%H:%M')
+
+            if loc_s.date() == loc_e.date():
+                date_tag = f"({loc_s.strftime('%d %B')})"
+            elif loc_s.month == loc_e.month:
+                date_tag = f"({loc_s.strftime('%d')}-{loc_e.strftime('%d %B')})"
+            else:
+                date_tag = f"({loc_s.strftime('%d %b')} - {loc_e.strftime('%d %b')})"
+
             output_lines.append(
-                f"└ **{label}:** Peak **{loc_p.strftime('%H:%M')}** *(Win: {loc_s.strftime('%H:%M')} ➔ {loc_e.strftime('%H:%M')})*"
+                f"└ **{label}:** Peak **{loc_p.strftime('%H:%M')}** *(Win: {s_time_str} ➔ {e_time_str})* *{date_tag}*"
             )
 
     return "\n".join(output_lines)
@@ -207,7 +220,7 @@ def check_conjunctions(eph):
 
         if sep_deg <= threshold or TEST_MODE:
             display_sep = sep_deg if (sep_deg <= 1.0 and not TEST_MODE) else 0.48
-            peak_dt = now_dt + timedelta(hours=2)
+            peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 30, tzinfo=timezone.utc)
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             if TEST_MODE or not is_already_notified(key_24h):
@@ -457,7 +470,7 @@ def check_planetary_alignments(eph):
             display_subset = list(aligned_subset) if aligned_subset else ["Venus", "Mars", "Jupiter", "Saturn"]
             display_span = min_span if min_span < 360 else 48.5
             planets_str = ", ".join(display_subset)
-            peak_dt = now_dt + timedelta(hours=3)
+            peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 3, 30, tzinfo=timezone.utc)
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             title = f"🪐 {len(display_subset)} PLANETS ALIGNMENT | PLANETARY SECTOR ALERT"
@@ -558,7 +571,7 @@ def check_eclipses_and_occultations(eph):
         if sep_deg <= 0.75 or TEST_MODE:
             if TEST_MODE or not is_already_notified(base_key):
                 display_sep = sep_deg if (sep_deg <= 0.75 and not TEST_MODE) else 0.35
-                peak_dt = now_dt + timedelta(hours=1)
+                peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 22, 15, tzinfo=timezone.utc)
                 date_str = peak_dt.strftime("%d %B %Y").upper()
 
                 title = f"🌒 MOON HIDES {name.upper()} | LUNAR OCCULTATION ALERT"
@@ -634,7 +647,7 @@ def check_noaa_space_weather(eph=None):
         display_kp = kp_value if kp_value >= 5.0 else 6.67
         display_storm = storm_class if kp_value >= 5.0 else "G2 - Moderate Geomagnetic Storm"
         aurora_reach = get_aurora_latitude_estimate(display_kp)
-        peak_dt = now_dt + timedelta(hours=1)
+        peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 23, 0, tzinfo=timezone.utc)
         date_str = peak_dt.strftime("%d %B %Y").upper()
 
         title = f"☀️ GEOMAGNETIC STORM (KP {display_kp:.1f}) | SPACE WEATHER ALERT"
@@ -689,7 +702,7 @@ def check_comets_and_interstellar(eph=None):
         print(f"[IAU MPC / COBS API NOTE] Live stream query active: {e}")
 
     if TEST_MODE or not is_already_notified(base_key):
-        peak_dt = now_dt + timedelta(hours=2)
+        peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 30, tzinfo=timezone.utc)
         date_str = peak_dt.strftime("%d %B %Y").upper()
 
         title = f"☄️ {comet_name.upper()} | COMET MAGNITUDE ALERT"
@@ -711,6 +724,63 @@ def check_comets_and_interstellar(eph=None):
         mark_notified(base_key, ttl_hours=168)
 
 # ==============================================================================
+# MODULE 9: LIVE EMERGENCY SOLAR FLARE ALERTS (X-CLASS & M-CLASS FLARES)
+# ==============================================================================
+def check_solar_flares(eph=None):
+    print("Checking Module 9: Emergency Solar Flare Monitoring (NOAA GOES X-Ray Data)...")
+    ts = load.timescale()
+    t_now = ts.now()
+    now_dt = datetime.now(timezone.utc)
+    
+    url = "https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json"
+    flare_class = "Normal"
+    max_flux = 0.0
+    flare_time_str = now_dt.strftime("%H:%M UTC")
+
+    try:
+        res = requests.get(url, timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            if data and isinstance(data, list):
+                long_xrays = [item for item in data if item.get("energy") == "0.1-0.8nm" and item.get("flux") is not None]
+                if long_xrays:
+                    latest = long_xrays[-1]
+                    flux = float(latest.get("flux", 0.0))
+                    if flux >= 1e-4:
+                        flare_class = f"X{(flux / 1e-4):.1f} Extreme Solar Flare"
+                    elif flux >= 5e-5:
+                        flare_class = f"M{(flux / 1e-5):.1f} Major Solar Flare"
+                    max_flux = flux
+    except Exception as e:
+        print(f"[SOLAR FLARE API NOTE] {e}")
+
+    if max_flux >= 5e-5 or TEST_MODE:
+        base_key = f"solar_flare_{now_dt.strftime('%Y%m%d_%H')}"
+        if TEST_MODE or not is_already_notified(base_key):
+            display_class = flare_class if max_flux >= 5e-5 else "X2.5 Extreme Solar Flare"
+            peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, now_dt.hour, now_dt.minute, tzinfo=timezone.utc)
+            date_str = peak_dt.strftime("%d %B %Y").upper()
+
+            title = f"🔥 EMERGENCY SOLAR FLARE ALERT | {display_class.upper()}"
+            description = (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"🎯 **EVENT:** High-Energy Solar Flare Eruption (NOAA GOES Satellite Telemetry)\n"
+                f"☀️ **FLARE CLASSIFICATION:** `{display_class}`\n"
+                f"⚡ **PEAK X-RAY FLUX:** `{max_flux:.2e} W/m²`\n"
+                f"📡 **RADIO BLACKOUT IMPACT:** `R2-R3 (High Frequency Radio Degradation)`\n"
+                f"📅 **DETECTION TIMESTAMP:** `{date_str} at {flare_time_str}`\n"
+                f"{get_moon_phase_info(t_now, eph)}\n"
+                f"🔭 **RECOMMENDED GEAR:** `Solar Telescopes / H-Alpha Solar Filters`\n\n"
+                f"⏱️ **ACTIVE FLARE WINDOW (MINUTE-PRECISE):**\n"
+                f"{get_regional_3utc_windows(peak_dt, window_minutes=60)}\n\n"
+                f"💡 **QUICK INFO:** Solar flares cause instantaneous ionospheric ionization on Earth's sunlit hemisphere.\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+
+            send_discord_embed(title, description, color=0xFF4500)
+            mark_notified(base_key, ttl_hours=6)
+
+# ==============================================================================
 # MAIN ENGINE EXECUTION
 # ==============================================================================
 def run_engine():
@@ -729,9 +799,10 @@ def run_engine():
     check_eclipses_and_occultations(eph)
     check_noaa_space_weather(eph)
     check_comets_and_interstellar(eph)
+    check_solar_flares(eph)
 
     print("==========================================================")
-    print("All 8 Astronomical Modules Completed Successfully.")
+    print("All 9 Astronomical Modules Completed Successfully.")
     print("==========================================================")
 
 if __name__ == "__main__":
