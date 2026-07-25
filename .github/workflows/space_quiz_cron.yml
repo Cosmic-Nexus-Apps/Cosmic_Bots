@@ -1,0 +1,43 @@
+name: Daily Space Quiz Cron
+
+on:
+  schedule:
+    # Runs daily at 12:00 UTC
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-quiz-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r space-quiz-bot/requirements.txt
+
+      - name: Cache SQLite database
+        uses: actions/cache@v4
+        with:
+          path: space-quiz-bot/quiz.db
+          key: quiz-db-${{ github.run_id }}
+          restore-keys: |
+            quiz-db-
+
+      - name: Run Space Quiz Core Engine
+        env:
+          SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL }}
+          SPACE_QUIZ_BOT_DISCORD_ROLE_ID: ${{ secrets.SPACE_QUIZ_BOT_DISCORD_ROLE_ID }}
+          TEST_MODE: "FALSE"
+        run: |
+          cd space-quiz-bot
+          python bot.py
