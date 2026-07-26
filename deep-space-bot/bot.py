@@ -339,6 +339,18 @@ TELESCOPE_SEARCH_QUERIES = [
     {"query": "Very Large Telescope discovery", "name": "VERY LARGE TELESCOPE (ESO VLT)", "color": 0x1ABC9C}
 ]
 
+def format_clean_summary(text, max_len=1000):
+    if not text:
+        return ""
+    text = text.strip()
+    if len(text) <= max_len:
+        return text
+    truncated = text[:max_len]
+    last_space = truncated.rfind(' ')
+    if last_space > max_len * 0.6:
+        truncated = truncated[:last_space]
+    return truncated.rstrip(' ,;:.') + "..."
+
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
     now_dt = datetime.now(timezone.utc)
@@ -360,9 +372,7 @@ def check_deep_space_imagery():
                 img_url = apod_data.get("url") if media_type == "image" else apod_data.get("thumbnail_url")
                 hd_url = apod_data.get("hdurl", img_url)
                 copyright_credit = apod_data.get("copyright", "NASA / APOD Science Core").replace('\n', ' ')
-                explanation = apod_data.get("explanation", "Daily astronomical observation release.")
-                if len(explanation) > 320:
-                    explanation = explanation[:317] + "..."
+                explanation = format_clean_summary(apod_data.get("explanation", "Daily astronomical observation release."), max_len=1000)
 
                 embed_title = f"🔭 NASA APOD (TODAY'S RELEASE) | {title_str.upper()}"
 
@@ -421,7 +431,8 @@ def check_deep_space_imagery():
                 item_data = data_list[0]
                 nasa_id = item_data.get("nasa_id", "")
                 title_str = item_data.get("title", scope["query"])
-                description_str = item_data.get("description", "Scientific space telescope discovery.")
+                raw_desc = item_data.get("description", "Scientific space telescope discovery.")
+                description_str = format_clean_summary(raw_desc, max_len=1000)
                 date_created = item_data.get("date_created", "")[:10]
                 
                 # Filter out old archived construction/facility photos
@@ -436,9 +447,6 @@ def check_deep_space_imagery():
                 # Filter out non-scientific event titles
                 if any(kw in title_str.lower() for kw in ignored_keywords):
                     continue
-
-                if len(description_str) > 300:
-                    description_str = description_str[:297] + "..."
 
                 img_url = links_list[0].get("href", "")
                 item_key = f"nasa_img_{nasa_id}"
