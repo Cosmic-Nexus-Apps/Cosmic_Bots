@@ -244,7 +244,7 @@ def check_upcoming_launches():
             except Exception:
                 launch_dt = now_dt
 
-        rocket_img = launch.get("image", "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000842/GSFC_20171208_Archive_e000842~medium.jpg")
+        rocket_img = launch.get("image", "https://images-assets.nasa.gov/image/KSC-20200530-PH-KSC01_0001/KSC-20200530-PH-KSC01_0001~medium.jpg")
         provider_name = launch.get("launch_service_provider", {}).get("name", "SpaceX")
         
         is_priority = any(kw in name.lower() for kw in PRIORITY_LAUNCH_KEYWORDS)
@@ -322,7 +322,7 @@ def check_upcoming_launches():
             f"💡 **MISSION BRIEF:** Historic human return to the lunar South Pole surface.\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         )
-        sample_img = "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000842/GSFC_20171208_Archive_e000842~medium.jpg"
+        sample_img = "https://images-assets.nasa.gov/image/KSC-20200530-PH-KSC01_0001/KSC-20200530-PH-KSC01_0001~medium.jpg"
         send_discord_embed(sample_title, sample_desc, color=0x003366, image_url=sample_img)
 
 # ==============================================================================
@@ -488,7 +488,7 @@ def check_humans_in_space():
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 
-    send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/PIA02308/PIA02308~medium.jpg")
+    send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/iss065e005080/iss065e005080~medium.jpg")
     mark_notified(base_key, ttl_hours=168)
 
 # ==============================================================================
