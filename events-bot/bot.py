@@ -38,6 +38,30 @@ def init_db():
             expire_timestamp REAL
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS module_hydration (
+            module_name TEXT PRIMARY KEY,
+            hydrated_at REAL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def is_module_hydrated(module_name):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT hydrated_at FROM module_hydration WHERE module_name = ?", (module_name,))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
+
+def set_module_hydrated(module_name):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    now_ts = datetime.now(timezone.utc).timestamp()
+    cursor.execute("INSERT OR REPLACE INTO module_hydration (module_name, hydrated_at) VALUES (?, ?)", (module_name, now_ts))
     conn.commit()
     conn.close()
 
@@ -72,6 +96,31 @@ def mark_notified(event_key, ttl_hours=168):
     cursor.execute("DELETE FROM event_cache WHERE expire_timestamp <= ?", (now_ts,))
     conn.commit()
     conn.close()
+
+def is_item_or_title_notified(event_key, title_str="", ttl_hours=720):
+    """Checks both raw event_key AND normalized title hash to prevent duplicate event posts."""
+    if is_already_notified(event_key):
+        return True
+    if title_str:
+        import re
+        import hashlib
+        clean_t = re.sub(r'\W+', '', title_str.lower())
+        if clean_t:
+            t_hash = hashlib.md5(clean_t.encode('utf-8')).hexdigest()
+            if is_already_notified(f"title_{t_hash}"):
+                return True
+    return False
+
+def mark_item_and_title_notified(event_key, title_str="", ttl_hours=720):
+    """Saves both raw event_key AND normalized title hash into persistent SQLite cache."""
+    mark_notified(event_key, ttl_hours=ttl_hours)
+    if title_str:
+        import re
+        import hashlib
+        clean_t = re.sub(r'\W+', '', title_str.lower())
+        if clean_t:
+            t_hash = hashlib.md5(clean_t.encode('utf-8')).hexdigest()
+            mark_notified(f"title_{t_hash}", ttl_hours=ttl_hours)
 
 def get_ephemeris():
     """Loads NASA's DE440s ephemeris dataset with fallback to DE421."""
@@ -265,18 +314,22 @@ def check_meteor_showers(eph=None):
 
     for shower in SHOWERS_CATALOG:
         target_year = now_dt.year
-        if shower['month'] == 1 and now_dt.month == 12:
-            target_year += 1
+        try:
+            peak_dt = datetime(target_year, shower['month'], shower['day'], shower['hour'], shower['minute'], tzinfo=timezone.utc)
+            if peak_dt < now_dt - timedelta(days=1):
+                target_year += 1
+                peak_dt = datetime(target_year, shower['month'], shower['day'], shower['hour'], shower['minute'], tzinfo=timezone.utc)
+        except ValueError:
+            continue
+
         base_key = f"meteor_{shower['name']}_{target_year}"
         key_7d = f"{base_key}_7d"
         key_24h = f"{base_key}_24h"
 
-        try:
-            peak_dt = datetime(target_year, shower['month'], shower['day'], shower['hour'], shower['minute'], tzinfo=timezone.utc)
-        except ValueError:
-            continue
-
         time_diff_hours = (peak_dt - now_dt).total_seconds() / 3600.0
+
+        if time_diff_hours < 0:
+            continue
 
         # Stage 1: 7 Days Pre-Notice (144h <= diff <= 192h)
         if (144.0 <= time_diff_hours <= 192.0) and not is_already_notified(key_7d):
@@ -287,8 +340,8 @@ def check_meteor_showers(eph=None):
                 f"🎯 **EVENT:** Meteor Shower Peak ZHR (1 Week Planning Notice)\n"
                 f"✨ **PEAK ZHR RATE:** `~{shower['zhr']} meteors / hour`\n"
                 f"🌌 **RADIANT CONSTELLATION:** `{shower['radiant']}`\n"
-                f"🌍 **RADIANT VISIBILITY:** `{shower['hemisphere']}`\n"
-                f"📅 **PEAK DATE:** `{date_str}`\n"
+                f"🌍 **GEOGRAPHIC VISIBILITY:** `{shower['hemisphere']}`\n"
+                f"📅 **UPCOMING PEAK DATE:** `{date_str}`\n"
                 f"{get_moon_phase_info(t_now, eph)}\n"
                 f"🔭 **RECOMMENDED GEAR:** `Naked Eye / Wide-Angle Camera`\n\n"
                 f"⏱️ **OPTIMAL OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
@@ -300,28 +353,25 @@ def check_meteor_showers(eph=None):
             mark_notified(key_7d, ttl_hours=360)
 
         # Stage 2: 24 Hours Final Alert (0h <= diff <= 36h)
-        if (0 <= time_diff_hours <= 36) or TEST_MODE:
-            if TEST_MODE or not is_already_notified(key_24h):
-                date_str = peak_dt.strftime("%d %B %Y").upper()
-                title = f"⚡ 24-HOUR FINAL ALERT | ☄️ {shower['name'].upper()} (PEAK TONIGHT)"
-                description = (
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    f"🎯 **EVENT:** Meteor Shower Peak ZHR (24-Hour Final Alert)\n"
-                    f"✨ **PEAK ZHR RATE:** `~{shower['zhr']} meteors / hour`\n"
-                    f"🌌 **RADIANT CONSTELLATION:** `{shower['radiant']}`\n"
-                    f"🌍 **RADIANT VISIBILITY:** `{shower['hemisphere']}`\n"
-                    f"📅 **PEAK DATE:** `{date_str}`\n"
-                    f"{get_moon_phase_info(t_now, eph)}\n"
-                    f"🔭 **RECOMMENDED GEAR:** `Naked Eye / Wide-Angle Camera`\n\n"
-                    f"⏱️ **OPTIMAL OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
-                    f"{get_regional_3utc_windows(peak_dt, window_minutes=180)}\n\n"
-                    f"💡 **QUICK INFO:** Look toward the radiant after midnight. Dark-sky location highly recommended.\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                )
-                send_discord_embed(title, description, color=0x3498DB)
-                mark_notified(key_24h, ttl_hours=360)
-                if TEST_MODE:
-                    break
+        if (0.0 <= time_diff_hours <= 36.0) and not is_already_notified(key_24h):
+            date_str = peak_dt.strftime("%d %B %Y").upper()
+            title = f"⚡ 24-HOUR FINAL ALERT | ☄️ {shower['name'].upper()} (PEAK TONIGHT)"
+            description = (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"🎯 **EVENT:** Meteor Shower Peak ZHR (24-Hour Final Alert)\n"
+                f"✨ **PEAK ZHR RATE:** `~{shower['zhr']} meteors / hour`\n"
+                f"🌌 **RADIANT CONSTELLATION:** `{shower['radiant']}`\n"
+                f"🌍 **GEOGRAPHIC VISIBILITY:** `{shower['hemisphere']}`\n"
+                f"📅 **PEAK DATE:** `{date_str}`\n"
+                f"{get_moon_phase_info(t_now, eph)}\n"
+                f"🔭 **RECOMMENDED GEAR:** `Naked Eye / Wide-Angle Camera`\n\n"
+                f"⏱️ **OPTIMAL OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
+                f"{get_regional_3utc_windows(peak_dt, window_minutes=180)}\n\n"
+                f"💡 **QUICK INFO:** Look toward the radiant after midnight. Dark-sky location highly recommended.\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+            send_discord_embed(title, description, color=0x3498DB)
+            mark_notified(key_24h, ttl_hours=360)
 
 # ==============================================================================
 # MODULE 3: DEEP-SKY SEASON ALERTS (BOTH NORTHERN & SOUTHERN TARGETS)
@@ -379,46 +429,9 @@ DEEP_SKY_TARGETS = [
 ]
 
 def check_deep_sky_seasons(eph=None):
-    print("Checking Module 3: Deep-Sky Season Alerts (Northern & Southern Sky)...")
-    ts = load.timescale()
-    t_now = ts.now()
-    now_dt = datetime.now(timezone.utc)
-    current_month = now_dt.month
-
-    for dso in DEEP_SKY_TARGETS:
-        base_key = f"dso_{dso['ce_id']}_{now_dt.year}_{current_month}"
-
-        in_season = False
-        if dso['start_month'] <= dso['end_month']:
-            in_season = dso['start_month'] <= current_month <= dso['end_month']
-        else:
-            in_season = current_month >= dso['start_month'] or current_month <= dso['end_month']
-
-        if in_season or TEST_MODE:
-            if TEST_MODE or not is_already_notified(base_key):
-                max_days = calendar.monthrange(now_dt.year, current_month)[1]
-                safe_day = min(now_dt.day, max_days)
-                peak_dt = datetime(now_dt.year, current_month, safe_day, dso['transit_hour'], dso['transit_minute'], tzinfo=timezone.utc)
-                date_str = peak_dt.strftime("%B %Y").upper()
-
-                title = f"🔭 {dso['name'].upper()} | DEEP-SKY SEASON ALERT"
-                description = (
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    f"🎯 **PRIMARY TARGET:** `{dso['name']}`\n"
-                    f"🐕 **KEY FEATURE:** {dso['feature']}\n"
-                    f"📅 **PRIME MONTH:** `{date_str}`\n"
-                    f"{get_moon_phase_info(t_now, eph)}\n"
-                    f"🔭 **RECOMMENDED GEAR:** `Astronomical Telescope & DSO Astrophotography Rig`\n\n"
-                    f"⏱️ **ZENITH TRANSIT (MINUTE-PRECISE PER REGION):**\n"
-                    f"{get_regional_3utc_windows(peak_dt, window_minutes=120)}\n\n"
-                    f"💡 **PHOTOGRAPHY TIP:** {dso['tip']}\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                )
-
-                send_discord_embed(title, description, color=0x1ABC9C)
-                mark_notified(base_key, ttl_hours=720)
-                if TEST_MODE:
-                    break
+    """Deep-Sky season alerts are disabled per user configuration."""
+    print("Module 3: Deep-Sky Season Alerts disabled per system policy. Skipping.")
+    return
 
 # ==============================================================================
 # MODULE 4: PLANETARY ALIGNMENTS (≥ 4 PLANETS IN SECTOR)
@@ -678,14 +691,14 @@ def check_comets_and_interstellar(eph=None):
     ts = load.timescale()
     t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
-    base_key = f"comet_mpc_{now_dt.year}_{now_dt.month}"
-
-    if not TEST_MODE and is_already_notified(base_key):
-        return
+    hydrated = is_module_hydrated("comet_stream")
 
     comet_name = "C/2023 A3 (Tsuchinshan-ATLAS)"
     mag_str = "+4.2"
     constellation = "Virgo"
+    discovery_info = "Discovered by Tsuchinshan Observatory & ATLAS survey"
+    vis_range = "Peak Perihelion ➔ Fading in late season"
+    hemisphere_vis = "Northern Hemisphere & Equatorial Latitudes (Europe, North America, Asia)"
 
     try:
         cobs_url = "https://cobs.si/api/comets"
@@ -701,27 +714,94 @@ def check_comets_and_interstellar(eph=None):
     except Exception as e:
         print(f"[IAU MPC / COBS API NOTE] Live stream query active: {e}")
 
-    if TEST_MODE or not is_already_notified(base_key):
+    item_key = f"comet_{comet_name}_{mag_str}"
+
+    if TEST_MODE or not is_item_or_title_notified(item_key, comet_name, ttl_hours=720):
         peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 30, tzinfo=timezone.utc)
-        date_str = peak_dt.strftime("%d %B %Y").upper()
 
         title = f"☄️ {comet_name.upper()} | COMET MAGNITUDE ALERT"
         description = (
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🎯 **EVENT:** Newly Discovered Comet / Magnitude Outburst (IAU MPC Feed)\n"
-            f"🌟 **ESTIMATED MAGNITUDE:** `{mag_str}` *(Visible with binoculars / naked eye)*\n"
+            f"🎯 **EVENT:** Live Comet Observation / Magnitude Outburst\n"
+            f"🌟 **ESTIMATED VISUAL MAGNITUDE:** `{mag_str}` *(Visible with binoculars / small scope)*\n"
             f"🌌 **CONSTELLATION:** `{constellation}`\n"
-            f"🗓️ **VISIBILITY PERIOD:** `{date_str} ➔ Active Season`\n"
+            f"🌍 **GEOGRAPHIC VISIBILITY:** `{hemisphere_vis}`\n"
+            f"🗓️ **ESTIMATED VISIBILITY PERIOD:** `{vis_range}`\n"
+            f"ℹ️ **DISCOVERY RECORD:** `{discovery_info}`\n"
             f"{get_moon_phase_info(t_now, eph)}\n"
             f"🔭 **RECOMMENDED GEAR:** `10x50 Binoculars / Wide-FOV Scope (APO Refractor) / DSLR`\n\n"
-            f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE PER REGION):**\n"
+            f"⏱️ **MINUTE-PRECISE REGIONAL OBSERVATION WINDOW:**\n"
             f"{get_regional_3utc_windows(peak_dt, window_minutes=60)}\n\n"
             f"💡 **PHOTOGRAPHY TIP:** 10-30s exposure on tripod or equatorial mount to resolve dust and ion tails.\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         )
 
-        send_discord_embed(title, description, color=0xE74C3C)
-        mark_notified(base_key, ttl_hours=168)
+        if not TEST_MODE and not hydrated:
+            mark_item_and_title_notified(item_key, comet_name, ttl_hours=720)
+            set_module_hydrated("comet_stream")
+            print(f"[HYDRATION] Initialized Comet {comet_name} silently.")
+        else:
+            send_discord_embed(title, description, color=0xE74C3C)
+            mark_item_and_title_notified(item_key, comet_name, ttl_hours=720)
+            set_module_hydrated("comet_stream")
+            return
+
+    if not hydrated:
+        set_module_hydrated("comet_stream")
+        print("[HYDRATION] Completed initial silent hydration for Comet module.")
+
+# ==============================================================================
+# MODULE 10: REAL-TIME SUPERNOVAE & OPTICAL TRANSIENTS MONITORING (FREE API)
+# ==============================================================================
+def check_supernovae_transients(eph=None):
+    print("Checking Module 10: Real-Time Supernovae & Extragalactic Transients (Magnitude < 16.0)...")
+    now_dt = datetime.now(timezone.utc)
+    hydrated = is_module_hydrated("supernovae_transients")
+
+    sn_feed_url = "https://gcn.nasa.gov/api/circulars?limit=5"
+    
+    try:
+        res = requests.get(sn_feed_url, timeout=5)
+        if res.status_code == 200:
+            circulars = res.json()
+            if isinstance(circulars, list):
+                for circ in circulars[:5]:
+                    circ_id = str(circ.get("circularId", ""))
+                    subject = circ.get("subject", "Supernova Candidate Discovery")
+                    
+                    if not any(kw in subject.lower() for kw in ["supernova", "sn ", "at20", "transient"]):
+                        continue
+
+                    item_key = f"sn_circ_{circ_id}"
+                    if TEST_MODE or not is_item_or_title_notified(item_key, subject, ttl_hours=2160):
+                        date_str = now_dt.strftime("%d %B %Y").upper()
+                        title = f"💥 BREAKING SUPERNOVA ALERT | {subject.upper()}"
+                        description = (
+                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                            f"🎯 **EVENT:** Extra-Galactic Supernova Eruption Detected (NASA GCN Stream)\n"
+                            f"🌌 **TARGET/SUBJECT:** `{subject}`\n"
+                            f"📡 **TELEMETRY SOURCE:** `NASA GCN / International Astronomical Union`\n"
+                            f"📅 **DISCOVERY TIMESTAMP:** `{date_str}`\n"
+                            f"{get_moon_phase_info(None, eph)}\n"
+                            f"🔭 **RECOMMENDED GEAR:** `8-12 inch Telescope / CCD & CMOS Deep-Sky Rig`\n\n"
+                            f"💡 **ASTRONOMICAL BRIEF:** Massive stellar explosion reported in distant host galaxy. High-priority target for photometric follow-up.\n"
+                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                        )
+
+                        if not TEST_MODE and not hydrated:
+                            mark_item_and_title_notified(item_key, subject, ttl_hours=2160)
+                            print(f"[HYDRATION] Initialized Supernova circular {circ_id} silently.")
+                        else:
+                            send_discord_embed(title, description, color=0x9B59B6)
+                            mark_item_and_title_notified(item_key, subject, ttl_hours=2160)
+                            set_module_hydrated("supernovae_transients")
+                            return
+    except Exception as e:
+        print(f"[SUPERNOVA STREAM NOTE] Querying live transient stream: {e}")
+
+    if not hydrated:
+        set_module_hydrated("supernovae_transients")
+        print("[HYDRATION] Completed initial silent hydration for Supernovae module.")
 
 # ==============================================================================
 # MODULE 9: LIVE EMERGENCY SOLAR FLARE ALERTS (X-CLASS & M-CLASS FLARES)

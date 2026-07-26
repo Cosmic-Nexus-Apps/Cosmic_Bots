@@ -323,7 +323,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇦 A rapidly rotating neutron star emitting beams of electromagnetic radiation from its magnetic poles",
         "explanation": "Pulsars rotate at high speeds (up to hundreds of times per second), creating a lighthouse-like beam of radiation that sweeps across space and is detected as precise periodic pulses on Earth.",
-        "image": "https://images-assets.nasa.gov/image/PIA21422/PIA21422~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/PIA21421/PIA21421~medium.jpg"
     },
     {
         "id": "q_great_red_spot_storm",
@@ -388,19 +388,34 @@ def check_daily_quiz():
     now_dt = datetime.now(timezone.utc)
     date_str = now_dt.strftime("%d %B %Y").upper()
 
-    available_questions = [q for q in QUIZ_CATALOG if TEST_MODE or not is_already_asked(q["id"])]
-    if not available_questions:
-        print("[QUIZ ENGINE NOTE] All questions asked within the past 1 year. Resetting catalog loop...")
-        available_questions = QUIZ_CATALOG
+    quiz_item = None
+    try:
+        from google_ai_helper import generate_ai_quiz
+        ai_quiz = generate_ai_quiz()
+        if ai_quiz and not is_already_asked(ai_quiz.get("id", "ai_q")):
+            quiz_item = ai_quiz
+            print(f"[GEMINI AI] Generated fresh quiz question: '{quiz_item.get('question')}'")
+    except Exception as e:
+        print(f"[GEMINI QUIZ NOTE] Using catalog fallback: {e}")
 
-    quiz_item = random.choice(available_questions)
-    item_id = quiz_item["id"]
+    if not quiz_item:
+        available_questions = [q for q in QUIZ_CATALOG if TEST_MODE or not is_already_asked(q["id"])]
+        if not available_questions:
+            print("[QUIZ ENGINE NOTE] All questions asked within the past 1 year. Resetting catalog loop...")
+            available_questions = QUIZ_CATALOG
 
-    title = f"🧠 DAILY SPACE QUIZ | {quiz_item['category'].upper()}"
+        quiz_item = random.choice(available_questions)
+
+    item_id = quiz_item.get("id", f"quiz_{now_dt.strftime('%Y%m%d')}")
+
+    diff_badge = quiz_item.get("difficulty", "🟡 Intermediate")
+    category_str = quiz_item.get("category", "Astrophysics").upper()
+    title = f"🧠 DAILY SPACE QUIZ | {category_str}"
     options_str = "\n".join(quiz_item["options"])
 
     description = (
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🎯 **DIFFICULTY LEVEL:** `{diff_badge}`\n"
         f"❓ **DAILY SPACE QUESTION ({date_str}):**\n"
         f"**{quiz_item['question']}**\n\n"
         f"📌 **MULTIPLE CHOICE OPTIONS:**\n"

@@ -51,6 +51,8 @@ def should_run_task(task_name: str, interval_hours: float = None, target_utc_hou
         row = cursor.fetchone()
 
         if not row:
+            if target_utc_hour is not None:
+                return target_utc_hour <= now_dt.hour < (target_utc_hour + 3)
             return True
 
         last_run_ts = row[0]
@@ -60,10 +62,9 @@ def should_run_task(task_name: str, interval_hours: float = None, target_utc_hou
         if interval_hours is not None:
             return elapsed_seconds >= (interval_hours * 3600)
 
-        # Once-Per-Day Target Hour Check (e.g. Low-Frequency: Daily at 12:00 UTC)
+        # Once-Per-Day Target Hour Check
         if target_utc_hour is not None:
             last_run_dt = datetime.fromtimestamp(last_run_ts, tz=timezone.utc)
-            # Run if it has not run today yet AND current hour is at or past target_utc_hour
             if last_run_dt.date() < now_dt.date() and now_dt.hour >= target_utc_hour:
                 return True
             return False
@@ -182,31 +183,29 @@ def main():
         if hasattr(events_bot, 'check_planetary_oppositions'):
             run_safe("Med_Freq_Planetary_Oppositions", events_bot.check_planetary_oppositions, eph)
 
-    # Medium-Frequency Task 4: Meteor Showers & Comet Streams
+    # Medium-Frequency Task 4: Meteor Showers, Comet Streams & Supernova Transients
     if should_run_task("Med_Freq_Meteor_Showers_Comets", interval_hours=6) and events_bot:
         if hasattr(events_bot, 'check_meteor_showers'):
             run_safe("Med_Freq_Meteor_Showers", events_bot.check_meteor_showers, eph)
         if hasattr(events_bot, 'check_comets_and_interstellar'):
             run_safe("Med_Freq_Comet_Stream", events_bot.check_comets_and_interstellar, eph)
+        if hasattr(events_bot, 'check_supernovae_transients'):
+            run_safe("Med_Freq_Supernova_Stream", events_bot.check_supernovae_transients, eph)
 
     # ==============================================================================
-    # 3. LOW-FREQUENCY MODULES (RUNS ONCE PER DAY AT ~12:00 UTC)
+    # 3. LOW-FREQUENCY MODULES (DAILY SCHEDULING: QUIZ AT 09:00 AM, HISTORY AT 12:00 PM)
     # ==============================================================================
-    print("\n--- [LOW-FREQUENCY TIER: ONCE DAILY AT ~12:00 UTC] ---")
+    print("\n--- [LOW-FREQUENCY TIER: DAILY SCHEDULED TASKS] ---")
     
-    # Low-Frequency Task 1: Daily Space Quiz
-    if should_run_task("Low_Freq_Daily_Space_Quiz", target_utc_hour=12) and quiz_bot:
+    # Low-Frequency Task 1: Daily Space Quiz (Scheduled at 09:00 AM EEST / 06:00 UTC)
+    if should_run_task("Low_Freq_Daily_Space_Quiz", target_utc_hour=6) and quiz_bot:
         if hasattr(quiz_bot, 'run_engine'):
             run_safe("Low_Freq_Daily_Space_Quiz", quiz_bot.run_engine)
 
-    # Low-Frequency Task 2: Daily Space History
+    # Low-Frequency Task 2: Daily Space History (Scheduled at 12:00 PM EEST / 09:00 UTC)
     if should_run_task("Low_Freq_Space_History", target_utc_hour=9) and history_bot:
         if hasattr(history_bot, 'run_engine'):
             run_safe("Low_Freq_Space_History", history_bot.run_engine)
-
-    # Low-Frequency Task 3: Deep-Sky Seasons Alert
-    if should_run_task("Low_Freq_Deep_Sky_Seasons", target_utc_hour=12) and events_bot and hasattr(events_bot, 'check_deep_sky_seasons'):
-        run_safe("Low_Freq_Deep_Sky_Seasons", events_bot.check_deep_sky_seasons, eph)
 
     print("\n==================================================================")
     print(" ORCHESTRATION CYCLE COMPLETED SUCCESSFULLY.")

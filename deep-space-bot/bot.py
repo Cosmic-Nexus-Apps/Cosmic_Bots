@@ -26,7 +26,7 @@ DB_FILE = "deep_space.db"
 TEST_MODE = os.getenv("TEST_MODE", "FALSE").upper() == "TRUE"
 
 def init_db():
-    """Initializes SQLite database for deep space and rocket launch tracking."""
+    """Initializes SQLite database for deep space tracking and crew state storage."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("""
@@ -35,6 +35,53 @@ def init_db():
             expire_timestamp REAL
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS crew_state (
+            key_name TEXT PRIMARY KEY,
+            manifest_text TEXT
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS module_hydration (
+            module_name TEXT PRIMARY KEY,
+            hydrated_at REAL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def is_module_hydrated(module_name):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT hydrated_at FROM module_hydration WHERE module_name = ?", (module_name,))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
+
+def set_module_hydrated(module_name):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    now_ts = datetime.now(timezone.utc).timestamp()
+    cursor.execute("INSERT OR REPLACE INTO module_hydration (module_name, hydrated_at) VALUES (?, ?)", (module_name, now_ts))
+    conn.commit()
+    conn.close()
+
+def get_stored_crew_manifest():
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT manifest_text FROM crew_state WHERE key_name = 'astros_manifest'")
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+def save_stored_crew_manifest(manifest_str):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO crew_state (key_name, manifest_text) VALUES ('astros_manifest', ?)", (manifest_str,))
     conn.commit()
     conn.close()
 
@@ -67,6 +114,29 @@ def mark_notified(item_id, ttl_hours=168):
     cursor.execute("DELETE FROM launch_cache WHERE expire_timestamp <= ?", (now_ts,))
     conn.commit()
     conn.close()
+
+def is_item_or_title_notified(item_id, title_str="", ttl_hours=720):
+    """Checks both raw item_id AND normalized title hash to prevent duplicate news posts."""
+    if is_already_notified(item_id):
+        return True
+    if title_str:
+        import re
+        clean_t = re.sub(r'\W+', '', title_str.lower())
+        if clean_t:
+            t_hash = hashlib.md5(clean_t.encode('utf-8')).hexdigest()
+            if is_already_notified(f"title_{t_hash}"):
+                return True
+    return False
+
+def mark_item_and_title_notified(item_id, title_str="", ttl_hours=720):
+    """Saves both raw item_id AND normalized title hash into persistent SQLite cache."""
+    mark_notified(item_id, ttl_hours=ttl_hours)
+    if title_str:
+        import re
+        clean_t = re.sub(r'\W+', '', title_str.lower())
+        if clean_t:
+            t_hash = hashlib.md5(clean_t.encode('utf-8')).hexdigest()
+            mark_notified(f"title_{t_hash}", ttl_hours=ttl_hours)
 
 def send_discord_embed(title, description, color=0x1F618D, role_id=ROLE_ID, image_url=None, fields=None, author=None, thumbnail_url=None):
     if not WEBHOOK_URL:
@@ -402,8 +472,8 @@ def detect_actual_observatory(title_str, raw_desc, default_scope_name):
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
     now_dt = datetime.now(timezone.utc)
-    current_year = now_dt.year # Strictly current year (e.g. 2026) for TODAY'S BREAKING NEWS
-    new_image_posted = False
+    current_year = now_dt.year
+    hydrated = is_module_hydrated("deep_space_imagery")
 
     # 1. Query Live NASA APOD (Astronomy Picture of the Day) API for TODAY'S picture
     try:
@@ -414,7 +484,7 @@ def check_deep_space_imagery():
             apod_date = apod_data.get("date", now_dt.strftime("%Y-%m-%d"))
             item_key = f"apod_{apod_date}"
 
-            if TEST_MODE or not is_already_notified(item_key, ttl_hours=24):
+            if TEST_MODE or not is_item_or_title_notified(item_key, apod_data.get("title", ""), ttl_hours=24):
                 title_str = apod_data.get("title", "Astronomy Picture of the Day")
                 media_type = apod_data.get("media_type", "image")
                 img_url = apod_data.get("url") if media_type == "image" else apod_data.get("thumbnail_url")
@@ -436,10 +506,13 @@ def check_deep_space_imagery():
                 )
 
                 if img_url:
-                    send_discord_embed(embed_title, description, color=0x8E44AD, image_url=img_url)
-                    mark_notified(item_key, ttl_hours=24)
-                    new_image_posted = True
-                    if TEST_MODE:
+                    if not TEST_MODE and not hydrated:
+                        mark_item_and_title_notified(item_key, title_str, ttl_hours=24)
+                        print(f"[HYDRATION] Initialized APOD {item_key} silently.")
+                    else:
+                        send_discord_embed(embed_title, description, color=0x8E44AD, image_url=img_url)
+                        mark_item_and_title_notified(item_key, title_str, ttl_hours=24)
+                        set_module_hydrated("deep_space_imagery")
                         return
     except Exception as e:
         print(f"[APOD API NOTE] Query active stream fallback: {e}")
@@ -449,21 +522,18 @@ def check_deep_space_imagery():
 
     for scope in TELESCOPE_SEARCH_QUERIES:
         try:
-            # Query strictly for current year discoveries
             search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image&year_start={current_year}"
             res = requests.get(search_url, timeout=6)
             items = []
             if res.status_code == 200:
                 items = res.json().get("collection", {}).get("items", [])
             
-            # Fallback to year_start = current_year - 1 if no items returned for current year
             if not items:
                 search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image&year_start={current_year - 1}"
                 res = requests.get(search_url, timeout=6)
                 if res.status_code == 200:
                     items = res.json().get("collection", {}).get("items", [])
 
-            # Sort items by date_created descending (NEWEST / LATEST FIRST)
             def get_item_date(it):
                 d_list = it.get("data", [])
                 return d_list[0].get("date_created", "1970-01-01") if d_list else "1970-01-01"
@@ -482,27 +552,15 @@ def check_deep_space_imagery():
                 raw_desc = item_data.get("description", "Scientific space telescope discovery.")
                 description_str = format_clean_summary(raw_desc, max_len=3000)
                 date_created = item_data.get("date_created", "")[:10]
-                
-                # Filter out old archived construction/facility photos
-                if date_created and len(date_created) >= 4:
-                    try:
-                        item_year = int(date_created[:4])
-                        if item_year < (current_year - 1):
-                            continue
-                    except Exception:
-                        pass
 
-                # Filter out non-scientific event titles
                 if any(kw in title_str.lower() for kw in ignored_keywords):
                     continue
 
-                # Dynamically resolve actual observatory to prevent misattribution
                 actual_observatory = detect_actual_observatory(title_str, raw_desc, scope["name"])
-
                 img_url = links_list[0].get("href", "")
                 item_key = f"nasa_img_{nasa_id}"
 
-                if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
+                if TEST_MODE or not is_item_or_title_notified(item_key, title_str, ttl_hours=720):
                     embed_title = f"🔭 {actual_observatory} | {title_str.upper()}"
 
                     description = (
@@ -516,15 +574,20 @@ def check_deep_space_imagery():
                         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                     )
 
-                    send_discord_embed(embed_title, description, color=scope["color"], image_url=img_url)
-                    mark_notified(item_key, ttl_hours=168)
-                    new_image_posted = True
-                    if TEST_MODE:
-                        break
-            if TEST_MODE and new_image_posted:
-                break
+                    if not TEST_MODE and not hydrated:
+                        mark_item_and_title_notified(item_key, title_str, ttl_hours=720)
+                        print(f"[HYDRATION] Initialized telescope discovery '{title_str}' silently.")
+                    else:
+                        send_discord_embed(embed_title, description, color=scope["color"], image_url=img_url)
+                        mark_item_and_title_notified(item_key, title_str, ttl_hours=720)
+                        set_module_hydrated("deep_space_imagery")
+                        return
         except Exception as e:
             print(f"[NASA TELESCOPE SEARCH API NOTE] {scope['name']}: {e}")
+
+    if not hydrated:
+        set_module_hydrated("deep_space_imagery")
+        print("[HYDRATION] Completed initial silent hydration for Deep Space Imagery module.")
 
 # ==============================================================================
 # MODULE 3: HUMANS IN SPACE LIVE TRACKER (OPEN-NOTIFY ASTROS API)
@@ -664,22 +727,43 @@ def check_humans_in_space():
             emoji, flag = resolve_astronaut_metadata(n, craft)
             manifest_lines.append(f"  └ {emoji} `{n}` {flag}")
 
-    # Generate unique signature of the crew composition
-    crew_str = "|".join(sorted(all_crew))
-    crew_hash = hashlib.md5(crew_str.encode('utf-8')).hexdigest()[:12]
-    item_key = f"astros_crew_signature_{crew_hash}"
+    current_crew_set = set(all_crew)
+    current_crew_str = "|".join(sorted(all_crew))
 
-    if not TEST_MODE and is_already_notified(item_key, ttl_hours=8760):
-        print(f"[ASTROS NOTE] Crew manifest unchanged ({crew_hash}). Skipping duplicate notification.")
+    stored_crew_str = get_stored_crew_manifest()
+
+    if stored_crew_str is None:
+        # First time running: record initial crew state silently to prevent sending random notifications on startup
+        save_stored_crew_manifest(current_crew_str)
+        print(f"[ASTROS NOTE] Initialized crew manifest state with {len(current_crew_set)} astronauts. No change alert sent.")
         return
+
+    if not TEST_MODE and stored_crew_str == current_crew_str:
+        print(f"[ASTROS NOTE] Orbital crew manifest unchanged ({len(current_crew_set)} astronauts). Skipping message.")
+        return
+
+    # Crew change detected! Calculate specific arrivals and departures
+    stored_crew_set = set(stored_crew_str.split("|")) if stored_crew_str else set()
+    joined = current_crew_set - stored_crew_set
+    left = stored_crew_set - current_crew_set
+
+    updates_text = ""
+    if joined:
+        joined_names = [j.split(":")[-1] for j in joined]
+        updates_text += f"\n✨ **NEW CREW ARRIVALS IN ORBIT:** {', '.join(joined_names)}"
+    if left:
+        left_names = [l.split(":")[-1] for l in left]
+        updates_text += f"\n🪂 **CREW RETURNED TO EARTH:** {', '.join(left_names)}"
 
     manifest_text = "\n".join(manifest_lines)
     date_str = now_dt.strftime("%d %B %Y").upper()
 
-    title = f"👨‍🚀 HUMANS IN SPACE LIVE | {total_count} ASTRONAUTS IN ORBIT"
+    title = f"👨‍🚀 HUMANS IN SPACE LIVE | CREW CHANGE UPDATE ({total_count} IN ORBIT)"
     description = (
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🎯 **CURRENT ORBITAL MANIFEST ({date_str}):**\n"
+        f"🚨 **CREW MANIFEST UPDATE DETECTED ({date_str}):**"
+        f"{updates_text}\n\n"
+        f"🎯 **UPDATED ORBITAL MANIFEST:**\n"
         f"🌍 **TOTAL HUMANS IN LOW EARTH ORBIT:** `{total_count} Crew Members`\n\n"
         f"{manifest_text}\n\n"
         f"💡 **FACT:** These astronauts orbit Earth every 90 minutes at ~28,000 km/h (~17,500 mph).\n"
@@ -687,7 +771,7 @@ def check_humans_in_space():
     )
 
     send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/jsc2011e021164/jsc2011e021164~medium.jpg")
-    mark_notified(item_key, ttl_hours=8760)
+    save_stored_crew_manifest(current_crew_str)
 
 # ==============================================================================
 # MAIN BOT EXECUTION

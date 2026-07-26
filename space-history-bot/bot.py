@@ -218,20 +218,31 @@ def check_today_in_space_history():
     current_mmdd = now_dt.strftime("%m-%d")
     date_display = now_dt.strftime("%d %B").upper()
 
-    # 1. Look for date-matched historical events
-    date_matched = [e for e in SPACE_HISTORY_CATALOG if e["date_mmdd"] == current_mmdd and (TEST_MODE or not is_already_posted(e["id"]))]
-    
-    if date_matched:
-        event = random.choice(date_matched)
-    else:
-        # Fallback to available unposted historical events
-        available = [e for e in SPACE_HISTORY_CATALOG if TEST_MODE or not is_already_posted(e["id"])]
-        if not available:
-            print("[HISTORY NOTE] Resetting history cache loop...")
-            available = SPACE_HISTORY_CATALOG
-        event = random.choice(available)
+    event = None
+    try:
+        from google_ai_helper import generate_ai_history
+        ai_hist = generate_ai_history(current_mmdd)
+        if ai_hist and not is_already_posted(ai_hist.get("id", "ai_h")):
+            event = ai_hist
+            print(f"[GEMINI AI] Generated fresh space history record for {current_mmdd}: '{event.get('title')}'")
+    except Exception as e:
+        print(f"[GEMINI HISTORY NOTE] Using catalog fallback: {e}")
 
-    event_id = event["id"]
+    if not event:
+        # 1. Look for date-matched historical events
+        date_matched = [e for e in SPACE_HISTORY_CATALOG if e["date_mmdd"] == current_mmdd and (TEST_MODE or not is_already_posted(e["id"]))]
+        
+        if date_matched:
+            event = random.choice(date_matched)
+        else:
+            # Fallback to available unposted historical events
+            available = [e for e in SPACE_HISTORY_CATALOG if TEST_MODE or not is_already_posted(e["id"])]
+            if not available:
+                print("[HISTORY NOTE] Resetting history cache loop...")
+                available = SPACE_HISTORY_CATALOG
+            event = random.choice(available)
+
+    event_id = event.get("id", f"hist_{current_mmdd}_{now_dt.year}")
     title = f"🗓️ TODAY IN SPACE HISTORY | {event['title'].upper()}"
 
     description = (
