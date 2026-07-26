@@ -330,16 +330,19 @@ def check_upcoming_launches():
 # MODULE 2: LIVE MULTI-TELESCOPE STREAM (NASA APOD + NASA IMAGE API FOR JWST, HST, EUCLID, CHANDRA)
 # ==============================================================================
 TELESCOPE_SEARCH_QUERIES = [
-    {"query": "James Webb Space Telescope", "name": "JAMES WEBB SPACE TELESCOPE (JWST)", "color": 0x8E44AD},
-    {"query": "Hubble Space Telescope", "name": "HUBBLE SPACE TELESCOPE (HST)", "color": 0x16A085},
-    {"query": "Euclid Space Telescope", "name": "EUCLID SPACE TELESCOPE (ESA/NASA 3D MAP)", "color": 0x2980B9},
-    {"query": "Chandra X-Ray Observatory", "name": "CHANDRA X-RAY OBSERVATORY", "color": 0xE74C3C},
-    {"query": "Vera C. Rubin Observatory", "name": "VERA C. RUBIN OBSERVATORY (LSST)", "color": 0x9B59B6}
+    {"query": "James Webb Space Telescope discovery", "name": "JAMES WEBB SPACE TELESCOPE (JWST)", "color": 0x8E44AD},
+    {"query": "Hubble Space Telescope discovery", "name": "HUBBLE SPACE TELESCOPE (HST)", "color": 0x16A085},
+    {"query": "Euclid Space Telescope discovery", "name": "EUCLID SPACE TELESCOPE (ESA)", "color": 0x2980B9},
+    {"query": "Chandra X-Ray Observatory discovery", "name": "CHANDRA X-RAY OBSERVATORY", "color": 0xE74C3C},
+    {"query": "Vera C. Rubin Observatory", "name": "VERA C. RUBIN OBSERVATORY (LSST)", "color": 0x9B59B6},
+    {"query": "Exoplanet discovery", "name": "EXOPLANET & ALIEN WORLD DISCOVERY", "color": 0xF39C12},
+    {"query": "Very Large Telescope discovery", "name": "VERY LARGE TELESCOPE (ESO VLT)", "color": 0x1ABC9C}
 ]
 
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
     now_dt = datetime.now(timezone.utc)
+    min_year = now_dt.year - 1 # Only accept recent discoveries from current year or previous year
     new_image_posted = False
 
     # 1. Query Live NASA APOD (Astronomy Picture of the Day) API
@@ -383,14 +386,16 @@ def check_deep_space_imagery():
     except Exception as e:
         print(f"[APOD API NOTE] Query active stream fallback: {e}")
 
-    # 2. Query Live NASA Image Search API for JWST, Hubble, Euclid, Chandra, Rubin
+    # 2. Query Live NASA Image Search API for JWST, Hubble, Euclid, Chandra, Rubin, VLT, Exoplanets
+    ignored_keywords = ["cinema", "screening", "auditorium", "cleanroom", "mirror", "installation", "building", "facility", "speech"]
+
     for scope in TELESCOPE_SEARCH_QUERIES:
         try:
-            search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image"
+            search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image&year_start={min_year}"
             res = requests.get(search_url, timeout=6)
             if res.status_code == 200:
                 items = res.json().get("collection", {}).get("items", [])
-                for item in items[:5]:
+                for item in items[:10]:
                     data_list = item.get("data", [])
                     links_list = item.get("links", [])
                     if not data_list or not links_list:
@@ -402,6 +407,19 @@ def check_deep_space_imagery():
                     description_str = item_data.get("description", "Scientific space telescope discovery.")
                     date_created = item_data.get("date_created", "")[:10]
                     
+                    # Filter out old archived construction/facility photos
+                    if date_created and len(date_created) >= 4:
+                        try:
+                            item_year = int(date_created[:4])
+                            if item_year < min_year:
+                                continue
+                        except Exception:
+                            pass
+
+                    # Filter out non-scientific event titles
+                    if any(kw in title_str.lower() for kw in ignored_keywords):
+                        continue
+
                     if len(description_str) > 300:
                         description_str = description_str[:297] + "..."
 
@@ -409,7 +427,6 @@ def check_deep_space_imagery():
                     item_key = f"nasa_img_{nasa_id}"
 
                     if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
-                        # TITLE FORMAT: 🔭 [TELESCOPE NAME] | [TARGET NAME]
                         embed_title = f"🔭 {scope['name']} | {title_str.upper()}"
 
                         description = (
