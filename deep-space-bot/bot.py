@@ -339,17 +339,20 @@ TELESCOPE_SEARCH_QUERIES = [
     {"query": "Very Large Telescope discovery", "name": "VERY LARGE TELESCOPE (ESO VLT)", "color": 0x1ABC9C}
 ]
 
-def format_clean_summary(text, max_len=1000):
+def format_clean_summary(text, max_len=3000):
     if not text:
         return ""
     text = text.strip()
     if len(text) <= max_len:
         return text
     truncated = text[:max_len]
+    last_period = truncated.rfind('.')
+    if last_period > int(max_len * 0.4):
+        return truncated[:last_period + 1]
     last_space = truncated.rfind(' ')
-    if last_space > max_len * 0.6:
-        truncated = truncated[:last_space]
-    return truncated.rstrip(' ,;:.') + "..."
+    if last_space > int(max_len * 0.4):
+        return truncated[:last_space] + "."
+    return truncated
 
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
@@ -372,7 +375,7 @@ def check_deep_space_imagery():
                 img_url = apod_data.get("url") if media_type == "image" else apod_data.get("thumbnail_url")
                 hd_url = apod_data.get("hdurl", img_url)
                 copyright_credit = apod_data.get("copyright", "NASA / APOD Science Core").replace('\n', ' ')
-                explanation = format_clean_summary(apod_data.get("explanation", "Daily astronomical observation release."), max_len=1000)
+                explanation = format_clean_summary(apod_data.get("explanation", "Daily astronomical observation release."), max_len=3000)
 
                 embed_title = f"🔭 NASA APOD (TODAY'S RELEASE) | {title_str.upper()}"
 
@@ -432,7 +435,7 @@ def check_deep_space_imagery():
                 nasa_id = item_data.get("nasa_id", "")
                 title_str = item_data.get("title", scope["query"])
                 raw_desc = item_data.get("description", "Scientific space telescope discovery.")
-                description_str = format_clean_summary(raw_desc, max_len=1000)
+                description_str = format_clean_summary(raw_desc, max_len=3000)
                 date_created = item_data.get("date_created", "")[:10]
                 
                 # Filter out old archived construction/facility photos
