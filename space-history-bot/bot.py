@@ -131,7 +131,7 @@ SPACE_HISTORY_CATALOG = [
         "crew": "Yuri Gagarin",
         "story": "Soviet Cosmonaut Yuri Gagarin boarded Vostok 1 and completed a 108-minute single-orbit flight around the Earth at an altitude of 327 km, exclaiming 'Poyekhali!' ('Let's go!') upon liftoff.",
         "impact": "Proved that humans can survive in microgravity and orbital spaceflight.",
-        "image": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001923/GSFC_20171208_Archive_e001923~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/6100140/6100140~medium.jpg"
     },
     {
         "id": "hist_hubble_deployment_sts31",

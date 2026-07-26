@@ -30,6 +30,7 @@ jobs:
         if [ -f events-bot/requirements.txt ]; then pip install -r events-bot/requirements.txt; fi
         if [ -f deep-space-bot/requirements.txt ]; then pip install -r deep-space-bot/requirements.txt; fi
         if [ -f space-quiz-bot/requirements.txt ]; then pip install -r space-quiz-bot/requirements.txt; fi
+        if [ -f space-history-bot/requirements.txt ]; then pip install -r space-history-bot/requirements.txt; fi
 
     - name: Restore & Cache SQLite Databases
       uses: actions/cache@v4
@@ -38,7 +39,9 @@ jobs:
           events-bot/events.db
           deep-space-bot/deep_space.db
           space-quiz-bot/quiz.db
+          space-history-bot/history.db
           events.db
+          scheduler.db
         key: cosmic-nexus-db-${{ github.run_id }}
         restore-keys: |
           cosmic-nexus-db-
@@ -52,6 +55,8 @@ jobs:
         DEEP_SPACE_BOT_DISCORD_ROLE_ID: ${{ secrets.DEEP_SPACE_BOT_DISCORD_ROLE_ID }}
         SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL }}
         SPACE_QUIZ_BOT_DISCORD_ROLE_ID: ${{ secrets.SPACE_QUIZ_BOT_DISCORD_ROLE_ID }}
+        SPACE_HISTORY_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.SPACE_HISTORY_BOT_DISCORD_WEBHOOK_URL }}
+        SPACE_HISTORY_BOT_DISCORD_ROLE_ID: ${{ secrets.SPACE_HISTORY_BOT_DISCORD_ROLE_ID }}
         TEST_MODE: "FALSE"
       run: |
         python main_orchestrator.py
