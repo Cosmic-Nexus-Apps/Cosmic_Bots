@@ -342,10 +342,10 @@ TELESCOPE_SEARCH_QUERIES = [
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
     now_dt = datetime.now(timezone.utc)
-    min_year = now_dt.year - 1 # Only accept recent discoveries from current year or previous year
+    current_year = now_dt.year # Strictly current year (e.g. 2026) for TODAY'S BREAKING NEWS
     new_image_posted = False
 
-    # 1. Query Live NASA APOD (Astronomy Picture of the Day) API
+    # 1. Query Live NASA APOD (Astronomy Picture of the Day) API for TODAY'S picture
     try:
         apod_url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
         res = requests.get(apod_url, timeout=6)
@@ -364,7 +364,7 @@ def check_deep_space_imagery():
                 if len(explanation) > 320:
                     explanation = explanation[:317] + "..."
 
-                embed_title = f"🔭 NASA APOD | {title_str.upper()}"
+                embed_title = f"🔭 NASA APOD (TODAY'S RELEASE) | {title_str.upper()}"
 
                 description = (
                     f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -391,62 +391,79 @@ def check_deep_space_imagery():
 
     for scope in TELESCOPE_SEARCH_QUERIES:
         try:
-            search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image&year_start={min_year}"
+            # Query strictly for current year discoveries
+            search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image&year_start={current_year}"
             res = requests.get(search_url, timeout=6)
+            items = []
             if res.status_code == 200:
                 items = res.json().get("collection", {}).get("items", [])
-                for item in items[:10]:
-                    data_list = item.get("data", [])
-                    links_list = item.get("links", [])
-                    if not data_list or not links_list:
-                        continue
+            
+            # Fallback to year_start = current_year - 1 if no items returned for current year
+            if not items:
+                search_url = f"https://images-api.nasa.gov/search?q={requests.utils.quote(scope['query'])}&media_type=image&year_start={current_year - 1}"
+                res = requests.get(search_url, timeout=6)
+                if res.status_code == 200:
+                    items = res.json().get("collection", {}).get("items", [])
 
-                    item_data = data_list[0]
-                    nasa_id = item_data.get("nasa_id", "")
-                    title_str = item_data.get("title", scope["query"])
-                    description_str = item_data.get("description", "Scientific space telescope discovery.")
-                    date_created = item_data.get("date_created", "")[:10]
-                    
-                    # Filter out old archived construction/facility photos
-                    if date_created and len(date_created) >= 4:
-                        try:
-                            item_year = int(date_created[:4])
-                            if item_year < min_year:
-                                continue
-                        except Exception:
-                            pass
+            # Sort items by date_created descending (NEWEST / LATEST FIRST)
+            def get_item_date(it):
+                d_list = it.get("data", [])
+                return d_list[0].get("date_created", "1970-01-01") if d_list else "1970-01-01"
 
-                    # Filter out non-scientific event titles
-                    if any(kw in title_str.lower() for kw in ignored_keywords):
-                        continue
+            items.sort(key=get_item_date, reverse=True)
 
-                    if len(description_str) > 300:
-                        description_str = description_str[:297] + "..."
+            for item in items[:10]:
+                data_list = item.get("data", [])
+                links_list = item.get("links", [])
+                if not data_list or not links_list:
+                    continue
 
-                    img_url = links_list[0].get("href", "")
-                    item_key = f"nasa_img_{nasa_id}"
+                item_data = data_list[0]
+                nasa_id = item_data.get("nasa_id", "")
+                title_str = item_data.get("title", scope["query"])
+                description_str = item_data.get("description", "Scientific space telescope discovery.")
+                date_created = item_data.get("date_created", "")[:10]
+                
+                # Filter out old archived construction/facility photos
+                if date_created and len(date_created) >= 4:
+                    try:
+                        item_year = int(date_created[:4])
+                        if item_year < (current_year - 1):
+                            continue
+                    except Exception:
+                        pass
 
-                    if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
-                        embed_title = f"🔭 {scope['name']} | {title_str.upper()}"
+                # Filter out non-scientific event titles
+                if any(kw in title_str.lower() for kw in ignored_keywords):
+                    continue
 
-                        description = (
-                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                            f"🌌 **PHOTOGRAPHED TARGET:** `{title_str}`\n"
-                            f"🎯 **OBSERVATORY:** `{scope['name']}`\n"
-                            f"📷 **IMAGE CREDIT:** `NASA / STScI / ESA Space Science`\n"
-                            f"📅 **RELEASE DATE:** `{date_created.upper()}`\n\n"
-                            f"📖 **SCIENTIFIC SUMMARY:** {description_str}\n\n"
-                            f"💾 **FULL-RESOLUTION IMAGE:** [Open High-Res Image File]({img_url})\n"
-                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                        )
+                if len(description_str) > 300:
+                    description_str = description_str[:297] + "..."
 
-                        send_discord_embed(embed_title, description, color=scope["color"], image_url=img_url)
-                        mark_notified(item_key, ttl_hours=168)
-                        new_image_posted = True
-                        if TEST_MODE:
-                            break
-                if TEST_MODE and new_image_posted:
-                    break
+                img_url = links_list[0].get("href", "")
+                item_key = f"nasa_img_{nasa_id}"
+
+                if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
+                    embed_title = f"🔭 {scope['name']} | {title_str.upper()}"
+
+                    description = (
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"🌌 **PHOTOGRAPHED TARGET:** `{title_str}`\n"
+                        f"🎯 **OBSERVATORY:** `{scope['name']}`\n"
+                        f"📷 **IMAGE CREDIT:** `NASA / STScI / ESA Space Science`\n"
+                        f"📅 **RELEASE DATE:** `{date_created.upper()}`\n\n"
+                        f"📖 **SCIENTIFIC SUMMARY:** {description_str}\n\n"
+                        f"💾 **FULL-RESOLUTION IMAGE:** [Open High-Res Image File]({img_url})\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    )
+
+                    send_discord_embed(embed_title, description, color=scope["color"], image_url=img_url)
+                    mark_notified(item_key, ttl_hours=168)
+                    new_image_posted = True
+                    if TEST_MODE:
+                        break
+            if TEST_MODE and new_image_posted:
+                break
         except Exception as e:
             print(f"[NASA TELESCOPE SEARCH API NOTE] {scope['name']}: {e}")
 
