@@ -435,6 +435,102 @@ def check_deep_space_imagery():
 # ==============================================================================
 # MODULE 3: HUMANS IN SPACE LIVE TRACKER (OPEN-NOTIFY ASTROS API)
 # ==============================================================================
+ASTRONAUT_METADATA_DB = {
+    # NASA / USA (Male 👨‍🚀 🇺🇸)
+    "butch wilmore": ("👨‍🚀", "🇺🇸"),
+    "barry wilmore": ("👨‍🚀", "🇺🇸"),
+    "nick hague": ("👨‍🚀", "🇺🇸"),
+    "matthew dominick": ("👨‍🚀", "🇺🇸"),
+    "michael barratt": ("👨‍🚀", "🇺🇸"),
+    "don pettit": ("👨‍🚀", "🇺🇸"),
+    "jonny kim": ("👨‍🚀", "🇺🇸"),
+    "victor glover": ("👨‍🚀", "🇺🇸"),
+    "reid wiseman": ("👨‍🚀", "🇺🇸"),
+
+    # NASA / USA (Female 👩‍🚀 🇺🇸)
+    "sunita williams": ("👩‍🚀", "🇺🇸"),
+    "tracy caldwell dyson": ("👩‍🚀", "🇺🇸"),
+    "tracy dyson": ("👩‍🚀", "🇺🇸"),
+    "jeanette epps": ("👩‍🚀", "🇺🇸"),
+    "loral o'hara": ("👩‍🚀", "🇺🇸"),
+    "christina koch": ("👩‍🚀", "🇺🇸"),
+    "jessica meir": ("👩‍🚀", "🇺🇸"),
+    "kate rubins": ("👩‍🚀", "🇺🇸"),
+    "anne mcclain": ("👩‍🚀", "🇺🇸"),
+    "nicole mann": ("👩‍🚀", "🇺🇸"),
+    "jasmin moghbeli": ("👩‍🚀", "🇺🇸"),
+
+    # ROSCOSMOS / RUSSIA & BELARUS (Male 👨‍🚀 / Female 👩‍🚀 🇷🇺 🇧🇾)
+    "oleg kononenko": ("👨‍🚀", "🇷🇺"),
+    "nikolai chub": ("👨‍🚀", "🇷🇺"),
+    "alexander grebenkin": ("👨‍🚀", "🇷🇺"),
+    "alexey ovchinin": ("👨‍🚀", "🇷🇺"),
+    "ivan vagner": ("👨‍🚀", "🇷🇺"),
+    "sergey prokopyev": ("👨‍🚀", "🇷🇺"),
+    "dmitry petelin": ("👨‍🚀", "🇷🇺"),
+    "konstantin borisov": ("👨‍🚀", "🇷🇺"),
+    "alexander gorbunov": ("👨‍🚀", "🇷🇺"),
+    "marina vasilevskaya": ("👩‍🚀", "🇧🇾"),
+    "anna kikina": ("👩‍🚀", "🇷🇺"),
+
+    # CNSA / CHINA (Male 👨‍🚀 / Female 👩‍🚀 🇨🇳)
+    "ye guangfu": ("👨‍🚀", "🇨🇳"),
+    "li cong": ("👨‍🚀", "🇨🇳"),
+    "li guangsu": ("👨‍🚀", "🇨🇳"),
+    "tang hongbo": ("👨‍🚀", "🇨🇳"),
+    "tang shengjie": ("👨‍🚀", "🇨🇳"),
+    "jiang xinlin": ("👨‍🚀", "🇨🇳"),
+    "jing haipeng": ("👨‍🚀", "🇨🇳"),
+    "zhu yangzhu": ("👨‍🚀", "🇨🇳"),
+    "gui haichao": ("👨‍🚀", "🇨🇳"),
+    "cai xuzhe": ("👨‍🚀", "🇨🇳"),
+    "song lingdong": ("👨‍🚀", "🇨🇳"),
+    "wang yaping": ("👩‍🚀", "🇨🇳"),
+    "liu yang": ("👩‍🚀", "🇨🇳"),
+    "wang haoze": ("👩‍🚀", "🇨🇳"),
+
+    # ESA / EUROPE
+    "samantha cristoforetti": ("👩‍🚀", "🇮🇹"),
+    "alexander gerst": ("👨‍🚀", "🇩🇪"),
+    "thomas pesquet": ("👨‍🚀", "🇫🇷"),
+    "andreas mogensen": ("👨‍🚀", "🇩🇰"),
+    "tim peake": ("👨‍🚀", "🇬🇧"),
+    "marcus wandt": ("👨‍🚀", "🇸🇪"),
+    "pablo alvarez": ("👨‍🚀", "🇪🇸"),
+    "sophie adenot": ("👩‍🚀", "🇫🇷"),
+
+    # JAXA / JAPAN
+    "satoshi furukawa": ("👨‍🚀", "🇯🇵"),
+    "akihiko hoshide": ("👨‍🚀", "🇯🇵"),
+    "soichi noguchi": ("👨‍🚀", "🇯🇵"),
+    "koichi wakata": ("👨‍🚀", "🇯🇵"),
+
+    # CSA / CANADA & ISRO / INDIA & UAE
+    "jeremy hansen": ("👨‍🚀", "🇨🇦"),
+    "jenni sidey-gibbons": ("👩‍🚀", "🇨🇦"),
+    "shubhanshu shukla": ("👨‍🚀", "🇮🇳"),
+    "sultan al neyadi": ("👨‍🚀", "🇦🇪"),
+    "rayyanah barnawi": ("👩‍🚀", "🇸🇦"),
+}
+
+def resolve_astronaut_metadata(name, craft="ISS"):
+    name_lower = name.lower().strip()
+    for key, val in ASTRONAUT_METADATA_DB.items():
+        if key in name_lower or name_lower in key:
+            return val
+
+    is_female = any(fn in name_lower for fn in ["sunita", "tracy", "jeanette", "loral", "christina", "jessica", "kate", "anne", "nicole", "jasmin", "samantha", "marina", "anna", "wang", "liu", "sophie", "rayyanah"])
+    gender_emoji = "👩‍🚀" if is_female else "👨‍🚀"
+
+    if "tiangong" in craft.lower() or any(cn_surname in name_lower for cn_surname in ["ye ", "li ", "tang ", "jiang ", "jing ", "zhu ", "gui ", "cai ", "song ", "wang ", "liu "]):
+        flag = "🇨🇳"
+    elif any(ru_name in name_lower for ru_name in ["oleg", "nikolai", "alexander", "alexey", "ivan", "sergey", "dmitry", "konstantin", "ovchinin", "vagner", "prokopyev", "gorbunov"]):
+        flag = "🇷🇺"
+    else:
+        flag = "🇺🇸"
+
+    return gender_emoji, flag
+
 def check_humans_in_space():
     print("Checking Module 3: Humans in Space Live Tracking Telemetry...")
     now_dt = datetime.now(timezone.utc)
@@ -464,7 +560,7 @@ def check_humans_in_space():
 
     if not craft_groups:
         craft_groups = {
-            "ISS (International Space Station)": ["Sunita Williams", "Butch Wilmore", "Nick Hague", "Alexander Gorbunov"],
+            "ISS (International Space Station)": ["Sunita Williams", "Butch Wilmore", "Nick Hague", "Alexander Gorbunov", "Oleg Kononenko", "Nikolai Chub", "Tracy Caldwell Dyson", "Matthew Dominick", "Michael Barratt", "Jeanette Epps", "Alexander Grebenkin"],
             "Tiangong Space Station": ["Ye Guangfu", "Li Cong", "Li Guangsu"]
         }
         total_count = sum(len(v) for v in craft_groups.values())
@@ -473,7 +569,8 @@ def check_humans_in_space():
     for craft, names in craft_groups.items():
         manifest_lines.append(f"🛸 **{craft.upper()}:** ({len(names)} Crew)")
         for n in names:
-            manifest_lines.append(f"  └ 👨‍🚀 `{n}`")
+            emoji, flag = resolve_astronaut_metadata(n, craft)
+            manifest_lines.append(f"  └ {emoji} `{n}` {flag}")
 
     manifest_text = "\n".join(manifest_lines)
     date_str = now_dt.strftime("%d %B %Y").upper()
