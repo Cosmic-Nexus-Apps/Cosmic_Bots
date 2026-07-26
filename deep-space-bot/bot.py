@@ -68,7 +68,7 @@ def mark_notified(item_id, ttl_hours=168):
     conn.commit()
     conn.close()
 
-def send_discord_embed(title, description, color=0x1F618D, role_id=ROLE_ID, image_url=None):
+def send_discord_embed(title, description, color=0x1F618D, role_id=ROLE_ID, image_url=None, fields=None, author=None, thumbnail_url=None):
     if not WEBHOOK_URL:
         print(f"[DISCORD EMBED - NO WEBHOOK CONFIGURED]\nTitle: {title}\n{description}\n")
         return
@@ -82,6 +82,15 @@ def send_discord_embed(title, description, color=0x1F618D, role_id=ROLE_ID, imag
             "text": "Cosmic Nexus | Deep Space & Rocket Launch Telemetry Core"
         }
     }
+
+    if author:
+        embed_obj["author"] = author
+
+    if thumbnail_url:
+        embed_obj["thumbnail"] = {"url": thumbnail_url}
+
+    if fields:
+        embed_obj["fields"] = fields
 
     if image_url:
         embed_obj["image"] = {"url": image_url}
@@ -354,6 +363,42 @@ def format_clean_summary(text, max_len=3000):
         return truncated[:last_space] + "."
     return truncated
 
+def detect_actual_observatory(title_str, raw_desc, default_scope_name):
+    """
+    Dynamically identifies the true observatory from title & description text
+    to prevent cross-query misattribution (e.g. Roman Space Telescope photos matching Hubble search queries).
+    """
+    combined = (title_str + " " + raw_desc).lower()
+    
+    # Title-level explicit checks take top priority
+    t_lower = title_str.lower()
+    if "roman" in t_lower:
+        return "NANCY GRACE ROMAN SPACE TELESCOPE (NGRST)"
+    elif "james webb" in t_lower or "jwst" in t_lower:
+        return "JAMES WEBB SPACE TELESCOPE (JWST)"
+    elif "hubble" in t_lower or "hst" in t_lower:
+        return "HUBBLE SPACE TELESCOPE (HST)"
+    elif "euclid" in t_lower:
+        return "EUCLID SPACE TELESCOPE (ESA)"
+    elif "chandra" in t_lower:
+        return "CHANDRA X-RAY OBSERVATORY"
+    elif "rubin" in t_lower or "lsst" in t_lower:
+        return "VERA C. RUBIN OBSERVATORY (LSST)"
+    elif "very large telescope" in t_lower or "vlt" in t_lower:
+        return "VERY LARGE TELESCOPE (ESO VLT)"
+    elif "spitzer" in t_lower:
+        return "SPITZER SPACE TELESCOPE"
+
+    # Description checks if title is ambiguous
+    if "roman space telescope" in combined:
+        return "NANCY GRACE ROMAN SPACE TELESCOPE (NGRST)"
+    elif "james webb space telescope" in combined:
+        return "JAMES WEBB SPACE TELESCOPE (JWST)"
+    elif "hubble space telescope" in combined and default_scope_name == "HUBBLE SPACE TELESCOPE (HST)":
+        return "HUBBLE SPACE TELESCOPE (HST)"
+        
+    return default_scope_name
+
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
     now_dt = datetime.now(timezone.utc)
@@ -377,15 +422,15 @@ def check_deep_space_imagery():
                 copyright_credit = apod_data.get("copyright", "NASA / APOD Science Core").replace('\n', ' ')
                 explanation = format_clean_summary(apod_data.get("explanation", "Daily astronomical observation release."), max_len=3000)
 
-                embed_title = f"🔭 NASA APOD (TODAY'S RELEASE) | {title_str.upper()}"
+                embed_title = f"🔭 NASA APOD | {title_str.upper()}"
 
                 description = (
                     f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                     f"🌌 **PHOTOGRAPHED TARGET:** `{title_str}`\n"
                     f"🎯 **OBSERVATORY / SOURCE:** `NASA Astronomy Picture of the Day`\n"
                     f"📷 **IMAGE CREDIT:** `{copyright_credit}`\n"
-                    f"📅 **OBSERVATION DATE:** `{apod_date.upper()}`\n\n"
-                    f"📖 **SCIENTIFIC SUMMARY:** {explanation}\n\n"
+                    f"📅 **RELEASE DATE:** `{apod_date.upper()}`\n\n"
+                    f"📖 **SCIENTIFIC SUMMARY:**\n{explanation}\n\n"
                     f"💾 **FULL-RESOLUTION IMAGE:** [Open High-Res Image File]({hd_url})\n"
                     f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 )
@@ -451,19 +496,22 @@ def check_deep_space_imagery():
                 if any(kw in title_str.lower() for kw in ignored_keywords):
                     continue
 
+                # Dynamically resolve actual observatory to prevent misattribution
+                actual_observatory = detect_actual_observatory(title_str, raw_desc, scope["name"])
+
                 img_url = links_list[0].get("href", "")
                 item_key = f"nasa_img_{nasa_id}"
 
                 if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
-                    embed_title = f"🔭 {scope['name']} | {title_str.upper()}"
+                    embed_title = f"🔭 {actual_observatory} | {title_str.upper()}"
 
                     description = (
                         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                         f"🌌 **PHOTOGRAPHED TARGET:** `{title_str}`\n"
-                        f"🎯 **OBSERVATORY:** `{scope['name']}`\n"
+                        f"🎯 **OBSERVATORY:** `{actual_observatory}`\n"
                         f"📷 **IMAGE CREDIT:** `NASA / STScI / ESA Space Science`\n"
                         f"📅 **RELEASE DATE:** `{date_created.upper()}`\n\n"
-                        f"📖 **SCIENTIFIC SUMMARY:** {description_str}\n\n"
+                        f"📖 **SCIENTIFIC SUMMARY:**\n{description_str}\n\n"
                         f"💾 **FULL-RESOLUTION IMAGE:** [Open High-Res Image File]({img_url})\n"
                         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                     )
