@@ -5,6 +5,7 @@ import sqlite3
 import requests
 import random
 import time
+import hashlib
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
@@ -534,10 +535,6 @@ def resolve_astronaut_metadata(name, craft="ISS"):
 def check_humans_in_space():
     print("Checking Module 3: Humans in Space Live Tracking Telemetry...")
     now_dt = datetime.now(timezone.utc)
-    base_key = f"astros_{now_dt.strftime('%Y%m%d')}"
-
-    if not TEST_MODE and is_already_notified(base_key, ttl_hours=168):
-        return
 
     total_count = 10
     craft_groups = {}
@@ -565,12 +562,23 @@ def check_humans_in_space():
         }
         total_count = sum(len(v) for v in craft_groups.values())
 
+    all_crew = []
     manifest_lines = []
     for craft, names in craft_groups.items():
         manifest_lines.append(f"🛸 **{craft.upper()}:** ({len(names)} Crew)")
         for n in names:
+            all_crew.append(f"{craft}:{n}")
             emoji, flag = resolve_astronaut_metadata(n, craft)
             manifest_lines.append(f"  └ {emoji} `{n}` {flag}")
+
+    # Generate unique signature of the crew composition
+    crew_str = "|".join(sorted(all_crew))
+    crew_hash = hashlib.md5(crew_str.encode('utf-8')).hexdigest()[:12]
+    item_key = f"astros_crew_signature_{crew_hash}"
+
+    if not TEST_MODE and is_already_notified(item_key, ttl_hours=8760):
+        print(f"[ASTROS NOTE] Crew manifest unchanged ({crew_hash}). Skipping duplicate notification.")
+        return
 
     manifest_text = "\n".join(manifest_lines)
     date_str = now_dt.strftime("%d %B %Y").upper()
@@ -586,7 +594,7 @@ def check_humans_in_space():
     )
 
     send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/jsc2011e021164/jsc2011e021164~medium.jpg")
-    mark_notified(base_key, ttl_hours=168)
+    mark_notified(item_key, ttl_hours=8760)
 
 # ==============================================================================
 # MAIN BOT EXECUTION
