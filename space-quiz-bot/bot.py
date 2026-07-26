@@ -141,7 +141,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇧 Sun-Earth Lagrange Point 2 (L2)",
         "explanation": "The L2 point allows JWST to orbit the Sun in synchronization with Earth while keeping its sunshield permanently positioned between the telescope and the Sun/Earth/Moon system, maintaining cryogenic temperatures around -233°C.",
-        "image": "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001446/GSFC_20171208_Archive_e001446~medium.jpg"
     },
     {
         "id": "q_sunlight_travel_time",
@@ -253,7 +253,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇧 'Where is everybody?'",
         "explanation": "The Fermi Paradox highlights the apparent contradiction between the high probability of extraterrestrial civilizations existing in our billions-of-years-old galaxy and the complete lack of evidence or contact.",
-        "image": "https://images-assets.nasa.gov/image/PIA04215/PIA04215~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/PIA03606/PIA03606~medium.jpg"
     },
     {
         "id": "q_hawking_radiation",
@@ -267,7 +267,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇦 Hawking Radiation",
         "explanation": "Quantum field effects near the event horizon generate virtual particle pairs. One particle falls in while the other escapes, causing the black hole to radiate thermal energy and gradually evaporate over cosmic timescales.",
-        "image": "https://images-assets.nasa.gov/image/PIA23122/PIA23122~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/PIA16695/PIA16695~medium.jpg"
     },
     {
         "id": "q_hottest_planet_solar_system",
@@ -323,7 +323,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇦 A rapidly rotating neutron star emitting beams of electromagnetic radiation from its magnetic poles",
         "explanation": "Pulsars rotate at high speeds (up to hundreds of times per second), creating a lighthouse-like beam of radiation that sweeps across space and is detected as precise periodic pulses on Earth.",
-        "image": "https://images-assets.nasa.gov/image/PIA12110/PIA12110~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/PIA21422/PIA21422~medium.jpg"
     },
     {
         "id": "q_great_red_spot_storm",
@@ -365,7 +365,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇦 LIGO detecting the merger of two binary black holes (GW150914)",
         "explanation": "LIGO's laser interferometers detected ripples in spacetime caused by two black holes (36 and 29 solar masses) colliding 1.3 billion light-years away, winning the 2017 Nobel Prize in Physics.",
-        "image": "https://images-assets.nasa.gov/image/PIA23122/PIA23122~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/PIA20027/PIA20027~medium.jpg"
     },
     {
         "id": "q_cosmic_microwave_background",
@@ -379,7 +379,7 @@ QUIZ_CATALOG = [
         ],
         "answer": "🇧 Thermal leftover radiation from the Big Bang (~380,000 years after creation)",
         "explanation": "Discovered accidentally by Penzias and Wilson in 1964, the CMB is the oldest light in the Universe, cooled by cosmic expansion to a faint 2.725 Kelvin microwave glow in all directions.",
-        "image": "https://images-assets.nasa.gov/image/PIA16873/PIA16873~medium.jpg"
+        "image": "https://images-assets.nasa.gov/image/PIA04221/PIA04221~medium.jpg"
     }
 ]
 

@@ -37,7 +37,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-def is_already_notified(item_id):
+def is_already_notified(item_id, ttl_hours=None):
     init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()

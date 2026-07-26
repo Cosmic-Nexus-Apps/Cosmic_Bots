@@ -103,7 +103,7 @@ def main():
 
     # Add subdirectories to Python Path to dynamically import bot modules
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    for sub in ['events-bot', 'deep-space-bot', 'space-quiz-bot']:
+    for sub in ['events-bot', 'deep-space-bot', 'space-quiz-bot', 'space-history-bot']:
         p = os.path.join(base_dir, sub)
         if p not in sys.path:
             sys.path.insert(0, p)
@@ -140,6 +140,7 @@ def main():
     events_bot = load_module("events_bot", "events-bot/bot.py")
     ds_bot = load_module("deep_space_bot", "deep-space-bot/bot.py")
     quiz_bot = load_module("space_quiz_bot", "space-quiz-bot/bot.py")
+    history_bot = load_module("space_history_bot", "space-history-bot/bot.py")
 
     # ==============================================================================
     # 1. HIGH-FREQUENCY MODULES (RUNS ON EVERY 5-MINUTE EXECUTION)
@@ -198,7 +199,12 @@ def main():
         if hasattr(quiz_bot, 'run_engine'):
             run_safe("Low_Freq_Daily_Space_Quiz", quiz_bot.run_engine)
 
-    # Low-Frequency Task 2: Deep-Sky Seasons Alert
+    # Low-Frequency Task 2: Daily Space History
+    if should_run_task("Low_Freq_Space_History", target_utc_hour=9) and history_bot:
+        if hasattr(history_bot, 'run_engine'):
+            run_safe("Low_Freq_Space_History", history_bot.run_engine)
+
+    # Low-Frequency Task 3: Deep-Sky Seasons Alert
     if should_run_task("Low_Freq_Deep_Sky_Seasons", target_utc_hour=12) and events_bot and hasattr(events_bot, 'check_deep_sky_seasons'):
         run_safe("Low_Freq_Deep_Sky_Seasons", events_bot.check_deep_sky_seasons, eph)
 
