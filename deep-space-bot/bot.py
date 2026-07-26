@@ -488,7 +488,7 @@ def check_humans_in_space():
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 
-    send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/iss065e005080/iss065e005080~medium.jpg")
+    send_discord_embed(title, description, color=0x34495E, image_url="https://images-assets.nasa.gov/image/jsc2011e021164/jsc2011e021164~medium.jpg")
     mark_notified(base_key, ttl_hours=168)
 
 # ==============================================================================
