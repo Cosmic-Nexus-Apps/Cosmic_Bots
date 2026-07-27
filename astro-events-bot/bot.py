@@ -65,8 +65,16 @@ def set_module_hydrated(module_name):
     conn.commit()
     conn.close()
 
+try:
+    import persistent_history
+except Exception:
+    persistent_history = None
+
 def is_already_notified(event_key):
-    """Checks if exact event key exists in SQLite cache and has not expired."""
+    """Checks if exact event key exists in persistent history or SQLite cache and has not expired."""
+    if persistent_history and persistent_history.is_published(event_key):
+        return True
+
     init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -82,6 +90,9 @@ def is_already_notified(event_key):
 
 def mark_notified(event_key, ttl_hours=168):
     """Saves notified event key into SQLite database and cleans up expired entries."""
+    if persistent_history:
+        persistent_history.record_published(event_key, ttl_hours=ttl_hours)
+
     init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -99,6 +110,8 @@ def mark_notified(event_key, ttl_hours=168):
 
 def is_item_or_title_notified(event_key, title_str="", ttl_hours=720):
     """Checks both raw event_key AND normalized title hash to prevent duplicate event posts."""
+    if persistent_history and persistent_history.is_published(event_key, title_str=title_str):
+        return True
     if is_already_notified(event_key):
         return True
     if title_str:
@@ -112,7 +125,9 @@ def is_item_or_title_notified(event_key, title_str="", ttl_hours=720):
     return False
 
 def mark_item_and_title_notified(event_key, title_str="", ttl_hours=720):
-    """Saves both raw event_key AND normalized title hash into persistent SQLite cache."""
+    """Saves both raw event_key AND normalized title hash into persistent SQLite & JSON cache."""
+    if persistent_history:
+        persistent_history.record_published(event_key, title_str=title_str, ttl_hours=ttl_hours)
     mark_notified(event_key, ttl_hours=ttl_hours)
     if title_str:
         import re
@@ -270,6 +285,8 @@ def check_conjunctions(eph):
         if sep_deg <= threshold or TEST_MODE:
             display_sep = sep_deg if (sep_deg <= 1.0 and not TEST_MODE) else 0.48
             peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 30, tzinfo=timezone.utc)
+            if peak_dt < now_dt - timedelta(minutes=90):
+                peak_dt += timedelta(days=1)
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             if TEST_MODE or not is_already_notified(key_24h):
@@ -484,6 +501,8 @@ def check_planetary_alignments(eph):
             display_span = min_span if min_span < 360 else 48.5
             planets_str = ", ".join(display_subset)
             peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 3, 30, tzinfo=timezone.utc)
+            if peak_dt < now_dt - timedelta(minutes=120):
+                peak_dt += timedelta(days=1)
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             title = f"🪐 {len(display_subset)} PLANETS ALIGNMENT | PLANETARY SECTOR ALERT"
@@ -534,6 +553,8 @@ def check_planetary_oppositions(eph):
             if elongation >= 170.0 or TEST_MODE:
                 display_dist = dist_au if dist_au > 0 else 8.65
                 peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 23, p_info['minute'], tzinfo=timezone.utc)
+                if peak_dt < now_dt - timedelta(minutes=120):
+                    peak_dt += timedelta(days=1)
                 date_str = peak_dt.strftime("%d %B %Y").upper()
 
                 title = f"🪐 {p_info['name'].upper()} AT PERIGEE | PLANETARY OPPOSITION"
@@ -585,6 +606,8 @@ def check_eclipses_and_occultations(eph):
             if TEST_MODE or not is_already_notified(base_key):
                 display_sep = sep_deg if (sep_deg <= 0.75 and not TEST_MODE) else 0.35
                 peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 22, 15, tzinfo=timezone.utc)
+                if peak_dt < now_dt - timedelta(minutes=45):
+                    peak_dt += timedelta(days=1)
                 date_str = peak_dt.strftime("%d %B %Y").upper()
 
                 title = f"🌒 MOON HIDES {name.upper()} | LUNAR OCCULTATION ALERT"
@@ -638,6 +661,7 @@ def check_noaa_space_weather(eph=None):
     storm_class = "Quiet / Normal"
     sunspot_region = "Active Sunspot Region AR3765 (Northeast Solar Quadrant)"
     nasa_sdo_image = "https://services.swpc.noaa.gov/images/animations/aurora/north/latest.png"
+    event_dt = now_dt
 
     try:
         url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
@@ -647,6 +671,12 @@ def check_noaa_space_weather(eph=None):
             if data and isinstance(data, list):
                 latest = data[-1]
                 kp_value = float(latest.get("kp_index", 3.0))
+                time_tag_raw = latest.get("time_tag")
+                if time_tag_raw:
+                    try:
+                        event_dt = datetime.fromisoformat(time_tag_raw.replace('Z', '+00:00'))
+                    except Exception:
+                        event_dt = now_dt
                 if kp_value >= 7:
                     storm_class = "G3 - Strong Geomagnetic Storm"
                 elif kp_value >= 6:
@@ -660,8 +690,8 @@ def check_noaa_space_weather(eph=None):
         display_kp = kp_value if kp_value >= 5.0 else 6.67
         display_storm = storm_class if kp_value >= 5.0 else "G2 - Moderate Geomagnetic Storm"
         aurora_reach = get_aurora_latitude_estimate(display_kp)
-        peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 23, 0, tzinfo=timezone.utc)
-        date_str = peak_dt.strftime("%d %B %Y").upper()
+        peak_dt = event_dt
+        date_str = peak_dt.strftime("%d %B %Y at %H:%M UTC").upper()
 
         title = f"☀️ GEOMAGNETIC STORM (KP {display_kp:.1f}) | SPACE WEATHER ALERT"
         description = (
@@ -718,6 +748,8 @@ def check_comets_and_interstellar(eph=None):
 
     if TEST_MODE or not is_item_or_title_notified(item_key, comet_name, ttl_hours=720):
         peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 21, 30, tzinfo=timezone.utc)
+        if peak_dt < now_dt - timedelta(minutes=60):
+            peak_dt += timedelta(days=1)
 
         title = f"☄️ {comet_name.upper()} | COMET MAGNITUDE ALERT"
         description = (
@@ -815,7 +847,7 @@ def check_solar_flares(eph=None):
     url = "https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json"
     flare_class = "Normal"
     max_flux = 0.0
-    flare_time_str = now_dt.strftime("%H:%M UTC")
+    event_dt = now_dt
 
     try:
         res = requests.get(url, timeout=5)
@@ -831,14 +863,21 @@ def check_solar_flares(eph=None):
                     elif flux >= 5e-5:
                         flare_class = f"M{(flux / 1e-5):.1f} Major Solar Flare"
                     max_flux = flux
+                    time_tag_raw = latest.get("time_tag")
+                    if time_tag_raw:
+                        try:
+                            event_dt = datetime.fromisoformat(time_tag_raw.replace('Z', '+00:00'))
+                        except Exception:
+                            event_dt = now_dt
     except Exception as e:
         print(f"[SOLAR FLARE API NOTE] {e}")
 
     if max_flux >= 5e-5 or TEST_MODE:
-        base_key = f"solar_flare_{now_dt.strftime('%Y%m%d_%H')}"
+        base_key = f"solar_flare_{event_dt.strftime('%Y%m%d_%H%M')}"
         if TEST_MODE or not is_already_notified(base_key):
             display_class = flare_class if max_flux >= 5e-5 else "X2.5 Extreme Solar Flare"
-            peak_dt = datetime(now_dt.year, now_dt.month, now_dt.day, now_dt.hour, now_dt.minute, tzinfo=timezone.utc)
+            peak_dt = event_dt
+            flare_time_str = peak_dt.strftime("%H:%M UTC")
             date_str = peak_dt.strftime("%d %B %Y").upper()
 
             title = f"🔥 EMERGENCY SOLAR FLARE ALERT | {display_class.upper()}"

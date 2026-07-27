@@ -85,7 +85,15 @@ def save_stored_crew_manifest(manifest_str):
     conn.commit()
     conn.close()
 
+try:
+    import persistent_history
+except Exception:
+    persistent_history = None
+
 def is_already_notified(item_id, ttl_hours=None):
+    if persistent_history and persistent_history.is_published(item_id):
+        return True
+
     init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -100,6 +108,9 @@ def is_already_notified(item_id, ttl_hours=None):
     return False
 
 def mark_notified(item_id, ttl_hours=168):
+    if persistent_history:
+        persistent_history.record_published(item_id, ttl_hours=ttl_hours)
+
     init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -117,6 +128,8 @@ def mark_notified(item_id, ttl_hours=168):
 
 def is_item_or_title_notified(item_id, title_str="", ttl_hours=720):
     """Checks both raw item_id AND normalized title hash to prevent duplicate news posts."""
+    if persistent_history and persistent_history.is_published(item_id, title_str=title_str):
+        return True
     if is_already_notified(item_id):
         return True
     if title_str:
@@ -129,7 +142,9 @@ def is_item_or_title_notified(item_id, title_str="", ttl_hours=720):
     return False
 
 def mark_item_and_title_notified(item_id, title_str="", ttl_hours=720):
-    """Saves both raw item_id AND normalized title hash into persistent SQLite cache."""
+    """Saves both raw item_id AND normalized title hash into persistent SQLite & JSON cache."""
+    if persistent_history:
+        persistent_history.record_published(item_id, title_str=title_str, ttl_hours=ttl_hours)
     mark_notified(item_id, ttl_hours=ttl_hours)
     if title_str:
         import re

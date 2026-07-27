@@ -104,7 +104,7 @@ def main():
 
     # Add subdirectories to Python Path to dynamically import bot modules
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    for sub in ['events-bot', 'deep-space-bot', 'space-quiz-bot', 'space-history-bot']:
+    for sub in ['astro-events-bot', 'deep-space-bot', 'space-quiz-bot', 'space-history-bot']:
         p = os.path.join(base_dir, sub)
         if p not in sys.path:
             sys.path.insert(0, p)
@@ -113,7 +113,7 @@ def main():
     try:
         from skyfield.api import load
         try:
-            eph = load('events-bot/de440s.bsp')
+            eph = load('astro-events-bot/de440s.bsp')
         except Exception:
             try:
                 eph = load('de440s.bsp')
@@ -138,7 +138,7 @@ def main():
             print(f"[WARN] Could not load module '{mod_name}' from {rel_path}: {e}")
             return None
 
-    events_bot = load_module("events_bot", "events-bot/bot.py")
+    events_bot = load_module("astro_events_bot", "astro-events-bot/bot.py")
     ds_bot = load_module("deep_space_bot", "deep-space-bot/bot.py")
     quiz_bot = load_module("space_quiz_bot", "space-quiz-bot/bot.py")
     history_bot = load_module("space_history_bot", "space-history-bot/bot.py")

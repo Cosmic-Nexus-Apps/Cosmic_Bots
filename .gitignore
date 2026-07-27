@@ -3,6 +3,7 @@ __pycache__/
 *.bsp
 *.db
 *.json
-events-bot/conjunctions_cache.txt
-events-bot/events_cache.json
-events-bot/events.db
+!published_history.json
+astro-events-bot/conjunctions_cache.txt
+astro-events-bot/events_cache.json
+astro-events-bot/events.db
