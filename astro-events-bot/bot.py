@@ -1017,11 +1017,19 @@ def check_rss_breaking_news():
             if is_already_notified(event_key):
                 continue
 
-            # Truncate summary for Discord embed
+            # Clean HTML tags and enhance summary via Gemini AI
             summary_clean = _re.sub(r'<[^>]+>', '', summary)  # Strip HTML tags
+            try:
+                import sys
+                from google_ai_helper import enhance_news_summary
+                summary_clean = enhance_news_summary(title, feed_cfg["name"], summary_clean)
+            except Exception as e:
+                print(f"[RSS AI SUMMARY NOTE] {e}")
+
             if len(summary_clean) > 800:
                 last_period = summary_clean[:800].rfind('.')
                 summary_clean = summary_clean[:last_period + 1] if last_period > 200 else summary_clean[:800] + "..."
+
 
             embed_title = f"{feed_cfg['emoji']} {feed_cfg['name'].upper()} | {title}"
             description = (

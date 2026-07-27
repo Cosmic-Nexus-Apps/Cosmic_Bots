@@ -306,3 +306,49 @@ def generate_ai_history(date_str_mmdd):
         h_data["image"] = fetch_best_nasa_image(keywords)
         return h_data
     return None
+
+def enhance_news_summary(title, source_name, raw_summary):
+    """
+    Uses Gemini AI to expand short RSS teasers into rich, comprehensive 3-4 sentence summaries.
+    Falls back to raw_summary if Gemini is unavailable or fails.
+    """
+    if not GEMINI_API_KEY:
+        return raw_summary
+
+    prompt = (
+        f"You are a senior science communicator and astrophysicist writing for an elite astronomy news channel.\n"
+        f"Rewrite and expand the following short RSS news teaser into a rich, captivating, highly informative, and scientifically precise summary of 3 to 4 sentences.\n"
+        f"Explain what this event or discovery is, why it matters, and key scientific context.\n\n"
+        f"Article Title: {title}\n"
+        f"News Source: {source_name}\n"
+        f"Original Teaser: {raw_summary}\n\n"
+        f"Requirements:\n"
+        f"1. Return ONLY the plain text summary (no markdown code blocks, no JSON, no headline repetition).\n"
+        f"2. Make it sound exciting, professional, and full of context.\n"
+        f"3. Keep length between 300 and 800 characters."
+    )
+
+    try:
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024}
+        }
+        for model_name in PREFERRED_GEMINI_MODELS:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+            res = requests.post(url, json=payload, headers=headers, timeout=8)
+            if res.status_code == 200:
+                candidates = res.json().get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        text_out = parts[0].get("text", "").strip()
+                        if text_out and len(text_out) > 50:
+                            clean_out = re.sub(r'^```[\w]*\n?', '', text_out)
+                            clean_out = re.sub(r'\n?```$', '', clean_out).strip(' "')
+                            return clean_out
+    except Exception as e:
+        print(f"[AI NEWS SUMMARY WARNING] {e}")
+
+    return raw_summary
+

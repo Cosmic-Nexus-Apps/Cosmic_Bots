@@ -440,7 +440,9 @@ def check_upcoming_launches():
     check_completed_launches()
 
 def check_completed_launches():
-    """Queries recent completed launches to send authentic Mission Landing & Final Outcome reports."""
+    """Queries recent completed launches to send authentic Mission Landing & Final Outcome reports.
+    Filters out launches that completed > 24 hours ago to prevent old notification spam.
+    Shows both Launch Date & Time (Decolare) and Completion Date & Time (Finalizare)."""
     now_dt = datetime.now(timezone.utc)
     url = "https://ll.thespacedevs.com/2.2.0/launch/previous/?limit=10"
     launches = []
@@ -463,6 +465,10 @@ def check_completed_launches():
         short_mission = name.split("|")[0].strip() if "|" in name else name
 
         net_raw = launch.get("net", "")
+        window_end_raw = launch.get("window_end", "")
+        last_updated_raw = launch.get("last_updated", "")
+
+        l_dt = None
         launch_date_str = "UNKNOWN DATE"
         if net_raw:
             try:
@@ -471,9 +477,33 @@ def check_completed_launches():
             except Exception:
                 launch_date_str = net_raw
 
+        comp_dt = None
+        completion_date_str = launch_date_str
+        if window_end_raw:
+            try:
+                comp_dt = datetime.fromisoformat(window_end_raw.replace('Z', '+00:00'))
+                completion_date_str = comp_dt.strftime("%d %B %Y at %H:%M UTC").upper()
+            except Exception:
+                pass
+
+        if not comp_dt and last_updated_raw:
+            try:
+                comp_dt = datetime.fromisoformat(last_updated_raw.replace('Z', '+00:00'))
+                completion_date_str = comp_dt.strftime("%d %B %Y at %H:%M UTC").upper()
+            except Exception:
+                pass
+
+        # Strict cutoff: If launch/completion was > 24 hours ago, skip sending Discord notification
+        ref_dt = comp_dt or l_dt
+        item_key = f"launch_landing_{launch_id}"
+        if ref_dt:
+            age_hours = (now_dt - ref_dt).total_seconds() / 3600.0
+            if age_hours > 24.0:
+                mark_notified(item_key, ttl_hours=168)
+                continue
+
         mission_brief = format_clean_mission_brief(launch)
 
-        item_key = f"launch_landing_{launch_id}"
         if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
             status_lower = raw_status.lower()
             status_badge = "✅ Mission Successful (Orbit Achieved)" if "success" in status_lower else f"⚠️ {raw_status}"
@@ -484,7 +514,8 @@ def check_completed_launches():
                 f"🎯 **MISSION:** `{name}`\n"
                 f"🏢 **LAUNCH PROVIDER:** `{provider_name}`\n"
                 f"🛰️ **ORBIT / DESTINATION:** `{orbit_type}`\n"
-                f"📅 **LAUNCH DATE & TIME (API):** `{launch_date_str}`\n"
+                f"📅 **LAUNCH DATE & TIME (DECOLARE):** `{launch_date_str}`\n"
+                f"🏁 **COMPLETION DATE & TIME (FINALIZARE):** `{completion_date_str}`\n"
                 f"📊 **FINAL MISSION STATUS:** `{status_badge}`\n\n"
                 f"📖 **MISSION SUMMARY & OUTCOME (AUTHENTIC API DATA):**\n"
                 f"{mission_brief}\n"
@@ -493,6 +524,7 @@ def check_completed_launches():
             )
             send_discord_embed(title, description, color=0x27AE60 if "success" in status_lower else 0xE74C3C, image_url=rocket_img)
             mark_notified(item_key, ttl_hours=168)
+
 
 # ==============================================================================
 # MODULE 2: LIVE MULTI-TELESCOPE STREAM (NASA APOD + NASA IMAGE API FOR JWST, HST, EUCLID, CHANDRA)
