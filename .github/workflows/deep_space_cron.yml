@@ -6,6 +6,11 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+# Prevents double-execution with the main orchestrator on the same run window
+concurrency:
+  group: deep-space-standalone-execution
+  cancel-in-progress: true
+
 jobs:
   run-deep-space-bot:
     runs-on: ubuntu-latest
@@ -37,6 +42,9 @@ jobs:
         env:
           DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL }}
           DEEP_SPACE_BOT_DISCORD_ROLE_ID: ${{ secrets.DEEP_SPACE_BOT_DISCORD_ROLE_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
           TEST_MODE: "FALSE"
         run: |
           cd deep-space-bot

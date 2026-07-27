@@ -1,5 +1,7 @@
 import os
 import sys
+import re
+import hashlib
 import sqlite3
 import requests
 import random
@@ -12,6 +14,10 @@ try:
         sys.stdout.reconfigure(encoding='utf-8')
 except Exception:
     pass
+
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path:
+    sys.path.insert(0, base_dir)
 
 load_dotenv()
 
@@ -48,7 +54,7 @@ def is_already_posted(event_id, ttl_hours=None):
         return True
     return False
 
-def mark_posted(event_id, ttl_hours=8760): # 1-year anti-repeat
+def mark_posted(event_id, title_str="", ttl_hours=8760): # 1-year anti-repeat
     init_db()
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -60,9 +66,26 @@ def mark_posted(event_id, ttl_hours=8760): # 1-year anti-repeat
         VALUES (?, ?)
     """, (event_id, expire_ts))
 
+    # Also store title hash to catch same event with different ID
+    if title_str:
+        clean_t = re.sub(r'\W+', '', title_str.lower())
+        if clean_t:
+            t_hash = hashlib.md5(clean_t.encode('utf-8')).hexdigest()
+            cursor.execute("""
+                INSERT OR REPLACE INTO history_cache (event_id, expire_timestamp)
+                VALUES (?, ?)
+            """, (f"title_{t_hash}", expire_ts))
+
     cursor.execute("DELETE FROM history_cache WHERE expire_timestamp <= ?", (now_ts,))
     conn.commit()
     conn.close()
+
+    # Sync to shared persistent_history.json (cross-bot dedup layer)
+    try:
+        import persistent_history
+        persistent_history.record_published(event_id, title_str=title_str, ttl_hours=ttl_hours)
+    except Exception:
+        pass
 
 def send_discord_embed(title, description, color=0xD35400, role_id=ROLE_ID, image_url=None):
     if not WEBHOOK_URL:
@@ -222,9 +245,19 @@ def check_today_in_space_history():
     try:
         from google_ai_helper import generate_ai_history
         ai_hist = generate_ai_history(current_mmdd)
-        if ai_hist and not is_already_posted(ai_hist.get("id", "ai_h")):
-            event = ai_hist
-            print(f"[GEMINI AI] Generated fresh space history record for {current_mmdd}: '{event.get('title')}'")
+        if ai_hist:
+            event_id_check = ai_hist.get("id", "ai_h")
+            title_check = ai_hist.get("title", "")
+            # Check both ID and title hash to prevent same event with different ID
+            title_hash_key = ""
+            if title_check:
+                clean_t = re.sub(r'\W+', '', title_check.lower())
+                if clean_t:
+                    title_hash_key = f"title_{hashlib.md5(clean_t.encode('utf-8')).hexdigest()}"
+            already = is_already_posted(event_id_check) or (title_hash_key and is_already_posted(title_hash_key))
+            if not already:
+                event = ai_hist
+                print(f"[GEMINI AI] Generated fresh space history record for {current_mmdd}: '{event.get('title')}'") 
     except Exception as e:
         print(f"[GEMINI HISTORY NOTE] Using catalog fallback: {e}")
 
@@ -245,19 +278,24 @@ def check_today_in_space_history():
     event_id = event.get("id", f"hist_{current_mmdd}_{now_dt.year}")
     title = f"🗓️ TODAY IN SPACE HISTORY | {event['title'].upper()}"
 
+    hook_str = f"🎬 **THE HOOK:**\n*{event['hook']}*\n\n" if event.get("hook") else ""
+    fun_fact_str = f"💡 **DID YOU KNOW?**\n_{event['fun_fact']}_\n\n" if event.get("fun_fact") else ""
+
     description = (
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🚀 **HISTORICAL MILESTONE:** `{event['title']}`\n"
-        f"📅 **DATE & YEAR:** `{event['date_mmdd']} ({event['year']})`\n"
+        f"📅 **HISTORICAL DATE:** `{date_display} ({event['year']})`\n"
         f"🏢 **AGENCY & CREW:** `{event['agency']}` | `{event['crew']}`\n\n"
-        f"📖 **HISTORICAL STORY:**\n{event['story']}\n\n"
-        f"💡 **HISTORIC IMPACT:** {event['impact']}\n"
+        f"{hook_str}"
+        f"📖 **THE HISTORICAL STORY:**\n{event['story']}\n\n"
+        f"💥 **THE HISTORIC LEGACY:**\n{event['impact']}\n\n"
+        f"{fun_fact_str}"
+        f"💬 *What is your favorite milestone from the era of space exploration? Leave a reaction below!*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 
-    send_discord_embed(title, description, color=0xD35400, image_url=event.get("image"))
+    send_discord_embed(title, description, color=0xE67E22, image_url=event.get("image"))
     if not TEST_MODE:
-        mark_posted(event_id, ttl_hours=8760)
+        mark_posted(event_id, title_str=event.get("title", ""), ttl_hours=8760)
 
 def run_engine():
     print("==========================================================")

@@ -160,6 +160,12 @@ def main():
     if events_bot and hasattr(events_bot, 'check_solar_flares'):
         run_safe("High_Freq_Solar_Flare_Check", events_bot.check_solar_flares, eph)
 
+    # High-Frequency Task 4: RSS Breaking Space News (NASA + ESA + ESO + Space.com)
+    # Runs every 15 minutes (every 3rd cron tick) to post news before other sites
+    if should_run_task("High_Freq_RSS_Breaking_News", interval_hours=0.25) and events_bot:
+        if hasattr(events_bot, 'check_rss_breaking_news'):
+            run_safe("High_Freq_RSS_Breaking_News", events_bot.check_rss_breaking_news)
+
     # ==============================================================================
     # 2. MEDIUM-FREQUENCY MODULES (RUNS ONCE EVERY 3 TO 6 HOURS)
     # ==============================================================================
@@ -191,6 +197,11 @@ def main():
             run_safe("Med_Freq_Comet_Stream", events_bot.check_comets_and_interstellar, eph)
         if hasattr(events_bot, 'check_supernovae_transients'):
             run_safe("Med_Freq_Supernova_Stream", events_bot.check_supernovae_transients, eph)
+
+    # Medium-Frequency Task 5: Exoplanet Discovery Tracker (NASA Exoplanet Archive)
+    if should_run_task("Med_Freq_Exoplanet_Tracker", interval_hours=6) and ds_bot:
+        if hasattr(ds_bot, 'check_exoplanet_discoveries'):
+            run_safe("Med_Freq_Exoplanet_Tracker", ds_bot.check_exoplanet_discoveries)
 
     # ==============================================================================
     # 3. LOW-FREQUENCY MODULES (GLOBALLY OPTIMIZED: QUIZ AT 13:00 UTC, HISTORY AT 15:00 UTC)

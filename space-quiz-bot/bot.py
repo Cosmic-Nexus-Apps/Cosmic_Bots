@@ -14,6 +14,10 @@ try:
 except Exception:
     pass
 
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if base_dir not in sys.path:
+    sys.path.insert(0, base_dir)
+
 load_dotenv()
 
 WEBHOOK_URL = os.getenv("SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL") or os.getenv("DISCORD_WEBHOOK_URL")
@@ -64,6 +68,13 @@ def mark_asked(question_id, ttl_hours=8760): # 8760 hours = 365 Days / 1 Full Ye
     cursor.execute("DELETE FROM quiz_cache WHERE expire_timestamp <= ?", (now_ts,))
     conn.commit()
     conn.close()
+
+    # Sync to shared persistent_history.json (cross-bot dedup layer)
+    try:
+        import persistent_history
+        persistent_history.record_published(question_id, ttl_hours=ttl_hours)
+    except Exception:
+        pass
 
 def send_discord_embed(title, description, color=0x9B59B6, role_id=ROLE_ID, image_url=None):
     if not WEBHOOK_URL:
@@ -398,6 +409,7 @@ def check_daily_quiz():
     except Exception as e:
         print(f"[GEMINI QUIZ NOTE] Using catalog fallback: {e}")
 
+    # AI path: use stable content-hash ID (already set by google_ai_helper)
     if not quiz_item:
         available_questions = [q for q in QUIZ_CATALOG if TEST_MODE or not is_already_asked(q["id"])]
         if not available_questions:
@@ -412,17 +424,20 @@ def check_daily_quiz():
     category_str = quiz_item.get("category", "Astrophysics").upper()
     title = f"🧠 DAILY SPACE QUIZ | {category_str}"
     options_str = "\n".join(quiz_item["options"])
+    fun_fact_str = f"💡 **BONUS COSMIC CURIOSITY:**\n_{quiz_item['fun_fact']}_\n\n" if quiz_item.get("fun_fact") else ""
 
     description = (
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🎯 **DIFFICULTY LEVEL:** `{diff_badge}`\n"
+        f"🎯 **DIFFICULTY:** `{diff_badge}`\n\n"
         f"❓ **DAILY SPACE QUESTION ({date_str}):**\n"
         f"**{quiz_item['question']}**\n\n"
         f"📌 **MULTIPLE CHOICE OPTIONS:**\n"
         f"{options_str}\n\n"
-        f"🔒 **CORRECT ANSWER & SCIENTIFIC BRIEF (CLICK SPOILERS BELOW):**\n"
+        f"👉 *Cast your vote or react below before revealing the answer!*\n\n"
+        f"🔒 **SOLUTION & SCIENTIFIC BRIEF (CLICK SPOILERS):**\n"
         f"||**Correct Answer:** {quiz_item['answer']}||\n"
-        f"||📖 **Scientific Explanation:** {quiz_item['explanation']}|| \n"
+        f"||📖 **Scientific Explanation:** {quiz_item['explanation']}|| \n\n"
+        f"{fun_fact_str}"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 

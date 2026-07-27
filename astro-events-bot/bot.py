@@ -919,10 +919,121 @@ def run_engine():
     check_noaa_space_weather(eph)
     check_comets_and_interstellar(eph)
     check_solar_flares(eph)
+    check_rss_breaking_news()
 
     print("==========================================================")
-    print("All 9 Astronomical Modules Completed Successfully.")
+    print("All 10 Astronomical Modules Completed Successfully.")
     print("==========================================================")
 
 if __name__ == "__main__":
     run_engine()
+
+
+# ==============================================================================
+# MODULE 10: RSS BREAKING NEWS AGGREGATOR (NASA + ESA + ESO + Space.com)
+# Posts new space news within ~15 minutes of publication.
+# ==============================================================================
+
+RSS_FEEDS = [
+    {
+        "name": "NASA Breaking News",
+        "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+        "color": 0x003366,
+        "emoji": "🚀"
+    },
+    {
+        "name": "ESA Space Science",
+        "url": "https://www.esa.int/rssfeed/Our_Activities/Space_Science",
+        "color": 0x0099CC,
+        "emoji": "🛸"
+    },
+    {
+        "name": "ESO Announcements",
+        "url": "https://www.eso.org/public/rss/announcements/",
+        "color": 0x8E44AD,
+        "emoji": "🔭"
+    },
+    {
+        "name": "Space.com Latest",
+        "url": "https://www.space.com/feeds/all",
+        "color": 0x1ABC9C,
+        "emoji": "🌌"
+    },
+]
+
+# Keywords that indicate a genuinely space-related article (filter out off-topic RSS items)
+_RSS_SPACE_KEYWORDS = [
+    "space", "nasa", "esa", "eso", "rocket", "launch", "satellite", "orbit",
+    "telescope", "planet", "star", "galaxy", "moon", "mars", "jupiter", "saturn",
+    "asteroid", "comet", "black hole", "exoplanet", "mission", "astronaut",
+    "spacecraft", "hubble", "webb", "jwst", "solar", "cosmic", "universe",
+    "discovery", "observatory", "supernova", "nebula", "shuttle", "iss"
+]
+
+def _is_space_relevant(title, summary):
+    """Returns True if the article is clearly space-related."""
+    combined = (title + " " + summary).lower()
+    return any(kw in combined for kw in _RSS_SPACE_KEYWORDS)
+
+def check_rss_breaking_news():
+    """
+    Polls NASA, ESA, ESO, and Space.com RSS feeds for new articles.
+    Posts each new article once, within ~15 minutes of publication.
+    Uses title-hash deduplication to prevent reposts.
+    TTL: 30 days (720h) per article.
+    """
+    print("Checking Module 10: RSS Breaking Space News Aggregator...")
+    try:
+        import feedparser
+    except ImportError:
+        print("[RSS NOTE] feedparser not installed. Run: pip install feedparser")
+        return
+
+    for feed_cfg in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(feed_cfg["url"])
+            entries = feed.entries[:5]  # Check latest 5 articles per feed
+        except Exception as e:
+            print(f"[RSS NOTE] Could not fetch {feed_cfg['name']}: {e}")
+            continue
+
+        for entry in entries:
+            title   = getattr(entry, "title", "").strip()
+            link    = getattr(entry, "link", "").strip()
+            summary = getattr(entry, "summary", "").strip()
+            if not title or not link:
+                continue
+
+            # Skip non-space-related articles (e.g. ESA human spaceflight policy news)
+            if not _is_space_relevant(title, summary):
+                continue
+
+            # Use title hash as dedup key (stable across feed re-fetches)
+            import hashlib, re as _re
+            clean_title = _re.sub(r'\W+', '', title.lower())
+            title_hash = hashlib.md5(clean_title.encode('utf-8')).hexdigest()
+            event_key = f"rss_{title_hash}"
+
+            if is_already_notified(event_key):
+                continue
+
+            # Truncate summary for Discord embed
+            summary_clean = _re.sub(r'<[^>]+>', '', summary)  # Strip HTML tags
+            if len(summary_clean) > 800:
+                last_period = summary_clean[:800].rfind('.')
+                summary_clean = summary_clean[:last_period + 1] if last_period > 200 else summary_clean[:800] + "..."
+
+            embed_title = f"{feed_cfg['emoji']} {feed_cfg['name'].upper()} | {title}"
+            description = (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"📰 **BREAKING SPACE NEWS:** `{title}`\n"
+                f"📡 **SOURCE:** `{feed_cfg['name']}`\n\n"
+                f"📖 **SUMMARY:**\n{summary_clean}\n\n"
+                f"🔗 **READ FULL ARTICLE:** [Open Full Story]({link})\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+
+            send_discord_embed(embed_title, description, color=feed_cfg["color"])
+            mark_notified(event_key, ttl_hours=720)  # 30-day TTL per article
+            print(f"[RSS] Posted: '{title}' from {feed_cfg['name']}")
+            break  # Post max 1 new article per feed per cycle

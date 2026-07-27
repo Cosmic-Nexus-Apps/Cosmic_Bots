@@ -10,24 +10,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
 
-# Top Model Order as requested: Gemini 3.5 -> 3 -> 3.1 Lite -> 2.5 -> 1.5
+# Active Gemini free-tier models (tried in order — fastest first)
 PREFERRED_GEMINI_MODELS = [
-    "gemini-3.5-flash",
-    "gemini-3-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-1.5-flash"
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.5-flash"
 ]
 
-def call_gemini_flash_multi_model(prompt_text, max_tokens=1024):
+def call_gemini_flash_multi_model(prompt_text, max_tokens=2048):
     """
-    Tries preferred Google AI Studio free tier models in strict user order:
-    1. gemini-3.5-flash
-    2. gemini-3-flash
-    3. gemini-3.1-flash-lite
+    Tries Google AI Studio free-tier models in order until one succeeds:
+    1. gemini-2.0-flash (fastest)
+    2. gemini-1.5-flash
+    3. gemini-1.5-pro
     4. gemini-2.5-flash
-    5. gemini-1.5-flash
+    Returns raw text response or None on failure.
     """
     if not GEMINI_API_KEY:
         return None
@@ -39,7 +39,8 @@ def call_gemini_flash_multi_model(prompt_text, max_tokens=1024):
         }],
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": max_tokens
+            "maxOutputTokens": max_tokens,
+            "responseMimeType": "application/json"
         }
     }
 
@@ -55,7 +56,7 @@ def call_gemini_flash_multi_model(prompt_text, max_tokens=1024):
                     if parts:
                         text_out = parts[0].get("text", "").strip()
                         if text_out:
-                            print(f"[GEMINI AI] Responded using top model '{model_name}'.")
+                            print(f"[GEMINI AI] Responded using model '{model_name}'.")
                             return text_out
         except Exception as e:
             print(f"[GEMINI AI] Model '{model_name}' notice: {e}")
@@ -63,14 +64,58 @@ def call_gemini_flash_multi_model(prompt_text, max_tokens=1024):
 
     return None
 
+# ==============================================================================
+# IMAGE SCORING: Relevance-based selection instead of "first result"
+# ==============================================================================
+
+# Words that indicate an irrelevant image (facility photos, portraits, ceremonies)
+_IMAGE_NOISE_WORDS = [
+    "facility", "ceremony", "portrait", "engineer", "technician", "clean room",
+    "cleanroom", "press conference", "award", "building", "installation",
+    "auditorium", "screening", "speech", "conference", "center", "laboratory",
+    "office", "meeting", "workshop", "celebration", "unveiling", "groundbreaking"
+]
+
+def _score_nasa_image(item_data, keywords):
+    """
+    Scores relevance of a NASA Image API result against the desired keywords.
+    Higher score = more relevant to the topic.
+    """
+    score = 0
+    title = item_data.get("title", "").lower()
+    desc  = item_data.get("description", "").lower()
+
+    for kw in keywords:
+        kw_low = kw.lower()
+        if kw_low in title: score += 10   # Title match = highest relevance
+        if kw_low in desc:  score += 3    # Description match = bonus
+
+    # Penalize images that are clearly about facilities, people, not space objects
+    for noise in _IMAGE_NOISE_WORDS:
+        if noise in title: score -= 20
+        if noise in desc:  score -= 3
+
+    # Bonus for recent images (more visually striking)
+    try:
+        year = int(item_data.get("date_created", "1970")[:4])
+        if year >= 2022: score += 8
+        elif year >= 2020: score += 5
+        elif year >= 2015: score += 2
+    except Exception:
+        pass
+
+    return score
+
 def fetch_best_nasa_image(keywords_list):
     """
     Queries NASA Image API and Wikimedia Commons with primary, backup, and alt keywords.
+    Uses relevance scoring to return the most contextually accurate image.
     """
     if isinstance(keywords_list, str):
         keywords_list = [keywords_list]
 
-    # 1. Search NASA Image Library API
+    # 1. Collect candidates from NASA Image Library API (scored for relevance)
+    scored_candidates = []
     for kw in keywords_list:
         if not kw:
             continue
@@ -79,21 +124,38 @@ def fetch_best_nasa_image(keywords_list):
             res = requests.get(url, timeout=5)
             if res.status_code == 200:
                 items = res.json().get("collection", {}).get("items", [])
-                for item in items[:5]:
-                    links = item.get("links", [])
-                    if links:
-                        href = links[0].get("href")
-                        if href and (".jpg" in href or ".png" in href or ".jpeg" in href):
-                            return href
+                for item in items[:15]:  # Check top 15 results per keyword
+                    data_list = item.get("data", [])
+                    links_list = item.get("links", [])
+                    if not data_list or not links_list:
+                        continue
+                    item_data = data_list[0]
+                    href = links_list[0].get("href", "")
+                    if not href or not any(ext in href for ext in [".jpg", ".png", ".jpeg"]):
+                        continue
+                    score = _score_nasa_image(item_data, keywords_list)
+                    scored_candidates.append((score, href))
         except Exception:
             continue
 
-    # 2. Fallback to Wikimedia Commons API for historical astronomers (e.g. Hipparchus, Galileo)
+    # Return highest-scoring NASA image if any have positive score
+    if scored_candidates:
+        scored_candidates.sort(key=lambda x: x[0], reverse=True)
+        best_score, best_url = scored_candidates[0]
+        if best_score > 0:  # Only use if genuinely relevant
+            return best_url
+
+    # 2. Fallback to Wikimedia Commons API for historical subjects (e.g. Hipparchus, Galileo)
     for kw in keywords_list:
         if not kw:
             continue
         try:
-            wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&prop=imageinfo&iiprop=url&gsrsearch={requests.utils.quote(kw)}&gsrlimit=3&format=json"
+            wiki_url = (
+                f"https://commons.wikimedia.org/w/api.php"
+                f"?action=query&generator=search&prop=imageinfo&iiprop=url"
+                f"&gsrsearch={requests.utils.quote(kw + ' space astronomy')}"
+                f"&gsrlimit=5&format=json"
+            )
             res = requests.get(wiki_url, timeout=5)
             if res.status_code == 200:
                 pages = res.json().get("query", {}).get("pages", {})
@@ -106,11 +168,12 @@ def fetch_best_nasa_image(keywords_list):
         except Exception:
             continue
 
+    # 3. Ultimate fallback — generic deep space image
     return "https://images-assets.nasa.gov/image/PIA12110/PIA12110~medium.jpg"
 
 def get_recent_asked_topics(db_file, table_name, column_name, limit=100):
     """
-    Fetches the last 100 asked titles/questions from SQLite database to inject into Gemini prompt.
+    Fetches the last N asked titles/questions from SQLite database to inject into Gemini prompt.
     """
     try:
         if not os.path.exists(db_file):
@@ -124,10 +187,45 @@ def get_recent_asked_topics(db_file, table_name, column_name, limit=100):
     except Exception:
         return []
 
+def make_stable_content_id(prefix, content_str):
+    """
+    Generates a stable, deterministic ID from content so the same question/event
+    always gets the same ID regardless of AI regeneration.
+    """
+    clean = re.sub(r'\W+', '', content_str.lower())
+    return f"{prefix}_{hashlib.md5(clean.encode('utf-8')).hexdigest()[:12]}"
+
+def extract_and_parse_json(raw_text):
+    if not raw_text:
+        return None
+    # Strip markdown block wrappers
+    clean = re.sub(r'```(?:json)?\s*', '', raw_text, flags=re.IGNORECASE)
+    clean = re.sub(r'```', '', clean).strip()
+
+    # Extract match between first { and last }
+    match = re.search(r'(\{.*\})', clean, re.DOTALL)
+    if match:
+        clean = match.group(1)
+
+    # Clean trailing commas inside lists or objects before parsing
+    clean = re.sub(r',\s*([\]}])', r'\1', clean)
+
+    try:
+        return json.loads(clean)
+    except Exception as e:
+        print(f"[JSON PARSE WARNING] standard json.loads failed: {e}")
+        try:
+            clean_fixed = re.sub(r'(?<!\\)\n', ' ', clean)
+            return json.loads(clean_fixed)
+        except Exception as e2:
+            print(f"[JSON PARSE ERROR] Second attempt failed: {e2}")
+            return None
+
 def generate_ai_quiz():
     """
     Generates a brand new 100% accurate astronomy quiz question using free Gemini models.
-    Injects past 100 asked topics to ensure 0 repetition across Astrophysics, Astrobiology, Astrophotography, etc.!
+    Injects past 100 asked topics to ensure 0 repetition across Astrophysics, Astrobiology,
+    Astrophotography, etc. Uses stable content-hash IDs to prevent duplicate detection bypass.
     """
     if not GEMINI_API_KEY:
         return None
@@ -136,47 +234,45 @@ def generate_ai_quiz():
     past_str = "; ".join(past_topics[:50]) if past_topics else "None"
 
     prompt = (
-        "You are an expert NASA astrophysicist, cosmologist, and space historian. Generate a brand new, highly engaging astronomy/space quiz question in JSON format.\n"
+        "You are an elite NASA astrophysicist and science communicator creating content for the world's #1 astronomy channel.\n"
+        "Generate a brand new, captivating space quiz question in raw JSON format.\n"
         "Cover the ENTIRE cosmic spectrum across all topics and difficulty levels:\n"
         "- Solar System: Planets, moons (Io, Titan, Europa, Enceladus), dwarf planets, asteroids, comets, Kuiper Belt, Oort Cloud.\n"
         "- Stellar Astrophysics: Main sequence, red giants, white dwarfs, neutron stars, pulsars, magnetars, supernovae.\n"
-        "- Extremes & Black Holes: Supermassive black holes, micro black holes, accretion disks, Hawking radiation, event horizons, frame dragging.\n"
-        "- High-Energy Cosmology: Quasars, blazars, Active Galactic Nuclei (AGN), dark matter, dark energy, gravitational lensing, Cosmic Microwave Background (CMB), cosmic rays, Fast Radio Bursts (FRBs).\n"
+        "- Extremes & Black Holes: Supermassive black holes, accretion disks, Hawking radiation, event horizons, frame dragging.\n"
+        "- High-Energy Cosmology: Quasars, dark matter, dark energy, gravitational lensing, CMB, Fast Radio Bursts (FRBs).\n"
         "- Astrobiology & Exoplanets: Habitable zones, biosignatures, extremophiles, transit photometry.\n"
-        "- Spaceflight & Rocketry: Apollo, Voyager, Cassini, JWST, Hubble, Artemis, Starship, orbital mechanics, TLI maneuvers.\n"
-        "- Astrophotography & Optics: Narrowband filters (H-Alpha, OIII), focal ratios, equatorial tracking, DSO exposure techniques.\n"
-        "- History of Astronomy: Ancient observers (Hipparchus, Al-Sufi), Renaissance pioneers (Galileo, Kepler, Copernicus, Tycho Brahe, Newton), and modern space age pioneers.\n\n"
-        f"CRITICAL CONSTRAINT - DO NOT REPEAT OR GENERATE QUESTIONS SIMILAR TO THESE PAST 100 TOPICS: [{past_str}]\n\n"
+        "- Spaceflight & Rocketry: Apollo, Voyager, Cassini, JWST, Hubble, Artemis, Starship, orbital mechanics.\n\n"
+        f"CRITICAL CONSTRAINT - DO NOT REPEAT OR GENERATE QUESTIONS SIMILAR TO THESE PAST TOPICS: [{past_str}]\n\n"
         "Strict Requirements:\n"
-        "1. Return ONLY valid JSON with keys: 'id', 'difficulty', 'category', 'question', 'options', 'answer', 'explanation', 'keywords'.\n"
-        "2. 'difficulty' must be one of: '🟢 Beginner', '🟡 Intermediate', '🔴 Advanced Astrophysicist'.\n"
+        "1. Return ONLY valid JSON with keys: 'difficulty', 'category', 'question', 'options', 'answer', 'explanation', 'fun_fact', 'keywords'.\n"
+        "   NOTE: Do NOT include an 'id' field — the system generates a stable ID automatically.\n"
+        "2. 'difficulty' must be one of: '🟢 Beginner', '🟡 Intermediate', '🔴 Deep Space Mastermind'.\n"
         "3. 'category' must be the specific subdiscipline.\n"
         "4. 'options' must be a list of 4 strings starting with 🇦, 🇧, 🇨, 🇩 emojis.\n"
         "5. 'answer' must exactly match the correct option string.\n"
-        "6. 'keywords' must be a list of 3 specific search phrases (primary, backup, alt) to find matching NASA or astronomical historical photos.\n"
-        "7. Do NOT include markdown codeblocks or quotes around the JSON output, output raw JSON strictly."
+        "6. 'explanation' must be a clear, mind-blowing 2-sentence explanation.\n"
+        "7. 'fun_fact' must be a captivating 1-sentence bonus curiosity.\n"
+        "8. 'keywords' must be a list of 3 search phrases for finding high-resolution NASA photos.\n"
+        "9. Output raw JSON strictly without markdown block formatting."
     )
 
     raw_text = call_gemini_flash_multi_model(prompt)
-    if not raw_text:
-        return None
-
-    clean_json = re.sub(r'^```json\s*', '', raw_text, flags=re.MULTILINE)
-    clean_json = re.sub(r'```$', '', clean_json, flags=re.MULTILINE).strip()
-
-    try:
-        q_data = json.loads(clean_json)
-        keywords = q_data.get("keywords", [q_data.get("question", "astronomy")])
+    q_data = extract_and_parse_json(raw_text)
+    if q_data:
+        # Generate a stable, deterministic ID from question content (prevents repeat bypass)
+        question_text = q_data.get("question", "")
+        q_data["id"] = make_stable_content_id("ai_quiz", question_text)
+        keywords = q_data.get("keywords", [question_text or "astronomy"])
         q_data["image"] = fetch_best_nasa_image(keywords)
         return q_data
-    except Exception as e:
-        print(f"[GEMINI QUIZ PARSE ERROR] {e}")
-        return None
+    return None
 
 def generate_ai_history(date_str_mmdd):
     """
     Generates a historical space flight milestone for today's date using free Gemini models.
-    Injects past 100 topics to ensure 0 repetition across Ancient, Renaissance, and Modern Space History!
+    Injects past 100 topics to ensure 0 repetition across Ancient, Renaissance, and Modern Space History.
+    Uses stable content-hash IDs to prevent duplicate detection bypass.
     """
     if not GEMINI_API_KEY:
         return None
@@ -185,29 +281,28 @@ def generate_ai_history(date_str_mmdd):
     past_str = "; ".join(past_topics[:50]) if past_topics else "None"
 
     prompt = (
-        f"You are a NASA space historian. Generate a real historical space/astronomy milestone for date {date_str_mmdd}.\n"
-        "Include milestones from any era: Ancient star catalogs (e.g. Hipparchus, Al-Sufi), Renaissance telescopes (Galileo, Kepler, Newton), 20th Century Space Race (Apollo, Sputnik, Vostok), or Modern Deep Space Missions (Hubble, JWST, Voyager, Mars rovers, Cassini).\n\n"
-        f"CRITICAL CONSTRAINT - DO NOT REPEAT THESE PAST 100 EVENTS: [{past_str}]\n\n"
+        f"You are a master space storyteller and NASA historian. Generate a real historical space/astronomy milestone for date {date_str_mmdd}.\n"
+        "Include milestones from any era: Ancient star catalogs, Renaissance astronomers, 20th Century Space Race (Apollo, Sputnik, Vostok), or Modern Deep Space Missions (Hubble, JWST, Voyager, Mars rovers, Cassini).\n\n"
+        f"CRITICAL CONSTRAINT - DO NOT REPEAT THESE PAST EVENTS: [{past_str}]\n\n"
         "Strict Requirements:\n"
-        "1. Return ONLY valid JSON with keys: 'id', 'year', 'title', 'agency', 'crew', 'story', 'impact', 'keywords'.\n"
-        "2. 'story' must be a captivating 2-3 sentence historical description.\n"
-        "3. 'keywords' must be a list of 3 specific search phrases to find matching NASA or historical astronomy photos.\n"
-        "4. Output raw JSON strictly without codeblocks."
+        "1. Return ONLY valid JSON with keys: 'year', 'title', 'agency', 'crew', 'hook', 'story', 'impact', 'fun_fact', 'keywords'.\n"
+        "   NOTE: Do NOT include an 'id' field — the system generates a stable ID automatically.\n"
+        "2. 'hook' must be an attention-grabbing, dramatic 1-sentence opening line.\n"
+        "3. 'story' must be a gripping 2-3 sentence narrative of what actually happened.\n"
+        "4. 'impact' must be a 1-sentence explanation of why it changed human history.\n"
+        "5. 'fun_fact' must be an intriguing, little-known detail about the event.\n"
+        "6. 'keywords' must be a list of 3 specific search phrases for finding historical photos.\n"
+        "7. Output raw JSON strictly without codeblocks."
     )
 
     raw_text = call_gemini_flash_multi_model(prompt)
-    if not raw_text:
-        return None
-
-    clean_json = re.sub(r'^```json\s*', '', raw_text, flags=re.MULTILINE)
-    clean_json = re.sub(r'```$', '', clean_json, flags=re.MULTILINE).strip()
-
-    try:
-        h_data = json.loads(clean_json)
+    h_data = extract_and_parse_json(raw_text)
+    if h_data:
+        # Generate stable, deterministic ID from title content
+        title_text = h_data.get("title", "")
+        h_data["id"] = make_stable_content_id(f"ai_hist_{date_str_mmdd}", title_text)
         h_data["date_mmdd"] = date_str_mmdd
-        keywords = h_data.get("keywords", [h_data.get("title", "astronomy history")])
+        keywords = h_data.get("keywords", [title_text or "astronomy history"])
         h_data["image"] = fetch_best_nasa_image(keywords)
         return h_data
-    except Exception as e:
-        print(f"[GEMINI HISTORY PARSE ERROR] {e}")
-        return None
+    return None

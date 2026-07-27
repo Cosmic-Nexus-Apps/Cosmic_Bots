@@ -20,6 +20,7 @@ load_dotenv()
 
 WEBHOOK_URL = os.getenv("DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL") or os.getenv("DISCORD_WEBHOOK_URL")
 ROLE_ID = os.getenv("DEEP_SPACE_BOT_DISCORD_ROLE_ID") or os.getenv("DISCORD_ROLE_ID")
+NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
 DB_FILE = "deep_space.db"
 
 # Operational flag: TEST_MODE = True generates sample launch & telescope embeds.
@@ -45,6 +46,12 @@ def init_db():
         CREATE TABLE IF NOT EXISTS module_hydration (
             module_name TEXT PRIMARY KEY,
             hydrated_at REAL
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS exoplanet_cache (
+            planet_name TEXT PRIMARY KEY,
+            expire_timestamp REAL
         )
     """)
     conn.commit()
@@ -241,6 +248,11 @@ PRIORITY_LAUNCH_KEYWORDS = [
     "sls", "ariane 6", "curiosity", "perseverance", "chandrayaan", "gaganyaan", "kinetica"
 ]
 
+def is_priority_launch(name, provider_name=""):
+    """Returns True if this is a high-profile mission deserving full cascade alerts (T-24h, T-6h, T-2h, T-0)."""
+    combined = (name + " " + provider_name).lower()
+    return any(kw in combined for kw in PRIORITY_LAUNCH_KEYWORDS)
+
 def get_provider_color(name, provider_name=""):
     combined = (name + " " + provider_name).lower()
     if "spacex" in combined or "starship" in combined:
@@ -327,15 +339,63 @@ def check_upcoming_launches():
         location = launch.get("pad", {}).get("location", {}).get("name", "USA")
         raw_status = launch.get("status", {}).get("name", "Go for Launch")
         orbit_type = launch.get("orbit", {}).get("name", "Low Earth Orbit") if launch.get("orbit") else "Low Earth Orbit"
-        
+
         webcast_url = get_webcast_url(launch, name, provider_name)
         embed_color = get_provider_color(name, provider_name)
         short_mission = name.split("|")[0].strip() if "|" in name else name
         mission_brief = format_clean_mission_brief(launch)
         utc_date_str = launch_dt.strftime("%d %B %Y at %H:%M UTC").upper()
+        priority = is_priority_launch(name, provider_name)
 
-        # Alert 1: T-2 Hours Pre-Launch Reminder (Only sent within 2.5h before T-0)
-        if 0 <= time_until_launch_sec <= (2.5 * 3600):
+        # ==== PRIORITY LAUNCHES: Full cascade T-24h → T-6h → T-2h → T-0 ====
+        # ==== NON-PRIORITY: Only T-2h (or T-0 if missed) + landing report ====
+
+        # Alert: T-24h Pre-Launch (Priority only, window: 22h–26h before launch)
+        if priority and (22 * 3600) <= time_until_launch_sec <= (26 * 3600):
+            item_key = f"launch_t24h_{launch_id}"
+            if TEST_MODE or not is_already_notified(item_key, ttl_hours=72):
+                title = f"📅 LAUNCH IN 24 HOURS | {short_mission.upper()}"
+                description = (
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"🚨 **PRIORITY MISSION ALERT:** Launch is exactly **24 hours away!**\n\n"
+                    f"🎯 **MISSION:** `{name}`\n"
+                    f"🏢 **LAUNCH PROVIDER:** `{provider_name}`\n"
+                    f"🛰️ **TARGET ORBIT / DESTINATION:** `{orbit_type}`\n"
+                    f"📍 **LAUNCH PAD:** `{pad_name} ({location})`\n"
+                    f"⚡ **LAUNCH STATUS:** `🟢 {raw_status}`\n"
+                    f"📅 **EXACT T-0 DATE & TIME:** `{utc_date_str}`\n\n"
+                    f"📖 **MISSION DETAILS:**\n{mission_brief}\n\n"
+                    f"⏱️ **GLOBAL LAUNCH TIMES:**\n"
+                    f"{get_regional_3utc_windows(launch_dt)}\n\n"
+                    f"📺 **LIVE STREAM:** [Watch Official Broadcast]({webcast_url})\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                )
+                send_discord_embed(title, description, color=embed_color, image_url=rocket_img)
+                mark_notified(item_key, ttl_hours=72)
+
+        # Alert: T-6h Pre-Launch (Priority only, window: 5h–8h before launch)
+        elif priority and (5 * 3600) <= time_until_launch_sec <= (8 * 3600):
+            item_key = f"launch_t6h_{launch_id}"
+            if TEST_MODE or not is_already_notified(item_key, ttl_hours=24):
+                title = f"⏳ LAUNCH IN 6 HOURS | {short_mission.upper()}"
+                description = (
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"🔥 **T-MINUS 6 HOURS:** `{name}` launches in **6 hours!**\n\n"
+                    f"🎯 **MISSION:** `{name}`\n"
+                    f"🏢 **LAUNCH PROVIDER:** `{provider_name}`\n"
+                    f"📍 **LAUNCH PAD:** `{pad_name} ({location})`\n"
+                    f"⚡ **STATUS:** `🟢 {raw_status}`\n"
+                    f"📅 **T-0:** `{utc_date_str}`\n\n"
+                    f"⏱️ **COUNTDOWN PER REGION:**\n"
+                    f"{get_regional_3utc_windows(launch_dt)}\n\n"
+                    f"📺 **LIVE STREAM:** [Watch Official Broadcast]({webcast_url})\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                )
+                send_discord_embed(title, description, color=embed_color, image_url=rocket_img)
+                mark_notified(item_key, ttl_hours=24)
+
+        # Alert: T-2h Pre-Launch Reminder (ALL launches, window: 0–2.5h before launch)
+        elif 0 <= time_until_launch_sec <= (2.5 * 3600):
             item_key = f"launch_t2h_{launch_id}"
             if TEST_MODE or not is_already_notified(item_key, ttl_hours=72):
                 title = f"🚀 ROCKET LAUNCH REMINDER (T-MINUS 2 HOURS) | {short_mission.upper()}"
@@ -506,7 +566,7 @@ def check_deep_space_imagery():
 
     # 1. Query Live NASA APOD (Astronomy Picture of the Day) API for TODAY'S picture
     try:
-        apod_url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
+        apod_url = f"https://api.nasa.gov/planetary/apod?api_key={NASA_API_KEY}"
         res = requests.get(apod_url, timeout=6)
         if res.status_code == 200:
             apod_data = res.json()
@@ -725,7 +785,7 @@ def check_humans_in_space():
     craft_groups = {}
 
     try:
-        url = "http://api.open-notify.org/astros.json"
+        url = "https://api.open-notify.org/astros.json"
         res = requests.get(url, timeout=5)
         if res.status_code == 200:
             data = res.json()
@@ -803,6 +863,151 @@ def check_humans_in_space():
     save_stored_crew_manifest(current_crew_str)
 
 # ==============================================================================
+# MODULE 4: EXOPLANET DISCOVERY TRACKER (NASA EXOPLANET ARCHIVE)
+# ==============================================================================
+
+def is_exoplanet_notified(planet_name):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    now_ts = datetime.now(timezone.utc).timestamp()
+    cursor.execute("SELECT expire_timestamp FROM exoplanet_cache WHERE planet_name = ?", (planet_name,))
+    row = cursor.fetchone()
+    conn.close()
+    return bool(row and row[0] > now_ts)
+
+def mark_exoplanet_notified(planet_name, ttl_hours=8760):
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    now_ts = datetime.now(timezone.utc).timestamp()
+    expire_ts = now_ts + (ttl_hours * 3600)
+    cursor.execute(
+        "INSERT OR REPLACE INTO exoplanet_cache (planet_name, expire_timestamp) VALUES (?, ?)",
+        (planet_name, expire_ts)
+    )
+    cursor.execute("DELETE FROM exoplanet_cache WHERE expire_timestamp <= ?", (now_ts,))
+    conn.commit()
+    conn.close()
+    if persistent_history:
+        persistent_history.record_published(f"exoplanet_{planet_name}", ttl_hours=ttl_hours)
+
+def get_habitability_badge(pl_rade, pl_orbper):
+    """Returns a simple habitability indicator based on planet radius and orbital period."""
+    try:
+        radius = float(pl_rade) if pl_rade else 0
+        period = float(pl_orbper) if pl_orbper else 0
+        if 0.5 <= radius <= 2.0 and 10 <= period <= 500:
+            return "🌊 Potentially Rocky & Habitable Zone"
+        elif radius < 0.5:
+            return "🪨 Sub-Earth / Rocky"
+        elif radius <= 4.0:
+            return "🌍 Super-Earth / Mini-Neptune"
+        elif radius <= 10.0:
+            return "🌊 Neptune-class Gas World"
+        else:
+            return "🪐 Gas Giant (Jupiter-class)"
+    except Exception:
+        return "🔭 Unknown Class"
+
+def check_exoplanet_discoveries():
+    """Checks NASA Exoplanet Archive for newly confirmed exoplanets and posts discoveries."""
+    print("Checking Module 4: Exoplanet Discovery Tracker (NASA Exoplanet Archive)...")
+    now_dt = datetime.now(timezone.utc)
+    current_year = now_dt.year
+
+    # Query NASA Exoplanet Archive TAP service for recent confirmations this year
+    try:
+        query = (
+            f"select pl_name,disc_year,disc_facility,disc_method,pl_rade,pl_bmasse,"
+            f"pl_orbper,pl_eqt,st_dist,sy_snum,sy_pnum "
+            f"from ps "
+            f"where disc_year={current_year} "
+            f"order by rowupdate desc"
+        )
+        url = f"https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query={requests.utils.quote(query)}&format=json"
+        res = requests.get(url, timeout=10)
+        if res.status_code != 200:
+            print(f"[EXOPLANET API NOTE] Status {res.status_code}")
+            return
+        planets = res.json()
+        if not planets:
+            print("[EXOPLANET] No new discoveries found for this year yet.")
+            return
+    except Exception as e:
+        print(f"[EXOPLANET API ERROR] {e}")
+        return
+
+    hydrated = is_module_hydrated("exoplanet_tracker")
+    posted_count = 0
+
+    for planet in planets:
+        pl_name     = planet.get("pl_name", "").strip()
+        disc_year   = planet.get("disc_year", current_year)
+        disc_fac    = planet.get("disc_facility", "Unknown Observatory")
+        disc_method = planet.get("disc_method", "Transit Photometry")
+        pl_rade     = planet.get("pl_rade")   # Earth radii
+        pl_bmasse   = planet.get("pl_bmasse") # Earth masses
+        pl_orbper   = planet.get("pl_orbper") # Orbital period (days)
+        pl_eqt      = planet.get("pl_eqt")   # Equilibrium temperature (K)
+        st_dist     = planet.get("st_dist")   # Distance to star (parsecs)
+        sy_snum     = planet.get("sy_snum", 1) # Stars in system
+        sy_pnum     = planet.get("sy_pnum", 1) # Planets in system
+
+        if not pl_name or is_exoplanet_notified(pl_name):
+            continue
+
+        habitability = get_habitability_badge(pl_rade, pl_orbper)
+
+        # Format optional fields
+        radius_str = f"{float(pl_rade):.2f}× Earth" if pl_rade else "Unknown"
+        mass_str   = f"{float(pl_bmasse):.1f}× Earth" if pl_bmasse else "Unknown"
+        period_str = f"{float(pl_orbper):.1f} days" if pl_orbper else "Unknown"
+        temp_str   = f"{int(float(pl_eqt))} K ({int(float(pl_eqt)) - 273}°C)" if pl_eqt else "Unknown"
+        dist_str   = f"{float(st_dist):.1f} parsecs ({float(st_dist)*3.26:.0f} light-years)" if st_dist else "Unknown"
+
+        # Fetch NASA image for the discovery facility / method
+        try:
+            from google_ai_helper import fetch_best_nasa_image
+            img_keywords = [pl_name.split()[0], disc_fac, "exoplanet discovery"]
+            img_url = fetch_best_nasa_image(img_keywords)
+        except Exception:
+            img_url = "https://images-assets.nasa.gov/image/PIA19830/PIA19830~medium.jpg"
+
+        embed_title = f"🌍 EXOPLANET DISCOVERED | {pl_name.upper()}"
+        description = (
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🌟 **NEWLY CONFIRMED EXOPLANET:** `{pl_name}`\n"
+            f"📅 **DISCOVERY YEAR:** `{disc_year}`\n"
+            f"🔭 **DISCOVERED BY:** `{disc_fac}`\n"
+            f"🧪 **DETECTION METHOD:** `{disc_method}`\n\n"
+            f"📐 **PLANET PROFILE:**\n"
+            f"└ 📏 **Radius:** `{radius_str}`\n"
+            f"└ ⚖️ **Mass:** `{mass_str}`\n"
+            f"└ 🔄 **Orbital Period:** `{period_str}`\n"
+            f"└ 🌡️ **Equilibrium Temp:** `{temp_str}`\n"
+            f"└ 📡 **Distance from Earth:** `{dist_str}`\n"
+            f"└ ⭐ **Stars in System:** `{sy_snum}` | 🪐 **Known Planets:** `{sy_pnum}`\n\n"
+            f"🏷️ **CLASSIFICATION:** {habitability}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        )
+
+        if not TEST_MODE and not hydrated:
+            mark_exoplanet_notified(pl_name, ttl_hours=8760)
+            print(f"[HYDRATION] Initialized exoplanet '{pl_name}' silently.")
+        else:
+            send_discord_embed(embed_title, description, color=0x1ABC9C, image_url=img_url)
+            mark_exoplanet_notified(pl_name, ttl_hours=8760)
+            set_module_hydrated("exoplanet_tracker")
+            posted_count += 1
+            if posted_count >= 1:  # Post max 1 new exoplanet per cycle
+                break
+
+    if not hydrated and posted_count == 0:
+        set_module_hydrated("exoplanet_tracker")
+        print("[HYDRATION] Completed silent hydration for Exoplanet Tracker module.")
+
+# ==============================================================================
 # MAIN BOT EXECUTION
 # ==============================================================================
 def run_engine():
@@ -814,6 +1019,7 @@ def run_engine():
     check_upcoming_launches()
     check_deep_space_imagery()
     check_humans_in_space()
+    check_exoplanet_discoveries()
 
     print("==========================================================")
     print("Deep Space & Launch Check Completed Successfully.")

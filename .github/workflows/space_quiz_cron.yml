@@ -6,6 +6,11 @@ on:
     - cron: '0 13 * * *'
   workflow_dispatch:
 
+# Prevents double-execution with the main orchestrator
+concurrency:
+  group: space-quiz-standalone-execution
+  cancel-in-progress: true
+
 jobs:
   run-quiz-bot:
     runs-on: ubuntu-latest
@@ -37,6 +42,8 @@ jobs:
         env:
           SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL: ${{ secrets.SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL }}
           SPACE_QUIZ_BOT_DISCORD_ROLE_ID: ${{ secrets.SPACE_QUIZ_BOT_DISCORD_ROLE_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TEST_MODE: "FALSE"
         run: |
           cd space-quiz-bot
