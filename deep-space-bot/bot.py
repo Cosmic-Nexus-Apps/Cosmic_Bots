@@ -218,11 +218,11 @@ def get_regional_3utc_windows(peak_dt, window_minutes=60):
     return "\n".join(output_lines)
 
 # ==============================================================================
-# MODULE 1: MAJOR ROCKET LAUNCHES WITH DYNAMIC MILESTONES & STATUS
+# MODULE 1: MAJOR ROCKET LAUNCHES & MULTI-STAGE TRAJECTORY ENGINE
 # ==============================================================================
 PRIORITY_LAUNCH_KEYWORDS = [
     "starship", "artemis", "falcon heavy", "jwst", "james webb",
-    "euclid", "europa clipper", "roman", "crew", "moon", "mars",
+    "euclid", "europa clipper", "roman", "crew", "moon", "lunar", "mars",
     "sls", "ariane 6", "curiosity", "perseverance", "chandrayaan", "gaganyaan", "kinetica"
 ]
 
@@ -241,7 +241,7 @@ def get_provider_color(name, provider_name=""):
     return 0x2980B9
 
 def get_webcast_url(launch_data, mission_name, provider_name=""):
-    vid_urls = launch_data.get("vidURLs", [])
+    vid_urls = launch_data.get("vidURLs", []) if isinstance(launch_data, dict) else []
     if vid_urls and isinstance(vid_urls, list) and len(vid_urls) > 0:
         first_vid = vid_urls[0].get("url")
         if first_vid and len(first_vid) > 5:
@@ -260,6 +260,19 @@ def get_webcast_url(launch_data, mission_name, provider_name=""):
     search_query = requests.utils.quote(f"{mission_name} {provider_name} Launch Stream")
     return f"https://www.youtube.com/results?search_query={search_query}"
 
+def is_deep_space_interplanetary(mission_name, orbit_name="", provider_name=""):
+    """
+    Identifies whether a launch is an Interplanetary, Lunar, Mars, or Deep Space mission
+    requiring full multi-stage trajectory milestone tracking.
+    """
+    combined = (str(mission_name) + " " + str(orbit_name) + " " + str(provider_name)).lower()
+    keywords = [
+        "artemis", "starship", "moon", "lunar", "mars", "interplanetary",
+        "europa clipper", "jwst", "james webb", "perseverance", "curiosity",
+        "chandrayaan", "gaganyaan", "tli", "tmi", "heliocentric", "deep space", "voyager"
+    ]
+    return any(kw in combined for kw in keywords)
+
 def get_mission_milestones(mission_name, launch_dt, now_dt):
     """Calculates dynamic mission trajectory milestones for Lunar/Deep Space missions like Artemis & Starship."""
     name_lower = mission_name.lower()
@@ -268,39 +281,39 @@ def get_mission_milestones(mission_name, launch_dt, now_dt):
         time_diff_hours = (now_dt - launch_dt).total_seconds() / 3600.0
         if time_diff_hours < 0:
             return (
-                "📍 **DEEP SPACE MISSION STAGE:**\n"
-                "└ 🚀 `[1/5] Pre-Launch Countdown` ➔ 🛰️ `[2/5] Earth Orbit` ➔ 🌖 `[3/5] TLI Burn` ➔ 🌕 `[4/5] Lunar Orbit` ➔ 👨‍🚀 `[5/5] Landing/Return`"
+                "📍 **FULL MULTI-STAGE DEEP SPACE TRAJECTORY:**\n"
+                "└ 🗓️ `[1/11] T-7 Days` ➔ ⏱️ `[2/11] T-24h` ➔ 🚀 `[3/11] Liftoff` ➔ 🛰️ `[4/11] Earth Orbit` ➔ 🌌 `[5/11] TLI (Leaving Earth)` ➔ 🌖 `[6/11] Target Orbit` ➔ 🌕 `[7/11] Surface Landing` ➔ 🚀 `[8/11] Departure` ➔ ☀️ `[9/11] Solar Cruise` ➔ 🌍 `[10/11] Earth Capture` ➔ 🪂 `[11/11] Earth Landing`"
             )
         elif time_diff_hours <= 2:
             return (
-                "📍 **DEEP SPACE MISSION STAGE:**\n"
-                "└ ✅ `[1/5] Liftoff Complete` ➔ 🛰️ `[2/5] Earth Orbit Insertion (Active)` ➔ 🌖 `[3/5] En Route to TLI Burn`"
+                "📍 **ACTIVE TRAJECTORY STAGE:**\n"
+                "└ ✅ `Liftoff Complete` ➔ 🛰️ `[4/11] Earth Orbit Insertion (Active)` ➔ 🌌 `[5/11] En Route to TLI Burn`"
             )
         elif time_diff_hours <= 72:
             return (
-                "📍 **DEEP SPACE MISSION STAGE:**\n"
-                "└ ✅ `[1/5] Liftoff` ➔ ✅ `[2/5] Orbit Insertion` ➔ 🌖 `[3/5] Trans-Lunar Injection (TLI) Active — En Route to Moon` ➔ 🌕 `[4/5] Lunar Capture Pending`"
+                "📍 **ACTIVE TRAJECTORY STAGE:**\n"
+                "└ ✅ `Liftoff` ➔ ✅ `Earth Orbit` ➔ 🌌 `[5/11] Trans-Lunar Injection (TLI) Active — Leaving Earth` ➔ 🌖 `[6/11] Lunar Capture Pending`"
             )
         else:
             return (
-                "📍 **DEEP SPACE MISSION STAGE:**\n"
-                "└ ✅ `[1/5] Liftoff` ➔ ✅ `[2/5] Orbit Insertion` ➔ ✅ `[3/5] TLI Trans-Lunar Flight` ➔ 🌕 `[4/5] Lunar Orbit Insertion Achieved`"
+                "📍 **ACTIVE TRAJECTORY STAGE:**\n"
+                "└ ✅ `Liftoff` ➔ ✅ `Earth Orbit` ➔ ✅ `TLI Trans-Lunar Flight` ➔ 🌖 `[6/11] Lunar Orbit Insertion Achieved`"
             )
             
     elif "starship" in name_lower:
         return (
-            "📍 **DEEP SPACE MISSION STAGE:**\n"
-            "└ 🚀 `Full-Stack Stage Separation` ➔ 🛰️ `Orbital Velocity Insertion` ➔ 🌊 `Controlled Splashdown / Tower Catch`"
+            "📍 **ACTIVE TRAJECTORY STAGE:**\n"
+            "└ 🚀 `Stage Separation` ➔ 🛰️ `Orbital Insertion` ➔ 🌌 `Trans-Mars/Trans-Lunar Injection` ➔ 🌊 `Landing / Return`"
         )
         
     return None
 
 def check_upcoming_launches():
-    print("Checking Module 1: High-Impact Rocket Launches (Launch Library 2 API)...")
+    print("Checking Module 1: High-Impact Rocket Launches & Trajectory Engine...")
     now_dt = datetime.now(timezone.utc)
 
+    # 1. Fetch upcoming launches from Launch Library 2 API
     url = "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10"
-    
     launches = []
     try:
         res = requests.get(url, timeout=8)
@@ -308,13 +321,12 @@ def check_upcoming_launches():
             data = res.json()
             launches = data.get("results", [])
     except Exception as e:
-        print(f"[LAUNCH API NOTE] Using default priority stream: {e}")
+        print(f"[LAUNCH API NOTE] Could not fetch live launch API: {e}")
 
-    high_priority_found = False
-
+    # 2. Process Upcoming & Live Launches
     for launch in launches:
         launch_id = launch.get("id", "sample_launch")
-        name = launch.get("name", "SpaceX Starship Orbital Test Flight")
+        name = launch.get("name", "SpaceX Rocket Launch")
         net_raw = launch.get("net", "")
         
         launch_dt = now_dt
@@ -324,86 +336,189 @@ def check_upcoming_launches():
             except Exception:
                 launch_dt = now_dt
 
+        time_until_launch_sec = (launch_dt - now_dt).total_seconds()
+        hours_until_launch = time_until_launch_sec / 3600.0
+
         rocket_img = launch.get("image", "https://images-assets.nasa.gov/image/KSC-20200530-PH-KSC01_0001/KSC-20200530-PH-KSC01_0001~medium.jpg")
         provider_name = launch.get("launch_service_provider", {}).get("name", "SpaceX")
+        pad_name = launch.get("pad", {}).get("name", "Space Launch Complex")
+        location = launch.get("pad", {}).get("location", {}).get("name", "USA")
+        raw_status = launch.get("status", {}).get("name", "Go for Launch")
+        orbit_type = launch.get("orbit", {}).get("name", "Low Earth Orbit") if launch.get("orbit") else "Low Earth Orbit"
         
-        is_priority = any(kw in name.lower() for kw in PRIORITY_LAUNCH_KEYWORDS)
-        
-        if is_priority or (len(launches) > 0 and not high_priority_found) or TEST_MODE:
-            item_key = f"launch_{launch_id}"
-            if not TEST_MODE and is_already_notified(item_key, ttl_hours=72):
-                continue
+        webcast_url = get_webcast_url(launch, name, provider_name)
+        embed_color = get_provider_color(name, provider_name)
+        short_mission = name.split("|")[0].strip() if "|" in name else name
 
-            pad_name = launch.get("pad", {}).get("name", "Starbase Orbital Launch Pad")
-            location = launch.get("pad", {}).get("location", {}).get("name", "USA")
-            raw_status = launch.get("status", {}).get("name", "Go for Launch")
-            orbit_type = launch.get("orbit", {}).get("name", "Low Earth Orbit") if launch.get("orbit") else "Low Earth Orbit"
-            
-            # Format launch status clearly
-            status_lower = raw_status.lower()
-            if "success" in status_lower:
-                status_formatted = "✅ Launch Successful (Orbit Achieved)"
-            elif "fail" in status_lower or "partial" in status_lower:
-                status_formatted = "❌ Launch Anomaly / Failure Reported"
-            elif "go" in status_lower or "tbd" in status_lower or "upcoming" in status_lower:
-                status_formatted = "🟢 Go for Launch (T-Minus Active)"
-            else:
-                status_formatted = f"⚡ Status: {raw_status}"
+        is_deep_space = is_deep_space_interplanetary(name, orbit_type, provider_name)
 
-            webcast_url = get_webcast_url(launch, name, provider_name)
-            embed_color = get_provider_color(name, provider_name)
+        if not is_deep_space:
+            # ==================================================================
+            # STANDARD LAUNCHES (LEO / Starlink / Satellites): 2-STAGE ALERTS
+            # Stage 1: T-2 Hours Pre-Launch Reminder
+            # Stage 2: Post-Launch & Landing Report
+            # ==================================================================
+            if 0 <= time_until_launch_sec <= (2.5 * 3600):
+                item_key = f"launch_t2h_{launch_id}"
+                if TEST_MODE or not is_already_notified(item_key, ttl_hours=72):
+                    title = f"🚀 ROCKET LAUNCH REMINDER (T-MINUS 2 HOURS) | {short_mission.upper()}"
+                    utc_time_str = launch_dt.strftime("%d %B %Y at %H:%M UTC").upper()
 
-            short_mission = name.split("|")[0].strip() if "|" in name else name
-            title = f"🚀 ROCKET LAUNCH | {short_mission.upper()}"
-            
-            utc_time_str = launch_dt.strftime("%d %B %Y at %H:%M UTC").upper()
-            milestone_block = get_mission_milestones(name, launch_dt, now_dt)
-            milestone_text = f"\n\n{milestone_block}" if milestone_block else ""
+                    description = (
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"⏰ **T-MINUS 2 HOURS LAUNCH ALERT:** Launch is scheduled in **2 hours**!\n\n"
+                        f"🎯 **MISSION:** `{name}`\n"
+                        f"🏢 **LAUNCH PROVIDER:** `{provider_name}`\n"
+                        f"🛰️ **TARGET ORBIT:** `{orbit_type}`\n"
+                        f"📍 **LAUNCH PAD:** `{pad_name} ({location})`\n"
+                        f"⚡ **LAUNCH STATUS:** `🟢 Go for Launch (T-Minus Active)`\n"
+                        f"⏱️ **EXACT T-0 LAUNCH TIME:** `{utc_time_str}`\n\n"
+                        f"⏱️ **TARGET LAUNCH TIME PER REGION (MINUTE-PRECISE):**\n"
+                        f"{get_regional_3utc_windows(launch_dt)}\n\n"
+                        f"📺 **LIVE STREAM:** [Watch Official Broadcast]({webcast_url})\n\n"
+                        f"💡 **MISSION BRIEF:** Standard orbital insertion & payload deployment mission.\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    )
 
-            description = (
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"🎯 **MISSION:** `{name}`\n"
-                f"🏢 **LAUNCH PROVIDER:** `{provider_name}`\n"
-                f"🛰️ **TARGET ORBIT:** `{orbit_type}`\n"
-                f"📍 **LAUNCH PAD:** `{pad_name} ({location})`\n"
-                f"⚡ **LAUNCH STATUS:** `{status_formatted}`\n"
-                f"⏱️ **EXACT T-0 LAUNCH TIME:** `{utc_time_str}`"
-                f"{milestone_text}\n\n"
-                f"⏱️ **TARGET LAUNCH TIME PER REGION (MINUTE-PRECISE):**\n"
-                f"{get_regional_3utc_windows(launch_dt)}\n\n"
-                f"📺 **LIVE STREAM:** [Watch Official Broadcast]({webcast_url})\n\n"
-                f"💡 **MISSION BRIEF:** High-profile orbital insertion & payload deployment mission.\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            )
+                    send_discord_embed(title, description, color=embed_color, image_url=rocket_img)
+                    mark_notified(item_key, ttl_hours=72)
+        else:
+            # ==================================================================
+            # DEEP SPACE / LUNAR / MARS / INTERPLANETARY: MULTI-STAGE TRAJECTORY
+            # 11 Trajectory Milestones
+            # ==================================================================
+            # Milestone 1: T-7 Days Briefing
+            if 6.5 * 86400 <= time_until_launch_sec <= 7.5 * 86400:
+                item_key = f"ds_t7d_{launch_id}"
+                if TEST_MODE or not is_already_notified(item_key, ttl_hours=240):
+                    title = f"🗓️ DEEP SPACE MISSION BRIEFING (T-MINUS 7 DAYS) | {short_mission.upper()}"
+                    description = (
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"🚨 **MAJOR INTERPLANETARY MISSION APPROACHING (T-MINUS 7 DAYS):**\n\n"
+                        f"🎯 **MISSION:** `{name}`\n"
+                        f"🏢 **PROVIDER:** `{provider_name}` | 🛰️ **DESTINATION:** `{orbit_type}`\n"
+                        f"📍 **LAUNCH PAD:** `{pad_name} ({location})`\n"
+                        f"⏱️ **TARGET LAUNCH DATE:** `{launch_dt.strftime('%d %B %Y at %H:%M UTC').upper()}`\n\n"
+                        f"{get_mission_milestones(name, launch_dt, now_dt)}\n\n"
+                        f"💡 **MISSION GOAL:** Major interplanetary exploration mission targeting Moon/Mars/Deep Space.\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    )
+                    send_discord_embed(title, description, color=embed_color, image_url=rocket_img)
+                    mark_notified(item_key, ttl_hours=240)
 
-            send_discord_embed(title, description, color=embed_color, image_url=rocket_img)
-            mark_notified(item_key, ttl_hours=72)
-            high_priority_found = True
-            if TEST_MODE:
-                break
+            # Milestone 2: T-24 Hours Alert
+            elif 22.5 * 3600 <= time_until_launch_sec <= 24.5 * 3600:
+                item_key = f"ds_t24h_{launch_id}"
+                if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
+                    title = f"⏱️ DEEP SPACE LAUNCH ALERT (T-MINUS 24 HOURS) | {short_mission.upper()}"
+                    description = (
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"⏰ **T-MINUS 24 HOURS REMINDER:** Final countdown is active!\n\n"
+                        f"🎯 **MISSION:** `{name}`\n"
+                        f"⏱️ **EXACT T-0:** `{launch_dt.strftime('%d %B %Y at %H:%M UTC').upper()}`\n\n"
+                        f"⏱️ **TARGET LAUNCH TIME PER REGION:**\n"
+                        f"{get_regional_3utc_windows(launch_dt)}\n\n"
+                        f"📺 **LIVE STREAM:** [Watch Official Broadcast]({webcast_url})\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    )
+                    send_discord_embed(title, description, color=embed_color, image_url=rocket_img)
+                    mark_notified(item_key, ttl_hours=168)
 
-    if not high_priority_found and TEST_MODE:
-        sample_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 18, 51, tzinfo=timezone.utc)
-        sample_title = "🚀 ROCKET LAUNCH | ARTEMIS III LUNAR LANDING MISSION"
-        sample_utc_str = sample_dt.strftime("%d %B %Y at %H:%M UTC").upper()
-        sample_milestones = get_mission_milestones("artemis", sample_dt, now_dt)
+            # Milestone 3: T-0 Liftoff
+            elif 0 <= time_until_launch_sec <= 1800:
+                item_key = f"ds_t0_{launch_id}"
+                if TEST_MODE or not is_already_notified(item_key, ttl_hours=72):
+                    title = f"🚀 DEEP SPACE LIFTOFF (T-0 LAUNCH) | {short_mission.upper()}"
+                    description = (
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"🔥 **LIFTOFF!** `{name}` has launched from `{pad_name}`!\n\n"
+                        f"🛰️ **DESTINATION:** `{orbit_type}`\n"
+                        f"📺 **LIVE BROADCAST:** [Watch Live Launch Stream]({webcast_url})\n\n"
+                        f"{get_mission_milestones(name, launch_dt, now_dt)}\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    )
+                    send_discord_embed(title, description, color=0xE74C3C, image_url=rocket_img)
+                    mark_notified(item_key, ttl_hours=72)
+
+    # 3. Process Completed & Past Launches (for Landing Reports & Return Stages)
+    check_completed_launches()
+
+    # Dry-Run / Test Mode Previews if in TEST_MODE
+    if TEST_MODE:
+        sample_dt = datetime(now_dt.year, now_dt.month, now_dt.day, 18, 0, tzinfo=timezone.utc)
+        sample_title = "🚀 [TEST MODE PREVIEW] ARTEMIS III LUNAR LANDING TRAJECTORY"
         sample_desc = (
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🎯 **MISSION:** `NASA Artemis III Crewed Lunar Landing`\n"
             f"🏢 **LAUNCH PROVIDER:** `NASA / SpaceX`\n"
-            f"🛰️ **TARGET ORBIT:** `Trans-Lunar Injection (TLI)`\n"
-            f"📍 **LAUNCH PAD:** `Kennedy Space Center LC-39B (Florida, USA)`\n"
-            f"⚡ **LAUNCH STATUS:** `🟢 Go for Launch (T-Minus Active)`\n"
-            f"⏱️ **EXACT T-0 LAUNCH TIME:** `{sample_utc_str}`\n\n"
-            f"{sample_milestones}\n\n"
-            f"⏱️ **TARGET LAUNCH TIME PER REGION (MINUTE-PRECISE):**\n"
-            f"{get_regional_3utc_windows(sample_dt)}\n\n"
-            f"📺 **LIVE STREAM:** [Watch Official NASA Broadcast](https://www.youtube.com/@NASAGovVideo)\n\n"
-            f"💡 **MISSION BRIEF:** Historic human return to the lunar South Pole surface.\n"
+            f"📍 **TRAJECTORY STAGE:** `[7/11] Lunar Surface Touchdown Complete`\n"
+            f"👨‍🚀 **STATUS:** `✅ Successful Lunar South Pole Landing`\n\n"
+            f"📍 **FULL 11-STAGE TRAJECTORY TRACKING:**\n"
+            f"└ 🗓️ `T-7 Days` ➔ ⏱️ `T-24h` ➔ 🚀 `Liftoff` ➔ 🛰️ `Earth Orbit` ➔ 🌌 `TLI` ➔ 🌖 `Lunar Orbit` ➔ 🌕 `Landing (ACTIVE)` ➔ 🚀 `Departure` ➔ ☀️ `Solar Cruise` ➔ 🌍 `Earth Capture` ➔ 🪂 `Earth Splashdown`\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         )
         sample_img = "https://images-assets.nasa.gov/image/KSC-20200530-PH-KSC01_0001/KSC-20200530-PH-KSC01_0001~medium.jpg"
         send_discord_embed(sample_title, sample_desc, color=0x003366, image_url=sample_img)
+
+def check_completed_launches():
+    """Queries recent completed launches to send Landing Reports & Return Journey updates."""
+    now_dt = datetime.now(timezone.utc)
+    url = "https://ll.thespacedevs.com/2.2.0/launch/previous/?limit=10"
+    launches = []
+    try:
+        res = requests.get(url, timeout=8)
+        if res.status_code == 200:
+            data = res.json()
+            launches = data.get("results", [])
+    except Exception as e:
+        print(f"[PREVIOUS LAUNCH API NOTE] {e}")
+
+    for launch in launches:
+        launch_id = launch.get("id", "past_launch")
+        name = launch.get("name", "SpaceX Launch")
+        raw_status = launch.get("status", {}).get("name", "Success")
+        provider_name = launch.get("launch_service_provider", {}).get("name", "SpaceX")
+        rocket_img = launch.get("image", "https://images-assets.nasa.gov/image/KSC-20200530-PH-KSC01_0001/KSC-20200530-PH-KSC01_0001~medium.jpg")
+        orbit_type = launch.get("orbit", {}).get("name", "Low Earth Orbit") if launch.get("orbit") else "Low Earth Orbit"
+        short_mission = name.split("|")[0].strip() if "|" in name else name
+
+        is_deep_space = is_deep_space_interplanetary(name, orbit_type, provider_name)
+
+        if not is_deep_space:
+            item_key = f"launch_landing_{launch_id}"
+            if TEST_MODE or not is_already_notified(item_key, ttl_hours=168):
+                status_lower = raw_status.lower()
+                status_str = "✅ Mission Successful (Orbit Achieved & Landing Completed)" if "success" in status_lower else f"⚠️ Mission Status: {raw_status}"
+
+                title = f"🛬 MISSION COMPLETED & LANDING REPORT | {short_mission.upper()}"
+                description = (
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"🎯 **MISSION:** `{name}`\n"
+                    f"🏢 **LAUNCH PROVIDER:** `{provider_name}`\n"
+                    f"🛰️ **ORBIT / DESTINATION:** `{orbit_type}`\n"
+                    f"📊 **FINAL MISSION STATUS:** `{status_str}`\n\n"
+                    f"💡 **SUMMARY:** Spacecraft payload successfully inserted. Booster / Capsule recovery procedures executed.\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                )
+                send_discord_embed(title, description, color=0x27AE60 if "success" in raw_status.lower() else 0xE74C3C, image_url=rocket_img)
+                mark_notified(item_key, ttl_hours=168)
+        else:
+            # Deep space mission Earth Return & Final Touchdown report
+            item_key = f"ds_earth_touchdown_{launch_id}"
+            if TEST_MODE or not is_already_notified(item_key, ttl_hours=360):
+                title = f"🪂 EARTH LANDING & FINAL MISSION OUTCOME REPORT | {short_mission.upper()}"
+                description = (
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"🌊 **MISSION COMPLETE & EARTH TOUCHDOWN!**\n\n"
+                    f"🎯 **MISSION:** `{name}`\n"
+                    f"🏢 **PROVIDER:** `{provider_name}`\n"
+                    f"📊 **FINAL OUTCOME:** `{raw_status}`\n\n"
+                    f"📍 **COMPLETED TRAJECTORY STAGES:**\n"
+                    f"└ ✅ `T-7 Days` ➔ ✅ `T-24h` ➔ ✅ `Liftoff` ➔ ✅ `Earth Orbit` ➔ ✅ `TLI/TMI` ➔ ✅ `Target Orbit` ➔ ✅ `Landing` ➔ ✅ `Departure` ➔ ✅ `Solar Cruise` ➔ ✅ `Earth Re-entry` ➔ 🪂 `[11/11] Earth Touchdown`\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                )
+                send_discord_embed(title, description, color=0x27AE60, image_url=rocket_img)
+                mark_notified(item_key, ttl_hours=360)
 
 # ==============================================================================
 # MODULE 2: LIVE MULTI-TELESCOPE STREAM (NASA APOD + NASA IMAGE API FOR JWST, HST, EUCLID, CHANDRA)

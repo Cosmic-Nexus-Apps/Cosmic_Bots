@@ -193,17 +193,17 @@ def main():
             run_safe("Med_Freq_Supernova_Stream", events_bot.check_supernovae_transients, eph)
 
     # ==============================================================================
-    # 3. LOW-FREQUENCY MODULES (DAILY SCHEDULING: QUIZ AT 09:00 AM, HISTORY AT 12:00 PM)
+    # 3. LOW-FREQUENCY MODULES (GLOBALLY OPTIMIZED: QUIZ AT 13:00 UTC, HISTORY AT 15:00 UTC)
     # ==============================================================================
     print("\n--- [LOW-FREQUENCY TIER: DAILY SCHEDULED TASKS] ---")
     
-    # Low-Frequency Task 1: Daily Space Quiz (Scheduled at 09:00 AM EEST / 06:00 UTC)
-    if should_run_task("Low_Freq_Daily_Space_Quiz", target_utc_hour=6) and quiz_bot:
+    # Low-Frequency Task 1: Daily Space Quiz (Scheduled at 16:00 EEST / 13:00 UTC)
+    if should_run_task("Low_Freq_Daily_Space_Quiz", target_utc_hour=13) and quiz_bot:
         if hasattr(quiz_bot, 'run_engine'):
             run_safe("Low_Freq_Daily_Space_Quiz", quiz_bot.run_engine)
 
-    # Low-Frequency Task 2: Daily Space History (Scheduled at 12:00 PM EEST / 09:00 UTC)
-    if should_run_task("Low_Freq_Space_History", target_utc_hour=9) and history_bot:
+    # Low-Frequency Task 2: Daily Space History (Scheduled at 18:00 EEST / 15:00 UTC)
+    if should_run_task("Low_Freq_Space_History", target_utc_hour=15) and history_bot:
         if hasattr(history_bot, 'run_engine'):
             run_safe("Low_Freq_Space_History", history_bot.run_engine)
 

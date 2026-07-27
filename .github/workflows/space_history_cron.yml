@@ -2,8 +2,8 @@ name: Daily Space History Cron
 
 on:
   schedule:
-    # Runs daily at 09:00 UTC
-    - cron: '0 9 * * *'
+    # Runs daily at 15:00 UTC (18:00 EEST)
+    - cron: '0 15 * * *'
   workflow_dispatch:
 
 jobs:
