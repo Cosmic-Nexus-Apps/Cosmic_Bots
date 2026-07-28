@@ -1,5 +1,8 @@
 name: Astronomy Events Cron
 
+permissions:
+  contents: write
+
 on:
   schedule:
     # Runs every 5 minutes automatically (FREE tier high-frequency polling)
@@ -70,4 +73,4 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add published_history.json
-        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update persistent published history state [skip ci]" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update persistent published history state [skip ci]" && git push || echo "[GIT PUSH NOTICE] Automatic commit push skipped due to token permission policy.")
