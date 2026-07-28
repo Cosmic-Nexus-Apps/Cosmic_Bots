@@ -977,10 +977,10 @@ def _is_space_relevant(title, summary):
 
 def check_rss_breaking_news():
     """
-    Polls NASA, ESA, ESO, and Space.com RSS feeds for new articles.
-    Posts each new article once, within ~15 minutes of publication.
-    Uses title-hash deduplication to prevent reposts.
-    TTL: 30 days (720h) per article.
+    Polls NASA, ESA, ESO, and Space.com RSS feeds for fresh articles.
+    Enforces strict 24-hour publication age filter (< 24h old).
+    Uses Gemini AI to curate and select ONLY the single #1 top-tier news story.
+    Uses title-hash deduplication (30-day TTL) so previously posted stories are strictly excluded.
     """
     print("Checking Module 10: RSS Breaking Space News Aggregator...")
     try:
@@ -989,10 +989,13 @@ def check_rss_breaking_news():
         print("[RSS NOTE] feedparser not installed. Run: pip install feedparser")
         return
 
+    now_ts = datetime.now(timezone.utc).timestamp()
+    candidate_articles = []
+
     for feed_cfg in RSS_FEEDS:
         try:
             feed = feedparser.parse(feed_cfg["url"])
-            entries = feed.entries[:5]  # Check latest 5 articles per feed
+            entries = feed.entries[:8]  # Check latest 8 articles per feed
         except Exception as e:
             print(f"[RSS NOTE] Could not fetch {feed_cfg['name']}: {e}")
             continue
@@ -1004,44 +1007,82 @@ def check_rss_breaking_news():
             if not title or not link:
                 continue
 
-            # Skip non-space-related articles (e.g. ESA human spaceflight policy news)
+            # Skip non-space-related articles
             if not _is_space_relevant(title, summary):
                 continue
 
-            # Use title hash as dedup key (stable across feed re-fetches)
+            # Strict 24-Hour Publication Age Filter (< 24 hours old)
+            pub_ts = None
+            if hasattr(entry, "published_parsed") and entry.published_parsed:
+                import calendar
+                pub_ts = calendar.timegm(entry.published_parsed)
+            elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
+                import calendar
+                pub_ts = calendar.timegm(entry.updated_parsed)
+
+            if pub_ts is not None:
+                age_seconds = now_ts - pub_ts
+                if age_seconds > (24 * 3600):
+                    print(f"[RSS AGE FILTER] Ignored old article ({age_seconds/3600:.1f}h old): '{title}'")
+                    continue
+
+            # Deduplication Check
             import hashlib, re as _re
             clean_title = _re.sub(r'\W+', '', title.lower())
             title_hash = hashlib.md5(clean_title.encode('utf-8')).hexdigest()
             event_key = f"rss_{title_hash}"
 
-            if is_already_notified(event_key):
+            if is_item_or_title_notified(event_key, title_str=title):
                 continue
 
-            # Clean HTML tags and enhance summary via Gemini AI
-            summary_clean = _re.sub(r'<[^>]+>', '', summary)  # Strip HTML tags
-            try:
-                import sys
-                from google_ai_helper import enhance_news_summary
-                summary_clean = enhance_news_summary(title, feed_cfg["name"], summary_clean)
-            except Exception as e:
-                print(f"[RSS AI SUMMARY NOTE] {e}")
+            candidate_articles.append({
+                "title": title,
+                "link": link,
+                "summary": summary,
+                "source": feed_cfg["name"],
+                "color": feed_cfg["color"],
+                "emoji": feed_cfg["emoji"],
+                "event_key": event_key
+            })
 
-            if len(summary_clean) > 800:
-                last_period = summary_clean[:800].rfind('.')
-                summary_clean = summary_clean[:last_period + 1] if last_period > 200 else summary_clean[:800] + "..."
+    if not candidate_articles:
+        print("[RSS] No fresh, unposted space news articles found within the last 24 hours.")
+        return
 
+    # Use Gemini AI to select ONLY the #1 top groundbreaking story among candidate articles
+    try:
+        from google_ai_helper import select_top_space_news, enhance_news_summary
+        selected_art = select_top_space_news(candidate_articles)
+    except Exception as e:
+        print(f"[RSS AI CURATOR NOTE] {e}")
+        selected_art = candidate_articles[0]
 
-            embed_title = f"{feed_cfg['emoji']} {feed_cfg['name'].upper()} | {title}"
-            description = (
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"📰 **BREAKING SPACE NEWS:** `{title}`\n"
-                f"📡 **SOURCE:** `{feed_cfg['name']}`\n\n"
-                f"📖 **SUMMARY:**\n{summary_clean}\n\n"
-                f"🔗 **READ FULL ARTICLE:** [Open Full Story]({link})\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            )
+    if not selected_art:
+        return
 
-            send_discord_embed(embed_title, description, color=feed_cfg["color"])
-            mark_notified(event_key, ttl_hours=720)  # 30-day TTL per article
-            print(f"[RSS] Posted: '{title}' from {feed_cfg['name']}")
-            break  # Post max 1 new article per feed per cycle
+    # Clean HTML tags and enhance summary via Gemini AI
+    import re as _re
+    summary_clean = _re.sub(r'<[^>]+>', '', selected_art["summary"])
+    try:
+        from google_ai_helper import enhance_news_summary
+        summary_clean = enhance_news_summary(selected_art["title"], selected_art["source"], summary_clean)
+    except Exception as e:
+        print(f"[RSS AI SUMMARY NOTE] {e}")
+
+    if len(summary_clean) > 800:
+        last_period = summary_clean[:800].rfind('.')
+        summary_clean = summary_clean[:last_period + 1] if last_period > 200 else summary_clean[:800] + "..."
+
+    embed_title = f"{selected_art['emoji']} {selected_art['source'].upper()} | {selected_art['title']}"
+    description = (
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📰 **BREAKING SPACE NEWS:** `{selected_art['title']}`\n"
+        f"📡 **SOURCE:** `{selected_art['source']}`\n\n"
+        f"📖 **SUMMARY:**\n{summary_clean}\n\n"
+        f"🔗 **READ FULL ARTICLE:** [Open Full Story]({selected_art['link']})\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    )
+
+    send_discord_embed(embed_title, description, color=selected_art["color"])
+    mark_item_and_title_notified(selected_art["event_key"], title_str=selected_art["title"], ttl_hours=720)
+    print(f"[RSS] Posted Top Story: '{selected_art['title']}' from {selected_art['source']}")

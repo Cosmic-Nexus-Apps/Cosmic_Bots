@@ -397,6 +397,14 @@ QUIZ_CATALOG = [
 def check_daily_quiz():
     print("Checking Space Quiz Core Engine (1-Year Anti-Repeat Mode)...")
     now_dt = datetime.now(timezone.utc)
+    today_str = now_dt.strftime("%Y-%m-%d")
+    daily_key = f"quiz_daily_{today_str}"
+
+    # Strict Daily Execution Guard: Only 1 post allowed per calendar day
+    if not TEST_MODE and is_already_asked(daily_key):
+        print(f"[QUIZ GUARD] Already published Daily Space Quiz for today ({today_str}). Skipping.")
+        return
+
     date_str = now_dt.strftime("%d %B %Y").upper()
 
     quiz_item = None
@@ -444,6 +452,7 @@ def check_daily_quiz():
     send_discord_embed(title, description, color=0xF1C40F, image_url=quiz_item.get("image"))
     if not TEST_MODE:
         mark_asked(item_id, ttl_hours=8760) # 8760 hours = 1 Full Year Anti-Repeat
+        mark_asked(daily_key, ttl_hours=48)  # Lock today's calendar slot
 
 def run_engine():
     print("==========================================================")

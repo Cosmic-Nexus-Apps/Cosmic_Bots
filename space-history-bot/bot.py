@@ -236,15 +236,28 @@ SPACE_HISTORY_CATALOG = [
 ]
 
 def check_today_in_space_history():
-    print("Checking Space History Engine (100% Context-Matched Historical NASA Records)...")
+    print("Checking Today in Space History Chronicle...")
     now_dt = datetime.now(timezone.utc)
+    today_str = now_dt.strftime("%Y-%m-%d")
+    daily_key = f"hist_daily_{today_str}"
+
+    # Strict Daily Execution Guard: Only 1 post allowed per calendar day
+    if not TEST_MODE and is_already_posted(daily_key):
+        print(f"[HISTORY GUARD] Already published Space History for today ({today_str}). Skipping.")
+        return
+
     current_mmdd = now_dt.strftime("%m-%d")
     date_display = now_dt.strftime("%d %B").upper()
+
+    # Century & Era Diversity Rotation across 4 historical eras
+    eras = ["ancient", "renaissance", "space_race", "modern"]
+    target_era = eras[now_dt.timetuple().tm_yday % 4]
+    print(f"[HISTORY ERA ROTATION] Targeted Era for today: '{target_era.upper()}'")
 
     event = None
     try:
         from google_ai_helper import generate_ai_history
-        ai_hist = generate_ai_history(current_mmdd)
+        ai_hist = generate_ai_history(current_mmdd, target_era=target_era)
         if ai_hist:
             event_id_check = ai_hist.get("id", "ai_h")
             title_check = ai_hist.get("title", "")
@@ -257,7 +270,7 @@ def check_today_in_space_history():
             already = is_already_posted(event_id_check) or (title_hash_key and is_already_posted(title_hash_key))
             if not already:
                 event = ai_hist
-                print(f"[GEMINI AI] Generated fresh space history record for {current_mmdd}: '{event.get('title')}'") 
+                print(f"[GEMINI AI] Generated fresh space history record for {current_mmdd} ({target_era}): '{event.get('title')}'") 
     except Exception as e:
         print(f"[GEMINI HISTORY NOTE] Using catalog fallback: {e}")
 
@@ -296,6 +309,7 @@ def check_today_in_space_history():
     send_discord_embed(title, description, color=0xE67E22, image_url=event.get("image"))
     if not TEST_MODE:
         mark_posted(event_id, title_str=event.get("title", ""), ttl_hours=8760)
+        mark_posted(daily_key, ttl_hours=48)  # Lock today's calendar slot
 
 def run_engine():
     print("==========================================================")

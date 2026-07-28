@@ -144,79 +144,73 @@ def main():
     history_bot = load_module("space_history_bot", "space-history-bot/bot.py")
 
     # ==============================================================================
-    # 1. HIGH-FREQUENCY MODULES (RUNS ON EVERY 5-MINUTE EXECUTION)
+    # 1. REAL-TIME EMERGENCY MODULES (5-MINUTE POLLING)
     # ==============================================================================
-    print("\n--- [HIGH-FREQUENCY TIER: 5-MINUTE POLLING] ---")
+    print("\n--- [REAL-TIME TELEMETRY & EMERGENCY ALERTS] ---")
     
-    # High-Frequency Task 1: Rocket Launch Tracking (Launch Library 2 T-0 Telemetry)
+    # Real-Time Task 1: Rocket Launch Tracking (Launch Library 2 T-0 Countdowns)
     if ds_bot and hasattr(ds_bot, 'check_upcoming_launches'):
-        run_safe("High_Freq_Launch_Tracking", ds_bot.check_upcoming_launches)
+        run_safe("Realtime_Launch_Tracking", ds_bot.check_upcoming_launches)
 
-    # High-Frequency Task 2: Live NOAA Space Weather & Geomagnetic Storm (Kp >= 5.0)
+    # Real-Time Task 2: Live NOAA Space Weather & Geomagnetic Storm (Kp >= 5.0)
     if events_bot and hasattr(events_bot, 'check_noaa_space_weather'):
-        run_safe("High_Freq_Geomagnetic_Storm_Check", events_bot.check_noaa_space_weather, eph)
+        run_safe("Realtime_Geomagnetic_Storm_Check", events_bot.check_noaa_space_weather, eph)
 
-    # High-Frequency Task 3: Emergency Solar Flare Monitoring (X-Class / M-Class)
+    # Real-Time Task 3: Emergency Solar Flare Monitoring (X-Class / M-Class)
     if events_bot and hasattr(events_bot, 'check_solar_flares'):
-        run_safe("High_Freq_Solar_Flare_Check", events_bot.check_solar_flares, eph)
+        run_safe("Realtime_Solar_Flare_Check", events_bot.check_solar_flares, eph)
 
-    # High-Frequency Task 4: RSS Breaking Space News (NASA + ESA + ESO + Space.com)
-    # Runs every 15 minutes (every 3rd cron tick) to post news before other sites
-    if should_run_task("High_Freq_RSS_Breaking_News", interval_hours=0.25) and events_bot:
+    # ==============================================================================
+    # 2. MASTER 24-HOUR SPACED SCHEDULED TASKS
+    # ==============================================================================
+    print("\n--- [MASTER 24-HOUR SCHEDULED BROADCAST TIMETABLE] ---")
+    
+    # Slot 1 (07:00 UTC / 10:00 EEST): Morning Space News (Gemini Top Story < 24h)
+    if should_run_task("Slot_07UTC_Morning_News", target_utc_hour=7) and events_bot:
         if hasattr(events_bot, 'check_rss_breaking_news'):
-            run_safe("High_Freq_RSS_Breaking_News", events_bot.check_rss_breaking_news)
+            run_safe("Slot_07UTC_Morning_News", events_bot.check_rss_breaking_news)
 
-    # ==============================================================================
-    # 2. MEDIUM-FREQUENCY MODULES (RUNS ONCE EVERY 3 TO 6 HOURS)
-    # ==============================================================================
-    print("\n--- [MEDIUM-FREQUENCY TIER: 3-6 HOUR POLLING] ---")
-    
-    # Medium-Frequency Task 1: Deep Space Telescope Imagery & Humans in Space Manifest
-    if should_run_task("Med_Freq_Deep_Space_Imagery", interval_hours=4) and ds_bot:
-        if hasattr(ds_bot, 'check_deep_space_imagery'):
-            run_safe("Med_Freq_Deep_Space_Imagery", ds_bot.check_deep_space_imagery)
-        if hasattr(ds_bot, 'check_humans_in_space'):
-            run_safe("Med_Freq_Humans_In_Space", ds_bot.check_humans_in_space)
-
-    # Medium-Frequency Task 2: Planetary Conjunctions
-    if should_run_task("Med_Freq_Conjunctions", interval_hours=3) and events_bot and hasattr(events_bot, 'check_conjunctions'):
-        run_safe("Med_Freq_Conjunctions", events_bot.check_conjunctions, eph)
-
-    # Medium-Frequency Task 3: Planetary Alignments & Oppositions
-    if should_run_task("Med_Freq_Planetary_Alignments", interval_hours=6) and events_bot:
+    # Slot 2 (09:00 UTC / 12:00 EEST): Astronomy Events, Comets & Interstellar Objects
+    if should_run_task("Slot_09UTC_Astronomy_Events", target_utc_hour=9) and events_bot:
+        if hasattr(events_bot, 'check_conjunctions'):
+            run_safe("Slot_09UTC_Conjunctions", events_bot.check_conjunctions, eph)
         if hasattr(events_bot, 'check_planetary_alignments'):
-            run_safe("Med_Freq_Planetary_Alignments", events_bot.check_planetary_alignments, eph)
-        if hasattr(events_bot, 'check_planetary_oppositions'):
-            run_safe("Med_Freq_Planetary_Oppositions", events_bot.check_planetary_oppositions, eph)
-
-    # Medium-Frequency Task 4: Meteor Showers, Comet Streams & Supernova Transients
-    if should_run_task("Med_Freq_Meteor_Showers_Comets", interval_hours=6) and events_bot:
-        if hasattr(events_bot, 'check_meteor_showers'):
-            run_safe("Med_Freq_Meteor_Showers", events_bot.check_meteor_showers, eph)
+            run_safe("Slot_09UTC_Planetary_Alignments", events_bot.check_planetary_alignments, eph)
         if hasattr(events_bot, 'check_comets_and_interstellar'):
-            run_safe("Med_Freq_Comet_Stream", events_bot.check_comets_and_interstellar, eph)
+            run_safe("Slot_09UTC_Comets_Interstellar", events_bot.check_comets_and_interstellar, eph)
+        if hasattr(events_bot, 'check_meteor_showers'):
+            run_safe("Slot_09UTC_Meteor_Showers", events_bot.check_meteor_showers, eph)
         if hasattr(events_bot, 'check_supernovae_transients'):
-            run_safe("Med_Freq_Supernova_Stream", events_bot.check_supernovae_transients, eph)
+            run_safe("Slot_09UTC_Supernovae_Transients", events_bot.check_supernovae_transients, eph)
 
-    # Medium-Frequency Task 5: Exoplanet Discovery Tracker (NASA Exoplanet Archive)
-    if should_run_task("Med_Freq_Exoplanet_Tracker", interval_hours=6) and ds_bot:
-        if hasattr(ds_bot, 'check_exoplanet_discoveries'):
-            run_safe("Med_Freq_Exoplanet_Tracker", ds_bot.check_exoplanet_discoveries)
-
-    # ==============================================================================
-    # 3. LOW-FREQUENCY MODULES (GLOBALLY OPTIMIZED: QUIZ AT 13:00 UTC, HISTORY AT 15:00 UTC)
-    # ==============================================================================
-    print("\n--- [LOW-FREQUENCY TIER: DAILY SCHEDULED TASKS] ---")
-    
-    # Low-Frequency Task 1: Daily Space Quiz (Scheduled at 16:00 EEST / 13:00 UTC)
-    if should_run_task("Low_Freq_Daily_Space_Quiz", target_utc_hour=13) and quiz_bot:
+    # Slot 3 (12:00 UTC / 15:00 EEST): Daily Space Quiz (Strictly 1/day)
+    if should_run_task("Slot_12UTC_Daily_Space_Quiz", target_utc_hour=12) and quiz_bot:
         if hasattr(quiz_bot, 'run_engine'):
-            run_safe("Low_Freq_Daily_Space_Quiz", quiz_bot.run_engine)
+            run_safe("Slot_12UTC_Daily_Space_Quiz", quiz_bot.run_engine)
 
-    # Low-Frequency Task 2: Daily Space History (Scheduled at 18:00 EEST / 15:00 UTC)
-    if should_run_task("Low_Freq_Space_History", target_utc_hour=15) and history_bot:
+    # Slot 4 (14:00 UTC / 17:00 EEST): Afternoon Space News (Gemini Top Story — Excludes 07:00 Story)
+    if should_run_task("Slot_14UTC_Afternoon_News", target_utc_hour=14) and events_bot:
+        if hasattr(events_bot, 'check_rss_breaking_news'):
+            run_safe("Slot_14UTC_Afternoon_News", events_bot.check_rss_breaking_news)
+
+    # Slot 5 (16:00 UTC / 19:00 EEST): Today in Space History (Strictly 1/day with Era Rotation)
+    if should_run_task("Slot_16UTC_Space_History", target_utc_hour=16) and history_bot:
         if hasattr(history_bot, 'run_engine'):
-            run_safe("Low_Freq_Space_History", history_bot.run_engine)
+            run_safe("Slot_16UTC_Space_History", history_bot.run_engine)
+
+    # Slot 6 (18:00 UTC / 21:00 EEST): Deep Space Imagery & ISS Humans in Space Manifest
+    if should_run_task("Slot_18UTC_Deep_Space_Imagery", target_utc_hour=18) and ds_bot:
+        if hasattr(ds_bot, 'check_deep_space_imagery'):
+            run_safe("Slot_18UTC_Deep_Space_Imagery", ds_bot.check_deep_space_imagery)
+        if hasattr(ds_bot, 'check_humans_in_space'):
+            run_safe("Slot_18UTC_Humans_In_Space", ds_bot.check_humans_in_space)
+        if hasattr(ds_bot, 'check_exoplanet_discoveries'):
+            run_safe("Slot_18UTC_Exoplanets", ds_bot.check_exoplanet_discoveries)
+
+    # Slot 7 (20:00 UTC / 23:00 EEST): Evening Space News (Gemini Top Story — Excludes Earlier Stories)
+    if should_run_task("Slot_20UTC_Evening_News", target_utc_hour=20) and events_bot:
+        if hasattr(events_bot, 'check_rss_breaking_news'):
+            run_safe("Slot_20UTC_Evening_News", events_bot.check_rss_breaking_news)
 
     print("\n==================================================================")
     print(" ORCHESTRATION CYCLE COMPLETED SUCCESSFULLY.")

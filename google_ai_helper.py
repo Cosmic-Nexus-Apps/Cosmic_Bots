@@ -268,11 +268,15 @@ def generate_ai_quiz():
         return q_data
     return None
 
-def generate_ai_history(date_str_mmdd):
+def generate_ai_history(date_str_mmdd, target_era=None):
     """
-    Generates a historical space flight milestone for today's date using free Gemini models.
-    Injects past 100 topics to ensure 0 repetition across Ancient, Renaissance, and Modern Space History.
-    Uses stable content-hash IDs to prevent duplicate detection bypass.
+    Generates a historical space flight/astronomy milestone for today's date using free Gemini models.
+    Supports targeted historical era rotation:
+    - 'ancient': Ancient & Classical Astronomy (BCE - 1500s)
+    - 'renaissance': Renaissance & Scientific Revolution (1600s - 1800s: Galileo, Kepler, Newton, Herschel)
+    - 'space_race': Space Race Golden Era (1950s - 1970s: Apollo, Sputnik, Vostok, Mariner)
+    - 'modern': Modern Deep Space & Observatories (1980s - Present: Hubble, JWST, Voyager, Mars rovers)
+    Injects past 100 topics to ensure 0 repetition.
     """
     if not GEMINI_API_KEY:
         return None
@@ -280,9 +284,19 @@ def generate_ai_history(date_str_mmdd):
     past_topics = get_recent_asked_topics("history.db", "history_cache", "event_id", limit=100)
     past_str = "; ".join(past_topics[:50]) if past_topics else "None"
 
+    era_instruction = ""
+    if target_era == "ancient":
+        era_instruction = "CRITICAL ERA TARGET: The event MUST be from Ancient or Classical Astronomy (BCE to 1500s CE, e.g. Aristarchus, Eratosthenes, Hipparchus, Antikythera, Mayan/Babylonian/Greek star catalogs, Copernicus).\n"
+    elif target_era == "renaissance":
+        era_instruction = "CRITICAL ERA TARGET: The event MUST be from the Renaissance or Scientific Revolution (1600s to 1800s CE, e.g. Galileo discovering Jupiter's moons, Kepler's laws, Newton's telescope & gravity, Herschel discovering Uranus, predicting Neptune).\n"
+    elif target_era == "space_race":
+        era_instruction = "CRITICAL ERA TARGET: The event MUST be from the Space Race Golden Era (1950s to 1970s CE, e.g. Sputnik, Yuri Gagarin, Apollo 11, Mariner 4 flyby, Pioneer, Voyager).\n"
+    elif target_era == "modern":
+        era_instruction = "CRITICAL ERA TARGET: The event MUST be from Modern Deep Space & Observatories (1980s to Present, e.g. Hubble, JWST, Cassini, Mars Curiosity/Perseverance, Artemis).\n"
+
     prompt = (
         f"You are a master space storyteller and NASA historian. Generate a real historical space/astronomy milestone for date {date_str_mmdd}.\n"
-        "Include milestones from any era: Ancient star catalogs, Renaissance astronomers, 20th Century Space Race (Apollo, Sputnik, Vostok), or Modern Deep Space Missions (Hubble, JWST, Voyager, Mars rovers, Cassini).\n\n"
+        f"{era_instruction}\n"
         f"CRITICAL CONSTRAINT - DO NOT REPEAT THESE PAST EVENTS: [{past_str}]\n\n"
         "Strict Requirements:\n"
         "1. Return ONLY valid JSON with keys: 'year', 'title', 'agency', 'crew', 'hook', 'story', 'impact', 'fun_fact', 'keywords'.\n"
@@ -306,6 +320,45 @@ def generate_ai_history(date_str_mmdd):
         h_data["image"] = fetch_best_nasa_image(keywords)
         return h_data
     return None
+
+def select_top_space_news(candidate_articles):
+    """
+    Given a list of fresh candidate RSS news items published in the last 24 hours,
+    asks Gemini AI to grade, rank, and select the single #1 most important, groundbreaking,
+    and scientifically significant space news story.
+    Returns the selected candidate dictionary or candidate_articles[0] on fallback.
+    """
+    if not candidate_articles:
+        return None
+    if len(candidate_articles) == 1 or not GEMINI_API_KEY:
+        return candidate_articles[0]
+
+    articles_summary = ""
+    for idx, art in enumerate(candidate_articles[:10]):
+        articles_summary += f"[{idx}] Source: {art.get('source')}\nTitle: {art.get('title')}\nTeaser: {art.get('summary')[:200]}\n\n"
+
+    prompt = (
+        "You are the Chief News Editor for the world's top astronomy broadcast network.\n"
+        "Review the following candidate space news articles published in the last 24 hours and select ONLY the single #1 most important, groundbreaking, and scientifically significant space news story.\n"
+        "Filter out minor press releases, administrative fluff, or routine non-groundbreaking items.\n\n"
+        f"CANDIDATE ARTICLES:\n{articles_summary}\n"
+        "Return ONLY valid JSON with keys:\n"
+        "- 'selected_index': (integer, 0-based index of the single best article)\n"
+        "- 'reason': (1 sentence explanation of why this story was chosen above the others)"
+    )
+
+    try:
+        raw_text = call_gemini_flash_multi_model(prompt)
+        res_data = extract_and_parse_json(raw_text)
+        if res_data and "selected_index" in res_data:
+            idx = int(res_data["selected_index"])
+            if 0 <= idx < len(candidate_articles):
+                print(f"[GEMINI NEWS CURATOR] Selected article [{idx}] '{candidate_articles[idx].get('title')}': {res_data.get('reason')}")
+                return candidate_articles[idx]
+    except Exception as e:
+        print(f"[GEMINI NEWS CURATOR NOTE] Fallback to first article: {e}")
+
+    return candidate_articles[0]
 
 def enhance_news_summary(title, source_name, raw_summary):
     """

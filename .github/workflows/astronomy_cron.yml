@@ -63,3 +63,11 @@ jobs:
         TEST_MODE: "FALSE"
       run: |
         python main_orchestrator.py
+
+    - name: Commit and Push Persistent State
+      if: always()
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add published_history.json
+        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update persistent published history state [skip ci]" && git push)
