@@ -197,7 +197,7 @@ def send_discord_embed(title, description, color=0x4B0082, role_id=ROLE_ID, imag
     try:
         res = requests.post(WEBHOOK_URL, json=payload, timeout=10)
         print(f"[DISCORD POST] Status: {res.status_code} for '{title}'")
-        time.sleep(1)
+        time.sleep(3)  # Anti-burst gap between consecutive embeds
     except Exception as e:
         print(f"[DISCORD ERROR] Failed to send webhook: {e}")
 
@@ -652,10 +652,22 @@ def check_noaa_space_weather(eph=None):
     ts = load.timescale()
     t_now = ts.now()
     now_dt = datetime.now(timezone.utc)
-    base_key = f"noaa_kp_{now_dt.strftime('%Y%m%d_%H')}"
+    now_ts = now_dt.timestamp()
 
-    if not TEST_MODE and is_already_notified(base_key):
-        return
+    # Table for active storm tracking (Start -> Active -> All Clear)
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS storm_state (
+            key_name TEXT PRIMARY KEY,
+            active_flag INTEGER,
+            start_ts REAL,
+            max_kp REAL,
+            storm_class TEXT
+        )
+    """)
+    conn.commit()
 
     kp_value = 3.0
     storm_class = "Quiet / Normal"
@@ -675,6 +687,8 @@ def check_noaa_space_weather(eph=None):
                 if time_tag_raw:
                     try:
                         event_dt = datetime.fromisoformat(time_tag_raw.replace('Z', '+00:00'))
+                        if event_dt.tzinfo is None:
+                            event_dt = event_dt.replace(tzinfo=timezone.utc)
                     except Exception:
                         event_dt = now_dt
                 if kp_value >= 7:
@@ -686,14 +700,32 @@ def check_noaa_space_weather(eph=None):
     except Exception as e:
         print(f"[NOAA API NOTE] Using default telemetry loop: {e}")
 
-    if kp_value >= 5.0 or TEST_MODE:
+    # Check active storm state from DB
+    cursor.execute("SELECT active_flag, start_ts, max_kp, storm_class FROM storm_state WHERE key_name = 'geomagnetic_storm'")
+    row = cursor.fetchone()
+    is_storm_active = bool(row[0]) if row else False
+    start_ts = row[1] if row else now_ts
+    max_kp = max(row[2] if row else 0.0, kp_value)
+    prev_class = row[3] if row else storm_class
+
+    # Calculate telemetry age in minutes
+    telemetry_age_mins = (now_dt - event_dt).total_seconds() / 60.0
+
+    # 1. NEW STORM ONSET ALERT (Kp >= 5.0 and fresh < 45 mins old)
+    if (kp_value >= 5.0 or TEST_MODE) and not is_storm_active:
+        # Enforce fresh telemetry onset filter: Do NOT send onset alert if peak/event is > 45 mins old
+        if not TEST_MODE and telemetry_age_mins > 45:
+            print(f"[NOAA STALE ONSET GUARD] Ignored stale geomagnetic storm onset ({telemetry_age_mins:.1f} mins old).")
+            conn.close()
+            return
+
         display_kp = kp_value if kp_value >= 5.0 else 6.67
         display_storm = storm_class if kp_value >= 5.0 else "G2 - Moderate Geomagnetic Storm"
         aurora_reach = get_aurora_latitude_estimate(display_kp)
         peak_dt = event_dt
         date_str = peak_dt.strftime("%d %B %Y at %H:%M UTC").upper()
 
-        title = f"☀️ GEOMAGNETIC STORM (KP {display_kp:.1f}) | SPACE WEATHER ALERT"
+        title = f"☀️ GEOMAGNETIC STORM INITIATED (KP {display_kp:.1f}) | SPACE WEATHER ALERT"
         description = (
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🎯 **EVENT:** Solar Geomagnetic Storm & Auroral Activity\n"
@@ -701,7 +733,7 @@ def check_noaa_space_weather(eph=None):
             f"📊 **PLANETARY KP INDEX:** `{display_kp:.1f} / 9.0`\n"
             f"⚡ **NOAA RATING:** `{display_storm}`\n"
             f"🌍 **MINIMUM AURORA LATITUDE:** `{aurora_reach}`\n"
-            f"📅 **DETECTION DATE:** `{date_str}`\n"
+            f"📅 **ONSET TIMESTAMP:** `{date_str}`\n"
             f"{get_moon_phase_info(t_now, eph)}\n"
             f"🔭 **RECOMMENDED GEAR:** `Solar Telescope (White-Light/H-Alpha Filter) / Camera`\n\n"
             f"⏱️ **OBSERVATION WINDOW (MINUTE-PRECISE):**\n"
@@ -711,7 +743,37 @@ def check_noaa_space_weather(eph=None):
         )
 
         send_discord_embed(title, description, color=0xE74C3C, image_url=nasa_sdo_image)
-        mark_notified(base_key, ttl_hours=6)
+
+        # Mark storm ACTIVE in DB
+        cursor.execute("INSERT OR REPLACE INTO storm_state (key_name, active_flag, start_ts, max_kp, storm_class) VALUES ('geomagnetic_storm', 1, ?, ?, ?)", (now_ts, display_kp, display_storm))
+        conn.commit()
+
+    # 2. STORM CONCLUDED / "ALL CLEAR" UPDATE (Kp dropped < 4.0 while storm was ACTIVE)
+    elif kp_value < 4.0 and is_storm_active:
+        duration_mins = max(1, int((now_ts - start_ts) / 60))
+        hours = duration_mins // 60
+        mins = duration_mins % 60
+        duration_str = f"{hours}h {mins}m" if hours > 0 else f"{mins} mins"
+
+        title = "🟢 ALL CLEAR | GEOMAGNETIC STORM CONCLUDED"
+        description = (
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎯 **EVENT:** Geomagnetic Storm Resolution & Magnetosphere Stabilization\n"
+            f"📊 **CURRENT PLANETARY KP INDEX:** `{kp_value:.1f} / 9.0` *(Normal / Quiet)*\n"
+            f"⚡ **MAXIMUM PEAK RATING REACHED:** `{prev_class}` *(Max Kp: {max_kp:.1f})*\n"
+            f"⏱️ **TOTAL STORM DURATION:** `{duration_str}`\n"
+            f"📅 **RESOLVED AT:** `{now_dt.strftime('%d %B %Y at %H:%M UTC').upper()}`\n\n"
+            f"💡 **SUMMARY:** Earth's magnetosphere has returned to quiet baseline levels. Auroral activity has subsided to polar latitudes.\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        )
+
+        send_discord_embed(title, description, color=0x2ECC71)
+
+        # Mark storm INACTIVE in DB
+        cursor.execute("INSERT OR REPLACE INTO storm_state (key_name, active_flag, start_ts, max_kp, storm_class) VALUES ('geomagnetic_storm', 0, 0, 0, 'Quiet')", ())
+        conn.commit()
+
+    conn.close()
 
 # ==============================================================================
 # MODULE 8: IAU MINOR PLANET CENTER & COBS LIVE COMET DATA STREAM (DYNAMIC API)
@@ -867,12 +929,19 @@ def check_solar_flares(eph=None):
                     if time_tag_raw:
                         try:
                             event_dt = datetime.fromisoformat(time_tag_raw.replace('Z', '+00:00'))
+                            if event_dt.tzinfo is None:
+                                event_dt = event_dt.replace(tzinfo=timezone.utc)
                         except Exception:
                             event_dt = now_dt
     except Exception as e:
         print(f"[SOLAR FLARE API NOTE] {e}")
 
     if max_flux >= 5e-5 or TEST_MODE:
+        telemetry_age_mins = (now_dt - event_dt).total_seconds() / 60.0
+        if not TEST_MODE and telemetry_age_mins > 45:
+            print(f"[SOLAR FLARE STALE GUARD] Ignored stale solar flare eruption ({telemetry_age_mins:.1f} mins old).")
+            return
+
         base_key = f"solar_flare_{event_dt.strftime('%Y%m%d_%H%M')}"
         if TEST_MODE or not is_already_notified(base_key):
             display_class = flare_class if max_flux >= 5e-5 else "X2.5 Extreme Solar Flare"
