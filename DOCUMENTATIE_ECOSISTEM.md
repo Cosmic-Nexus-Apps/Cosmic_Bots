@@ -126,7 +126,7 @@ Pentru a se potrivi perfect cu serverul tău în limba engleză, structura exact
 ## 🚀 7. Cum Rulează Ecosistemul în Producție
 
 1. **Rularea prin Cron / GitHub Actions:**
-   La fiecare 5 minute, se apelează comanda:
+   La fiecare oră la fix (`0 * * * *`), se apelează comanda:
    ```bash
    python main_orchestrator.py
    ```
@@ -136,4 +136,16 @@ Pentru a se potrivi perfect cu serverul tău în limba engleză, structura exact
    - `DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL`
    - `SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL`
    - `SPACE_HISTORY_BOT_DISCORD_WEBHOOK_URL`
+
+---
+
+## 🔄 8. Regula de Aur pentru Update-uri & Git Workflow (AI Prompt & Best Practices)
+
+Când se fac modificări în codul botului de pe calculatorul local sau prin intermediul unui asistent AI:
+1. **Întotdeauna `git pull --rebase` înainte de editare/push**: Deoarece GitHub Actions salvează continuu istoricul postărilor în `published_history.json`, localul trebuie sincronizat cu remote-ul înainte de commit/push.
+2. **Păstrarea `published_history.json`**: Acest fișier garantează că nicio știre, cometă, supernovă sau quiz nu se va repeta pe Discord.
+
+### 📝 Prompt de oferit Asistentului AI la orice Update:
+> *"Înainte de a face modificări sau de a da git push, execută `git pull --rebase` pentru a aduce cea mai recentă versiune a fișierului `published_history.json` actualizată automat de GitHub Actions. Nu șterge și nu reseta `published_history.json` pentru a preveni repetarea mesajelor pe Discord."*
+
 
