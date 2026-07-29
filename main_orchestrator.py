@@ -144,7 +144,7 @@ def main():
     history_bot = load_module("space_history_bot", "space-history-bot/bot.py")
 
     # ==============================================================================
-    # 1. REAL-TIME EMERGENCY MODULES (5-MINUTE POLLING)
+    # 1. REAL-TIME TELEMETRY & EMERGENCY ALERTS (CHECKED ON EVERY CYCLE)
     # ==============================================================================
     print("\n--- [REAL-TIME TELEMETRY & EMERGENCY ALERTS] ---")
     
@@ -159,6 +159,14 @@ def main():
     # Real-Time Task 3: Emergency Solar Flare Monitoring (X-Class / M-Class)
     if events_bot and hasattr(events_bot, 'check_solar_flares'):
         run_safe("Realtime_Solar_Flare_Check", events_bot.check_solar_flares, eph)
+
+    # Real-Time Task 4: Real-Time Supernovae & Extragalactic Transients Alerts
+    if events_bot and hasattr(events_bot, 'check_supernovae_transients'):
+        run_safe("Realtime_Supernovae_Check", events_bot.check_supernovae_transients, eph)
+
+    # Real-Time Task 5: IAU & COBS Live Comet / Interstellar Outburst Alerts
+    if events_bot and hasattr(events_bot, 'check_comets_and_interstellar'):
+        run_safe("Realtime_Comets_Interstellar_Check", events_bot.check_comets_and_interstellar, eph)
 
     # ==============================================================================
     # 2. MASTER 24-HOUR SPACED SCHEDULED TASKS

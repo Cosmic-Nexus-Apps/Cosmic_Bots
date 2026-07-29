@@ -596,6 +596,33 @@ def check_deep_space_imagery():
     current_year = now_dt.year
     hydrated = is_module_hydrated("deep_space_imagery")
 
+    # 0. Check for Rare Extraordinary Breaking News Override (Stire Foarte Importanta)
+    try:
+        from google_ai_helper import check_for_extraordinary_news, enhance_news_summary
+        extraordinary_art = check_for_extraordinary_news()
+        if extraordinary_art:
+            import re
+            summary_clean = re.sub(r'<[^>]+>', '', extraordinary_art["summary"])
+            summary_clean = enhance_news_summary(extraordinary_art["title"], extraordinary_art["source"], summary_clean)
+
+            embed_title = f"🚨 STIRE EXTRAORDINARA | {extraordinary_art['title'].upper()}"
+            description = (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"🔥 **ALERTA DE STIRE RARA SI FOARTE IMPORTANTA:** `{extraordinary_art['title']}`\n"
+                f"📡 **SURSA:** `{extraordinary_art['source']}`\n"
+                f"💡 **MOTIV PRIORITATE:** `{extraordinary_art.get('reason', 'Eveniment Istoric')}`\n\n"
+                f"📖 **REZUMAT:**\n{summary_clean}\n\n"
+                f"🔗 **CITESTE ARTICOLUL COMPLET:** [Deschide Stirea]({extraordinary_art['link']})\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+            send_discord_embed(embed_title, description, color=0xE74C3C)
+            mark_item_and_title_notified(extraordinary_art["event_key"], title_str=extraordinary_art["title"], ttl_hours=720)
+            set_module_hydrated("deep_space_imagery")
+            print(f"[DEEP SPACE] Broadcasted Rare Extraordinary News override instead of APOD: '{extraordinary_art['title']}'")
+            return
+    except Exception as e:
+        print(f"[EXTRAORDINARY NEWS OVERRIDE NOTE] {e}")
+
     # 1. Query Live NASA APOD (Astronomy Picture of the Day) API for TODAY'S picture
     try:
         apod_url = f"https://api.nasa.gov/planetary/apod?api_key={NASA_API_KEY}"

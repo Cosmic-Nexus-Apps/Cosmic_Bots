@@ -169,8 +169,9 @@ def get_moon_phase_info(t_now=None, eph=None):
             
     return "🌔 **MOON:** `Dynamic Telemetry Active` *(Optimal Dark Sky Tracking)*"
 
-def send_discord_embed(title, description, color=0x4B0082, role_id=ROLE_ID, image_url=None):
-    if not WEBHOOK_URL:
+def send_discord_embed(title, description, color=0x4B0082, role_id=ROLE_ID, image_url=None, webhook_url=None):
+    target_url = webhook_url or WEBHOOK_URL
+    if not target_url:
         print(f"[DISCORD EMBED - NO WEBHOOK CONFIGURED]\nTitle: {title}\n{description}\n")
         return
 
@@ -195,7 +196,7 @@ def send_discord_embed(title, description, color=0x4B0082, role_id=ROLE_ID, imag
         payload["content"] = f"<@&{role_id}>"
 
     try:
-        res = requests.post(WEBHOOK_URL, json=payload, timeout=10)
+        res = requests.post(target_url, json=payload, timeout=10)
         print(f"[DISCORD POST] Status: {res.status_code} for '{title}'")
         time.sleep(3)  # Anti-burst gap between consecutive embeds
     except Exception as e:
@@ -1152,6 +1153,8 @@ def check_rss_breaking_news():
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 
-    send_discord_embed(embed_title, description, color=selected_art["color"])
+    ds_webhook = os.getenv("DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL") or WEBHOOK_URL
+    ds_role = os.getenv("DEEP_SPACE_BOT_DISCORD_ROLE_ID") or ROLE_ID
+    send_discord_embed(embed_title, description, color=selected_art["color"], role_id=ds_role, webhook_url=ds_webhook)
     mark_item_and_title_notified(selected_art["event_key"], title_str=selected_art["title"], ttl_hours=720)
     print(f"[RSS] Posted Top Story: '{selected_art['title']}' from {selected_art['source']}")

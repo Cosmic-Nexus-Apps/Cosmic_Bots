@@ -405,3 +405,110 @@ def enhance_news_summary(title, source_name, raw_summary):
 
     return raw_summary
 
+def check_for_extraordinary_news():
+    """
+    Scans space RSS feeds for articles published in the last 24h.
+    Uses Gemini AI to determine if ANY candidate article represents a TRULY EXTRAORDINARY,
+    HISTORIC, or URGENT BREAKING EVENT (e.g. extraterrestrial biosignature detection,
+    massive Carrington-level solar storm, major spacecraft loss/discovery, historic JWST finding).
+    Returns the article dictionary if extraordinary news exists, else None.
+    """
+    try:
+        import feedparser
+    except ImportError:
+        return None
+
+    RSS_FEEDS = [
+        {"name": "NASA Breaking News", "url": "https://www.nasa.gov/news-release/feed/", "color": 0xE74C3C, "emoji": "🚨"},
+        {"name": "ESA Top News", "url": "https://www.esa.int/rssfeed/Our_Activities/Space_News", "color": 0x3498DB, "emoji": "🛰️"},
+        {"name": "Space.com Breaking", "url": "https://www.space.com/feeds/all", "color": 0xF1C40F, "emoji": "📰"},
+        {"name": "ESO News", "url": "https://www.eso.org/public/outreach/rss/news.xml", "color": 0x9B59B6, "emoji": "🔭"}
+    ]
+
+    now_ts = datetime.now(timezone.utc).timestamp()
+    candidate_articles = []
+
+    for feed_cfg in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(feed_cfg["url"])
+            entries = feed.entries[:5]
+        except Exception:
+            continue
+
+        for entry in entries:
+            title = getattr(entry, "title", "").strip()
+            link = getattr(entry, "link", "").strip()
+            summary = getattr(entry, "summary", "").strip()
+            if not title or not link:
+                continue
+
+            pub_ts = None
+            if hasattr(entry, "published_parsed") and entry.published_parsed:
+                import calendar
+                pub_ts = calendar.timegm(entry.published_parsed)
+            elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
+                import calendar
+                pub_ts = calendar.timegm(entry.updated_parsed)
+
+            if pub_ts is not None and (now_ts - pub_ts) > (24 * 3600):
+                continue
+
+            clean_title = re.sub(r'\W+', '', title.lower())
+            title_hash = hashlib.md5(clean_title.encode('utf-8')).hexdigest()
+            event_key = f"extraordinary_news_{title_hash}"
+
+            # Check if published
+            try:
+                import persistent_history
+                if persistent_history.is_published(event_key, title_str=title):
+                    continue
+            except Exception:
+                pass
+
+            candidate_articles.append({
+                "title": title,
+                "link": link,
+                "summary": summary,
+                "source": feed_cfg["name"],
+                "color": feed_cfg["color"],
+                "emoji": feed_cfg["emoji"],
+                "event_key": event_key
+            })
+
+    if not candidate_articles or not GEMINI_API_KEY:
+        return None
+
+    articles_summary = ""
+    for idx, art in enumerate(candidate_articles[:10]):
+        articles_summary += f"[{idx}] Source: {art.get('source')}\nTitle: {art.get('title')}\nTeaser: {art.get('summary')[:250]}\n\n"
+
+    prompt = (
+        "You are the Chief News Editor for a global astronomy network.\n"
+        "Analyze the following recent space news articles. Determine if ANY of them is a TRULY EXTRAORDINARY, HISTORIC, or URGENT BREAKING EVENT.\n"
+        "An EXTRAORDINARY story includes: detection of alien life/biosignatures, massive Carrington-level solar storm, major rocket/spacecraft explosion or historical landing, discovery of a novel interstellar object, or revolutionary paradigm-shifting physics discovery.\n"
+        "Routine space station updates, standard launches, normal telescope photos, or minor scientific studies ARE NOT extraordinary (set has_extraordinary_news to false).\n\n"
+        f"ARTICLES:\n{articles_summary}\n"
+        "Return ONLY valid JSON:\n"
+        "{\n"
+        '  "has_extraordinary_news": true or false,\n'
+        '  "selected_index": integer (0-based index if true, else null),\n'
+        '  "reason": "1-sentence explanation"\n'
+        "}"
+    )
+
+    try:
+        raw_text = call_gemini_flash_multi_model(prompt)
+        res_data = extract_and_parse_json(raw_text)
+        if res_data and res_data.get("has_extraordinary_news") is True:
+            idx = res_data.get("selected_index")
+            if idx is not None and isinstance(idx, int) and 0 <= idx < len(candidate_articles):
+                art = candidate_articles[idx]
+                art["reason"] = res_data.get("reason", "Tier-1 Extraordinary Breaking News")
+                print(f"[EXTRAORDINARY NEWS DETECTED] '{art['title']}': {art['reason']}")
+                return art
+    except Exception as e:
+        print(f"[EXTRAORDINARY NEWS CHECK NOTE] {e}")
+
+    return None
+
+

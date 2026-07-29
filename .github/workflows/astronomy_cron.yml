@@ -5,8 +5,8 @@ permissions:
 
 on:
   schedule:
-    # Runs every 5 minutes automatically (FREE tier high-frequency polling)
-    - cron: '*/5 * * * *'
+    # Runs every hour at minute 0 (Reliable hourly check for alerts & scheduled slots)
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 # Prevents execution overlap: If a job runs >5 minutes, cancel the previous stuck job
