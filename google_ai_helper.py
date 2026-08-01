@@ -106,13 +106,19 @@ def _score_nasa_image(item_data, keywords):
 
     return score
 
-def fetch_best_nasa_image(keywords_list):
+def fetch_best_nasa_image(keywords_list, excluded_image_urls=None):
     """
     Queries NASA Image API and Wikimedia Commons with primary, backup, and alt keywords.
     Uses relevance scoring to return the most contextually accurate image.
     """
     if isinstance(keywords_list, str):
         keywords_list = [keywords_list]
+
+    excluded = {
+        (url or "").split("#", 1)[0].split("?", 1)[0].strip().lower()
+        for url in (excluded_image_urls or [])
+        if url
+    }
 
     # 1. Collect candidates from NASA Image Library API (scored for relevance)
     scored_candidates = []
@@ -134,7 +140,9 @@ def fetch_best_nasa_image(keywords_list):
                     if not href or not any(ext in href for ext in [".jpg", ".png", ".jpeg"]):
                         continue
                     score = _score_nasa_image(item_data, keywords_list)
-                    scored_candidates.append((score, href))
+                    normalized_href = href.split("#", 1)[0].split("?", 1)[0].strip().lower()
+                    if normalized_href not in excluded:
+                        scored_candidates.append((score, href))
         except Exception:
             continue
 
@@ -163,13 +171,16 @@ def fetch_best_nasa_image(keywords_list):
                     imageinfo = pdata.get("imageinfo", [])
                     if imageinfo and imageinfo[0].get("url"):
                         img_url = imageinfo[0].get("url")
-                        if any(ext in img_url.lower() for ext in [".jpg", ".png", ".jpeg"]):
+                        normalized_img_url = img_url.split("#", 1)[0].split("?", 1)[0].strip().lower()
+                        if (any(ext in img_url.lower() for ext in [".jpg", ".png", ".jpeg"])
+                                and normalized_img_url not in excluded):
                             return img_url
         except Exception:
             continue
 
     # 3. Ultimate fallback — generic deep space image
-    return "https://images-assets.nasa.gov/image/PIA12110/PIA12110~medium.jpg"
+    fallback = "https://images-assets.nasa.gov/image/PIA12110/PIA12110~medium.jpg"
+    return None if fallback.lower() in excluded else fallback
 
 def get_recent_asked_topics(db_file, table_name, column_name, limit=100):
     """
@@ -221,7 +232,7 @@ def extract_and_parse_json(raw_text):
             print(f"[JSON PARSE ERROR] Second attempt failed: {e2}")
             return None
 
-def generate_ai_quiz():
+def generate_ai_quiz(excluded_image_urls=None):
     """
     Generates a brand new 100% accurate astronomy quiz question using free Gemini models.
     Injects past 100 asked topics to ensure 0 repetition across Astrophysics, Astrobiology,
@@ -264,7 +275,7 @@ def generate_ai_quiz():
         question_text = q_data.get("question", "")
         q_data["id"] = make_stable_content_id("ai_quiz", question_text)
         keywords = q_data.get("keywords", [question_text or "astronomy"])
-        q_data["image"] = fetch_best_nasa_image(keywords)
+        q_data["image"] = fetch_best_nasa_image(keywords, excluded_image_urls=excluded_image_urls)
         return q_data
     return None
 

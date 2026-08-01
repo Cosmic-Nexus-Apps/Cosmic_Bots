@@ -27,7 +27,7 @@ DB_FILE = "quiz.db"
 TEST_MODE = os.getenv("TEST_MODE", "FALSE").upper() == "TRUE"
 
 def init_db():
-    """Initializes SQLite database for quiz question tracking with 1-year anti-repeat retention."""
+    """Initializes quiz/question and image tracking with 1-year anti-repeat retention."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("""
@@ -36,6 +36,40 @@ def init_db():
             expire_timestamp REAL
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS quiz_image_cache (
+            image_url TEXT PRIMARY KEY,
+            first_seen_timestamp REAL,
+            question_id TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def _image_key(image_url):
+    """Normalizes image URLs so URL variants cannot bypass the no-repeat guard."""
+    return (image_url or "").split("#", 1)[0].split("?", 1)[0].strip().lower()
+
+def is_image_already_used(image_url):
+    image_key = _image_key(image_url)
+    if not image_key:
+        return True
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    row = conn.execute("SELECT 1 FROM quiz_image_cache WHERE image_url = ?", (image_key,)).fetchone()
+    conn.close()
+    return row is not None
+
+def mark_image_used(image_url, question_id):
+    image_key = _image_key(image_url)
+    if not image_key:
+        return
+    init_db()
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute(
+        "INSERT OR IGNORE INTO quiz_image_cache (image_url, first_seen_timestamp, question_id) VALUES (?, ?, ?)",
+        (image_key, datetime.now(timezone.utc).timestamp(), question_id),
+    )
     conn.commit()
     conn.close()
 
@@ -407,11 +441,22 @@ def check_daily_quiz():
 
     date_str = now_dt.strftime("%d %B %Y").upper()
 
+    # Backfill image usage for catalog questions published before this guard.
+    init_db()
+    for catalog_item in QUIZ_CATALOG:
+        if is_already_asked(catalog_item["id"]):
+            mark_image_used(catalog_item.get("image"), catalog_item["id"])
+
     quiz_item = None
     try:
         from google_ai_helper import generate_ai_quiz
-        ai_quiz = generate_ai_quiz()
-        if ai_quiz and not is_already_asked(ai_quiz.get("id", "ai_q")):
+        used_images = {
+            _image_key(q.get("image")) for q in QUIZ_CATALOG
+            if is_image_already_used(q.get("image"))
+        }
+        ai_quiz = generate_ai_quiz(excluded_image_urls=used_images)
+        if (ai_quiz and not is_already_asked(ai_quiz.get("id", "ai_q"))
+                and not is_image_already_used(ai_quiz.get("image"))):
             quiz_item = ai_quiz
             print(f"[GEMINI AI] Generated fresh quiz question: '{quiz_item.get('question')}'")
     except Exception as e:
@@ -419,10 +464,14 @@ def check_daily_quiz():
 
     # AI path: use stable content-hash ID (already set by google_ai_helper)
     if not quiz_item:
-        available_questions = [q for q in QUIZ_CATALOG if TEST_MODE or not is_already_asked(q["id"])]
+        available_questions = [
+            q for q in QUIZ_CATALOG
+            if (TEST_MODE or not is_already_asked(q["id"]))
+            and not is_image_already_used(q.get("image"))
+        ]
         if not available_questions:
-            print("[QUIZ ENGINE NOTE] All questions asked within the past 1 year. Resetting catalog loop...")
-            available_questions = QUIZ_CATALOG
+            print("[QUIZ ENGINE STOP] No question with a never-used image is available; refusing to repeat an image.")
+            return
 
         quiz_item = random.choice(available_questions)
 
@@ -452,6 +501,7 @@ def check_daily_quiz():
     send_discord_embed(title, description, color=0xF1C40F, image_url=quiz_item.get("image"))
     if not TEST_MODE:
         mark_asked(item_id, ttl_hours=8760) # 8760 hours = 1 Full Year Anti-Repeat
+        mark_image_used(quiz_item.get("image"), item_id)
         mark_asked(daily_key, ttl_hours=48)  # Lock today's calendar slot
 
 def run_engine():

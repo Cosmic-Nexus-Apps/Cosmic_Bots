@@ -249,9 +249,14 @@ def check_today_in_space_history():
     current_mmdd = now_dt.strftime("%m-%d")
     date_display = now_dt.strftime("%d %B").upper()
 
-    # Century & Era Diversity Rotation across 4 historical eras
-    eras = ["ancient", "renaissance", "space_race", "modern"]
-    target_era = eras[now_dt.timetuple().tm_yday % 4]
+    # Weighted 20-day cycle: Ancient 50%, Renaissance 25%, Space Race 15%, Modern 10%.
+    weighted_eras = (
+        ["ancient"] * 10
+        + ["renaissance"] * 5
+        + ["space_race"] * 3
+        + ["modern"] * 2
+    )
+    target_era = weighted_eras[now_dt.timetuple().tm_yday % len(weighted_eras)]
     print(f"[HISTORY ERA ROTATION] Targeted Era for today: '{target_era.upper()}'")
 
     event = None
