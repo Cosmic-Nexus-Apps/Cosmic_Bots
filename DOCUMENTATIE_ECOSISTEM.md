@@ -25,17 +25,16 @@ Transmisiile pe server sunt împărțite în două categorii: **Alerte în Timp 
 
 ---
 
-### 📅 Orarul Zilnic Programat (Cele 7 Sloturi Orare)
+### 📅 Orarul Zilnic Programat (Cele 6 Sloturi Orare)
 
 | Slot Orar | Ora UTC | Ora României (EEST / UTC+3) | Bot / Modul Responsabil | Conținut Transmis |
-| :---: | :---: | :---: | :--- | :--- |
-| **Slot 1** | **07:00 UTC** | **10:00 EEST** | `astro-events-bot` | 📰 **Știrile Dimineții:** Cea mai importantă știre spațială din ultimele 24h selectată de Gemini AI. |
+| :---: | :---: | :---: | :---: | :--- |
+| **Slot 1** | **07:00 UTC** | **10:00 EEST** | `astro-events-bot` | 📰 **Știrea Zilei (Daily Top Story):** Cea mai importantă știre spațială a zilei selectată de Gemini AI cu rezumat extins și imaginea originală din articol. |
 | **Slot 2** | **09:00 UTC** | **12:00 EEST** | `astro-events-bot` | 🔭 **Evenimente Astronomice:** Conjuncții planetare (Skyfield JPL), Alinieri planetare ($\ge 4$ planete), Comete noi, Ploi de meteoriți & Supernove. |
-| **Slot 3** | **12:00 UTC** | **15:00 EEST** | `space-quiz-bot` | 🧠 **Quiz-ul Spațial Zilnic:** Întrebare interactivă de astronomie generată dinamic cu Gemini AI (Fără repetări). |
-| **Slot 4** | **14:00 UTC** | **17:00 EEST** | `astro-events-bot` | 📰 **Știrile După-Amiezii:** Știre spațială de top (excluzând știrile deja transmise). |
-| **Slot 5** | **16:00 UTC** | **19:00 EEST** | `space-history-bot` | 📜 **A Azi în Istoria Spațiului:** Eveniment istoric major (Misiuni Apollo, Voyager, Hubble, etc.) cu poze arhivă NASA. |
-| **Slot 6** | **18:00 UTC** | **21:00 EEST** | `deep-space-bot` | 📸 **Poza Zilei NASA (APOD) & Deep Space:** NASA APOD / JWST / Hubble + Echipajul de pe ISS + Exoplanete noi. *(Vezi mai jos logica de override pentru știri rare)*. |
-| **Slot 7** | **20:00 UTC** | **23:00 EEST** | `astro-events-bot` | 📰 **Știrile Serii:** Sinteză cu cele mai noi descoperiri ale zilei. |
+| **Slot 3** | **12:00 UTC** | **15:00 EEST** | `space-quiz-bot` | 🧠 **Quiz-ul Spațial Zilnic:** Întrebare interactivă de astronomie generată dinamic cu Gemini AI + căutare imagini relevante via Wikipedia API. |
+| **Slot 4** | **14:00 UTC** | **17:00 EEST** | `deep-space-bot` | 📸 **Poza Zilei NASA (APOD):** Slot 100% dedicat pentru Astronomy Picture of the Day de la NASA. |
+| **Slot 5** | **16:00 UTC** | **19:00 EEST** | `space-history-bot` | 📜 **Azi în Istoria Spațiului:** Eveniment istoric (Apollo, Voyager, Kepler, Galileo) cu portrete/imagini verificate via Wikipedia API. |
+| **Slot 6** | **18:00 UTC** | **21:00 EEST** | `deep-space-bot` | 🌌 **Deep Space & Telemetrie ISS:** Imagini telescoape JWST/Hubble + Echipajul uman de pe ISS + Exoplanete noi. |
 
 ---
 

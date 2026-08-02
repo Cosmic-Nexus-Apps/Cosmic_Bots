@@ -5,8 +5,8 @@ permissions:
 
 on:
   schedule:
-    # Runs every hour at minute 0 (Reliable hourly check for alerts & scheduled slots)
-    - cron: '0 * * * *'
+    # Runs at exact broadcast target hours in UTC (07:00, 09:00, 12:00, 14:00, 16:00, 18:00 UTC)
+    - cron: '0 7,9,12,14,16,18 * * *'
   workflow_dispatch:
 
 # Prevents execution overlap: If a job runs >5 minutes, cancel the previous stuck job

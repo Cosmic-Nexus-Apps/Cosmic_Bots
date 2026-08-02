@@ -52,7 +52,7 @@ def should_run_task(task_name: str, interval_hours: float = None, target_utc_hou
 
         if not row:
             if target_utc_hour is not None:
-                return target_utc_hour <= now_dt.hour < (target_utc_hour + 3)
+                return now_dt.hour >= target_utc_hour
             return True
 
         last_run_ts = row[0]
@@ -98,7 +98,7 @@ def run_safe(task_name: str, task_func, *args, **kwargs):
 
 def main():
     print("==================================================================")
-    print(" COSMIC NEXUS HIGH-FREQUENCY (5-MIN) CRON ORCHESTRATOR")
+    print(" COSMIC NEXUS SCHEDULED BROADCAST ORCHESTRATOR")
     print(f" Timestamp: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print("==================================================================")
 
@@ -169,16 +169,16 @@ def main():
         run_safe("Realtime_Comets_Interstellar_Check", events_bot.check_comets_and_interstellar, eph)
 
     # ==============================================================================
-    # 2. MASTER 24-HOUR SPACED SCHEDULED TASKS
+    # 2. MASTER SCHEDULED BROADCAST TIMETABLE (FIXED TARGET HOURS)
     # ==============================================================================
-    print("\n--- [MASTER 24-HOUR SCHEDULED BROADCAST TIMETABLE] ---")
+    print("\n--- [MASTER SCHEDULED BROADCAST TIMETABLE] ---")
     
-    # Slot 1 (07:00 UTC / 10:00 EEST): Morning Space News (Gemini Top Story < 24h)
+    # Slot 1 (07:00 UTC / 10:00 EEST): Daily Space News (Single #1 Gemini Top Story < 24h)
     if should_run_task("Slot_07UTC_Morning_News", target_utc_hour=7) and events_bot:
         if hasattr(events_bot, 'check_rss_breaking_news'):
             run_safe("Slot_07UTC_Morning_News", events_bot.check_rss_breaking_news)
 
-    # Slot 2 (09:00 UTC / 12:00 EEST): Astronomy Events, Comets & Interstellar Objects
+    # Slot 2 (09:00 UTC / 12:00 EEST): Astronomy Events, Comets & Planetary Alignments
     if should_run_task("Slot_09UTC_Astronomy_Events", target_utc_hour=9) and events_bot:
         if hasattr(events_bot, 'check_conjunctions'):
             run_safe("Slot_09UTC_Conjunctions", events_bot.check_conjunctions, eph)
@@ -196,29 +196,22 @@ def main():
         if hasattr(quiz_bot, 'run_engine'):
             run_safe("Slot_12UTC_Daily_Space_Quiz", quiz_bot.run_engine)
 
-    # Slot 4 (14:00 UTC / 17:00 EEST): Afternoon Space News (Gemini Top Story — Excludes 07:00 Story)
-    if should_run_task("Slot_14UTC_Afternoon_News", target_utc_hour=14) and events_bot:
-        if hasattr(events_bot, 'check_rss_breaking_news'):
-            run_safe("Slot_14UTC_Afternoon_News", events_bot.check_rss_breaking_news)
+    # Slot 4 (14:00 UTC / 17:00 EEST): Dedicated NASA APOD (Astronomy Picture of the Day)
+    if should_run_task("Slot_14UTC_NASA_APOD", target_utc_hour=14) and ds_bot:
+        if hasattr(ds_bot, 'check_deep_space_imagery'):
+            run_safe("Slot_14UTC_NASA_APOD", ds_bot.check_deep_space_imagery)
 
     # Slot 5 (16:00 UTC / 19:00 EEST): Today in Space History (Strictly 1/day with Era Rotation)
     if should_run_task("Slot_16UTC_Space_History", target_utc_hour=16) and history_bot:
         if hasattr(history_bot, 'run_engine'):
             run_safe("Slot_16UTC_Space_History", history_bot.run_engine)
 
-    # Slot 6 (18:00 UTC / 21:00 EEST): Deep Space Imagery & ISS Humans in Space Manifest
+    # Slot 6 (18:00 UTC / 21:00 EEST): Deep Space Imagery, JWST/Hubble & ISS Humans in Space
     if should_run_task("Slot_18UTC_Deep_Space_Imagery", target_utc_hour=18) and ds_bot:
-        if hasattr(ds_bot, 'check_deep_space_imagery'):
-            run_safe("Slot_18UTC_Deep_Space_Imagery", ds_bot.check_deep_space_imagery)
         if hasattr(ds_bot, 'check_humans_in_space'):
             run_safe("Slot_18UTC_Humans_In_Space", ds_bot.check_humans_in_space)
         if hasattr(ds_bot, 'check_exoplanet_discoveries'):
             run_safe("Slot_18UTC_Exoplanets", ds_bot.check_exoplanet_discoveries)
-
-    # Slot 7 (20:00 UTC / 23:00 EEST): Evening Space News (Gemini Top Story — Excludes Earlier Stories)
-    if should_run_task("Slot_20UTC_Evening_News", target_utc_hour=20) and events_bot:
-        if hasattr(events_bot, 'check_rss_breaking_news'):
-            run_safe("Slot_20UTC_Evening_News", events_bot.check_rss_breaking_news)
 
     print("\n==================================================================")
     print(" ORCHESTRATION CYCLE COMPLETED SUCCESSFULLY.")

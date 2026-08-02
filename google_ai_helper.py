@@ -95,21 +95,31 @@ def _score_nasa_image(item_data, keywords):
         if noise in title: score -= 20
         if noise in desc:  score -= 3
 
-    # Bonus for recent images (more visually striking)
+    return score
+
+def fetch_wikipedia_image(query):
+    """Fetches high-quality main image/thumbnail from Wikipedia Page Summary REST API."""
+    if not query:
+        return None
     try:
-        year = int(item_data.get("date_created", "1970")[:4])
-        if year >= 2022: score += 8
-        elif year >= 2020: score += 5
-        elif year >= 2015: score += 2
+        clean_q = requests.utils.quote(query.strip())
+        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{clean_q}"
+        headers = {"User-Agent": "CosmicNexusBot/2.0 (astronomy-discord-bot)"}
+        res = requests.get(url, headers=headers, timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            # Original image preferred, thumbnail fallback
+            img_url = data.get("originalimage", {}).get("source") or data.get("thumbnail", {}).get("source")
+            if img_url and any(ext in img_url.lower() for ext in [".jpg", ".png", ".jpeg", ".webp"]):
+                return img_url
     except Exception:
         pass
-
-    return score
+    return None
 
 def fetch_best_nasa_image(keywords_list, excluded_image_urls=None):
     """
-    Queries NASA Image API and Wikimedia Commons with primary, backup, and alt keywords.
-    Uses relevance scoring to return the most contextually accurate image.
+    Queries Wikipedia API, NASA Image API, and Wikimedia Commons with relevance scoring.
+    Returns the most contextually accurate image URL or None if no high-confidence match is found.
     """
     if isinstance(keywords_list, str):
         keywords_list = [keywords_list]
@@ -120,7 +130,17 @@ def fetch_best_nasa_image(keywords_list, excluded_image_urls=None):
         if url
     }
 
-    # 1. Collect candidates from NASA Image Library API (scored for relevance)
+    # 1. Primary Search: Wikipedia Page Summary API (Highest accuracy for historical figures, planets, missions)
+    for kw in keywords_list:
+        if not kw:
+            continue
+        wiki_img = fetch_wikipedia_image(kw)
+        if wiki_img:
+            norm_wiki = wiki_img.split("#", 1)[0].split("?", 1)[0].strip().lower()
+            if norm_wiki not in excluded:
+                return wiki_img
+
+    # 2. Secondary Search: NASA Image Library API (scored for title/description relevance)
     scored_candidates = []
     for kw in keywords_list:
         if not kw:
@@ -137,7 +157,7 @@ def fetch_best_nasa_image(keywords_list, excluded_image_urls=None):
                         continue
                     item_data = data_list[0]
                     href = links_list[0].get("href", "")
-                    if not href or not any(ext in href for ext in [".jpg", ".png", ".jpeg"]):
+                    if not href or not any(ext in href.lower() for ext in [".jpg", ".png", ".jpeg"]):
                         continue
                     score = _score_nasa_image(item_data, keywords_list)
                     normalized_href = href.split("#", 1)[0].split("?", 1)[0].strip().lower()
@@ -146,14 +166,14 @@ def fetch_best_nasa_image(keywords_list, excluded_image_urls=None):
         except Exception:
             continue
 
-    # Return highest-scoring NASA image if any have positive score
+    # Return highest-scoring NASA image if positive relevance score
     if scored_candidates:
         scored_candidates.sort(key=lambda x: x[0], reverse=True)
         best_score, best_url = scored_candidates[0]
         if best_score > 0:  # Only use if genuinely relevant
             return best_url
 
-    # 2. Fallback to Wikimedia Commons API for historical subjects (e.g. Hipparchus, Galileo)
+    # 3. Tertiary Search: Wikimedia Commons API
     for kw in keywords_list:
         if not kw:
             continue
@@ -178,9 +198,8 @@ def fetch_best_nasa_image(keywords_list, excluded_image_urls=None):
         except Exception:
             continue
 
-    # 3. Ultimate fallback — generic deep space image
-    fallback = "https://images-assets.nasa.gov/image/PIA12110/PIA12110~medium.jpg"
-    return None if fallback.lower() in excluded else fallback
+    # 4. Strict Fallback — Omit image if no relevant image match is found
+    return None
 
 def get_recent_asked_topics(db_file, table_name, column_name, limit=100):
     """
@@ -381,15 +400,16 @@ def enhance_news_summary(title, source_name, raw_summary):
 
     prompt = (
         f"You are a senior science communicator and astrophysicist writing for an elite astronomy news channel.\n"
-        f"Rewrite and expand the following short RSS news teaser into a rich, captivating, highly informative, and scientifically precise summary of 3 to 4 sentences.\n"
-        f"Explain what this event or discovery is, why it matters, and key scientific context.\n\n"
+        f"Rewrite and expand the following short RSS news teaser into a rich, captivating, highly informative, and comprehensive multi-paragraph news analysis (2 to 3 paragraphs).\n"
+        f"Explain in depth what this discovery/event is, the scientific breakthrough or mission background, why it matters for humanity and space science, and its future implications.\n\n"
         f"Article Title: {title}\n"
         f"News Source: {source_name}\n"
         f"Original Teaser: {raw_summary}\n\n"
         f"Requirements:\n"
         f"1. Return ONLY the plain text summary (no markdown code blocks, no JSON, no headline repetition).\n"
-        f"2. Make it sound exciting, professional, and full of context.\n"
-        f"3. Keep length between 300 and 800 characters."
+        f"2. Format into 2-3 clean, engaging paragraphs.\n"
+        f"3. Make it sound exciting, professional, and rich with scientific depth.\n"
+        f"4. Keep length between 1000 and 1800 characters."
     )
 
     try:

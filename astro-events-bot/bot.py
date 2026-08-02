@@ -1105,6 +1105,23 @@ def check_rss_breaking_news():
             if is_item_or_title_notified(event_key, title_str=title):
                 continue
 
+            # Extract Article Image URL from RSS Feed
+            img_url = None
+            if hasattr(entry, "media_thumbnail") and entry.media_thumbnail:
+                img_url = entry.media_thumbnail[0].get("url")
+            elif hasattr(entry, "media_content") and entry.media_content:
+                img_url = entry.media_content[0].get("url")
+            elif hasattr(entry, "enclosures") and entry.enclosures:
+                for enc in entry.enclosures:
+                    enc_href = enc.get("href", "")
+                    if enc.get("type", "").startswith("image/") or any(ext in enc_href.lower() for ext in [".jpg", ".png", ".jpeg", ".webp"]):
+                        img_url = enc_href
+                        break
+            if not img_url and summary:
+                img_match = _re.search(r'<img[^>]+src=["\']([^"\']+)["\']', summary)
+                if img_match:
+                    img_url = img_match.group(1)
+
             candidate_articles.append({
                 "title": title,
                 "link": link,
@@ -1112,7 +1129,8 @@ def check_rss_breaking_news():
                 "source": feed_cfg["name"],
                 "color": feed_cfg["color"],
                 "emoji": feed_cfg["emoji"],
-                "event_key": event_key
+                "event_key": event_key,
+                "image_url": img_url
             })
 
     if not candidate_articles:
@@ -1139,22 +1157,22 @@ def check_rss_breaking_news():
     except Exception as e:
         print(f"[RSS AI SUMMARY NOTE] {e}")
 
-    if len(summary_clean) > 800:
-        last_period = summary_clean[:800].rfind('.')
-        summary_clean = summary_clean[:last_period + 1] if last_period > 200 else summary_clean[:800] + "..."
+    if len(summary_clean) > 2000:
+        last_period = summary_clean[:2000].rfind('.')
+        summary_clean = summary_clean[:last_period + 1] if last_period > 400 else summary_clean[:2000] + "..."
 
     embed_title = f"{selected_art['emoji']} {selected_art['source'].upper()} | {selected_art['title']}"
     description = (
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📰 **BREAKING SPACE NEWS:** `{selected_art['title']}`\n"
         f"📡 **SOURCE:** `{selected_art['source']}`\n\n"
-        f"📖 **SUMMARY:**\n{summary_clean}\n\n"
+        f"📖 **SUMMARY & ANALYSIS:**\n{summary_clean}\n\n"
         f"🔗 **READ FULL ARTICLE:** [Open Full Story]({selected_art['link']})\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
 
     ds_webhook = os.getenv("DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL") or WEBHOOK_URL
     ds_role = os.getenv("DEEP_SPACE_BOT_DISCORD_ROLE_ID") or ROLE_ID
-    send_discord_embed(embed_title, description, color=selected_art["color"], role_id=ds_role, webhook_url=ds_webhook)
+    send_discord_embed(embed_title, description, color=selected_art["color"], role_id=ds_role, image_url=selected_art.get("image_url"), webhook_url=ds_webhook)
     mark_item_and_title_notified(selected_art["event_key"], title_str=selected_art["title"], ttl_hours=720)
     print(f"[RSS] Posted Top Story: '{selected_art['title']}' from {selected_art['source']}")
