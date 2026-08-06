@@ -590,6 +590,40 @@ def detect_actual_observatory(title_str, raw_desc, default_scope_name):
         
     return default_scope_name
 
+import socket
+socket.setdefaulttimeout(8.0)
+
+def fetch_apod_fallback():
+    """Fallback fetcher for NASA APOD if api.nasa.gov is rate-limited or fails."""
+    try:
+        import re
+        res = requests.get("https://apod.nasa.gov/apod/astropix.html", timeout=6, headers={"User-Agent": "CosmicNexus/2.0"})
+        if res.status_code == 200:
+            html = res.text
+            img_match = re.search(r'<a\s+href=["\'](image/[^"\']+)["\']', html, re.IGNORECASE) or re.search(r'<img\s+src=["\'](image/[^"\']+)["\']', html, re.IGNORECASE)
+            img_url = f"https://apod.nasa.gov/apod/{img_match.group(1)}" if img_match else None
+            
+            title_match = re.search(r'<b>\s*([^<]+?)\s*</b>\s*<br>\s*<b>\s*Credit', html, re.IGNORECASE) or re.search(r'<center>\s*<b>\s*([^<]+?)\s*</b>', html, re.IGNORECASE)
+            title = title_match.group(1).strip() if title_match else "Astronomy Picture of the Day"
+            
+            exp_match = re.search(r'<b>\s*Explanation:\s*</b>\s*(.*?)(?:<hr>|<b>\s*Tomorrow|\Z)', html, re.IGNORECASE | re.DOTALL)
+            explanation = re.sub(r'<[^>]+>', '', exp_match.group(1)).strip() if exp_match else "Daily astronomical observation release."
+            explanation = re.sub(r'\s+', ' ', explanation)
+            
+            now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            return {
+                "title": title,
+                "url": img_url,
+                "hdurl": img_url,
+                "media_type": "image",
+                "explanation": explanation,
+                "date": now_str,
+                "copyright": "NASA / APOD"
+            }
+    except Exception as e:
+        print(f"[APOD HTML FALLBACK NOTE] {e}")
+    return None
+
 def check_deep_space_imagery():
     print("Checking Module 2: Live Multi-Telescope Telemetry Stream (NASA APOD & NASA Image Library)...")
     now_dt = datetime.now(timezone.utc)
@@ -597,46 +631,49 @@ def check_deep_space_imagery():
     hydrated = is_module_hydrated("deep_space_imagery")
 
     # 1. Query Live NASA APOD (Astronomy Picture of the Day) API for TODAY'S picture
+    apod_data = None
     try:
         apod_url = f"https://api.nasa.gov/planetary/apod?api_key={NASA_API_KEY}"
         res = requests.get(apod_url, timeout=6)
         if res.status_code == 200:
             apod_data = res.json()
-            apod_date = apod_data.get("date", now_dt.strftime("%Y-%m-%d"))
-            item_key = f"apod_{apod_date}"
-
-            if TEST_MODE or not is_item_or_title_notified(item_key, apod_data.get("title", ""), ttl_hours=24):
-                title_str = apod_data.get("title", "Astronomy Picture of the Day")
-                media_type = apod_data.get("media_type", "image")
-                img_url = apod_data.get("url") if media_type == "image" else apod_data.get("thumbnail_url")
-                hd_url = apod_data.get("hdurl", img_url)
-                copyright_credit = apod_data.get("copyright", "NASA / APOD Science Core").replace('\n', ' ')
-                explanation = format_clean_summary(apod_data.get("explanation", "Daily astronomical observation release."), max_len=3000)
-
-                embed_title = f"🔭 NASA APOD | {title_str.upper()}"
-
-                description = (
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    f"🌌 **PHOTOGRAPHED TARGET:** `{title_str}`\n"
-                    f"🎯 **OBSERVATORY / SOURCE:** `NASA Astronomy Picture of the Day`\n"
-                    f"📷 **IMAGE CREDIT:** `{copyright_credit}`\n"
-                    f"📅 **RELEASE DATE:** `{apod_date.upper()}`\n\n"
-                    f"📖 **SCIENTIFIC SUMMARY:**\n{explanation}\n\n"
-                    f"💾 **FULL-RESOLUTION IMAGE:** [Open High-Res Image File]({hd_url})\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                )
-
-                if img_url:
-                    if not TEST_MODE and not hydrated:
-                        mark_item_and_title_notified(item_key, title_str, ttl_hours=24)
-                        print(f"[HYDRATION] Initialized APOD {item_key} silently.")
-                    else:
-                        send_discord_embed(embed_title, description, color=0x8E44AD, image_url=img_url)
-                        mark_item_and_title_notified(item_key, title_str, ttl_hours=24)
-                        set_module_hydrated("deep_space_imagery")
-                        return
+        else:
+            print(f"[APOD API NOTICE] HTTP {res.status_code}. Attempting RSS fallback...")
+            apod_data = fetch_apod_fallback()
     except Exception as e:
-        print(f"[APOD API NOTE] Query active stream fallback: {e}")
+        print(f"[APOD API NOTE] Exception: {e}. Attempting RSS fallback...")
+        apod_data = fetch_apod_fallback()
+
+    if apod_data:
+        apod_date = apod_data.get("date", now_dt.strftime("%Y-%m-%d"))
+        item_key = f"apod_{apod_date}"
+
+        if TEST_MODE or not is_item_or_title_notified(item_key, apod_data.get("title", ""), ttl_hours=24):
+            title_str = apod_data.get("title", "Astronomy Picture of the Day")
+            media_type = apod_data.get("media_type", "image")
+            img_url = apod_data.get("url") if media_type == "image" else apod_data.get("thumbnail_url")
+            hd_url = apod_data.get("hdurl", img_url)
+            copyright_credit = apod_data.get("copyright", "NASA / APOD Science Core").replace('\n', ' ')
+            explanation = format_clean_summary(apod_data.get("explanation", "Daily astronomical observation release."), max_len=3000)
+
+            embed_title = f"🔭 NASA APOD | {title_str.upper()}"
+
+            description = (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"🌌 **PHOTOGRAPHED TARGET:** `{title_str}`\n"
+                f"🎯 **OBSERVATORY / SOURCE:** `NASA Astronomy Picture of the Day`\n"
+                f"📷 **IMAGE CREDIT:** `{copyright_credit}`\n"
+                f"📅 **RELEASE DATE:** `{apod_date.upper()}`\n\n"
+                f"📖 **SCIENTIFIC SUMMARY:**\n{explanation}\n\n"
+                f"💾 **FULL-RESOLUTION IMAGE:** [Open High-Res Image File]({hd_url or img_url})\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+
+            if img_url:
+                send_discord_embed(embed_title, description, color=0x8E44AD, image_url=img_url)
+                mark_item_and_title_notified(item_key, title_str, ttl_hours=24)
+                set_module_hydrated("deep_space_imagery")
+                return
 
     # 2. Query Live NASA Image Search API for JWST, Hubble, Euclid, Chandra, Rubin, VLT, Exoplanets
     ignored_keywords = ["cinema", "screening", "auditorium", "cleanroom", "mirror", "installation", "building", "facility", "speech"]

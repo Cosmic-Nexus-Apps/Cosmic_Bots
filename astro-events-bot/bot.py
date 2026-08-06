@@ -7,10 +7,13 @@ import requests
 import itertools
 import time
 import calendar
+import socket
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from skyfield.api import load
+
+socket.setdefaulttimeout(8.0)
 
 try:
     if hasattr(sys.stdout, 'reconfigure'):
@@ -1064,7 +1067,10 @@ def check_rss_breaking_news():
 
     for feed_cfg in RSS_FEEDS:
         try:
-            feed = feedparser.parse(feed_cfg["url"])
+            res = requests.get(feed_cfg["url"], timeout=5, headers={"User-Agent": "CosmicNexus/2.0"})
+            if res.status_code != 200:
+                continue
+            feed = feedparser.parse(res.content)
             entries = feed.entries[:8]  # Check latest 8 articles per feed
         except Exception as e:
             print(f"[RSS NOTE] Could not fetch {feed_cfg['name']}: {e}")

@@ -12,12 +12,13 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
 
+import socket
+socket.setdefaulttimeout(8.0)
+
 # Active Gemini free-tier models (tried in order — fastest first)
 PREFERRED_GEMINI_MODELS = [
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-2.5-flash"
+    "gemini-1.5-flash"
 ]
 
 def call_gemini_flash_multi_model(prompt_text, max_tokens=2048):
@@ -25,8 +26,6 @@ def call_gemini_flash_multi_model(prompt_text, max_tokens=2048):
     Tries Google AI Studio free-tier models in order until one succeeds:
     1. gemini-2.0-flash (fastest)
     2. gemini-1.5-flash
-    3. gemini-1.5-pro
-    4. gemini-2.5-flash
     Returns raw text response or None on failure.
     """
     if not GEMINI_API_KEY:
@@ -47,7 +46,7 @@ def call_gemini_flash_multi_model(prompt_text, max_tokens=2048):
     for model_name in PREFERRED_GEMINI_MODELS:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         try:
-            res = requests.post(url, json=payload, headers=headers, timeout=10)
+            res = requests.post(url, json=payload, headers=headers, timeout=5)
             if res.status_code == 200:
                 data = res.json()
                 candidates = data.get("candidates", [])

@@ -173,10 +173,10 @@ def main():
     # ==============================================================================
     print("\n--- [MASTER SCHEDULED BROADCAST TIMETABLE] ---")
     
-    # Slot 1 (07:00 UTC / 10:00 EEST): Daily Space News (Single #1 Gemini Top Story < 24h)
-    if should_run_task("Slot_07UTC_Morning_News", target_utc_hour=7) and events_bot:
-        if hasattr(events_bot, 'check_rss_breaking_news'):
-            run_safe("Slot_07UTC_Morning_News", events_bot.check_rss_breaking_news)
+    # Slot 1 (07:00 UTC / 10:00 EEST): Dedicated NASA APOD (Morning Astronomy Picture of the Day)
+    if should_run_task("Slot_07UTC_NASA_APOD", target_utc_hour=7) and ds_bot:
+        if hasattr(ds_bot, 'check_deep_space_imagery'):
+            run_safe("Slot_07UTC_NASA_APOD", ds_bot.check_deep_space_imagery)
 
     # Slot 2 (09:00 UTC / 12:00 EEST): Astronomy Events, Comets & Planetary Alignments
     if should_run_task("Slot_09UTC_Astronomy_Events", target_utc_hour=9) and events_bot:
@@ -196,22 +196,22 @@ def main():
         if hasattr(quiz_bot, 'run_engine'):
             run_safe("Slot_12UTC_Daily_Space_Quiz", quiz_bot.run_engine)
 
-    # Slot 4 (14:00 UTC / 17:00 EEST): Dedicated NASA APOD (Astronomy Picture of the Day)
-    if should_run_task("Slot_14UTC_NASA_APOD", target_utc_hour=14) and ds_bot:
-        if hasattr(ds_bot, 'check_deep_space_imagery'):
-            run_safe("Slot_14UTC_NASA_APOD", ds_bot.check_deep_space_imagery)
-
-    # Slot 5 (16:00 UTC / 19:00 EEST): Today in Space History (Strictly 1/day with Era Rotation)
-    if should_run_task("Slot_16UTC_Space_History", target_utc_hour=16) and history_bot:
+    # Slot 4 (14:00 UTC / 17:00 EEST): Today in Space History (Strictly 1/day with Era Rotation)
+    if should_run_task("Slot_14UTC_Space_History", target_utc_hour=14) and history_bot:
         if hasattr(history_bot, 'run_engine'):
-            run_safe("Slot_16UTC_Space_History", history_bot.run_engine)
+            run_safe("Slot_14UTC_Space_History", history_bot.run_engine)
 
-    # Slot 6 (18:00 UTC / 21:00 EEST): Deep Space Imagery, JWST/Hubble & ISS Humans in Space
-    if should_run_task("Slot_18UTC_Deep_Space_Imagery", target_utc_hour=18) and ds_bot:
+    # Slot 5 (16:00 UTC / 19:00 EEST): Deep Space Imagery, JWST/Hubble & ISS Humans in Space
+    if should_run_task("Slot_16UTC_Humans_In_Space", target_utc_hour=16) and ds_bot:
         if hasattr(ds_bot, 'check_humans_in_space'):
-            run_safe("Slot_18UTC_Humans_In_Space", ds_bot.check_humans_in_space)
+            run_safe("Slot_16UTC_Humans_In_Space", ds_bot.check_humans_in_space)
         if hasattr(ds_bot, 'check_exoplanet_discoveries'):
-            run_safe("Slot_18UTC_Exoplanets", ds_bot.check_exoplanet_discoveries)
+            run_safe("Slot_16UTC_Exoplanets", ds_bot.check_exoplanet_discoveries)
+
+    # Slot 6 (18:00 UTC / 21:00 EEST): Evening Daily Space News (Single #1 Gemini Top Story of the day < 24h)
+    if should_run_task("Slot_18UTC_Evening_News", target_utc_hour=18) and events_bot:
+        if hasattr(events_bot, 'check_rss_breaking_news'):
+            run_safe("Slot_18UTC_Evening_News", events_bot.check_rss_breaking_news)
 
     print("\n==================================================================")
     print(" ORCHESTRATION CYCLE COMPLETED SUCCESSFULLY.")
