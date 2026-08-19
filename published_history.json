@@ -223,10 +223,6 @@
     "published_at": "2026-08-04T09:34:54.263371+00:00",
     "expire_ts": 1788428094.263367
   },
-  "meteor_Perseids_2026_7d": {
-    "published_at": "2026-08-04T09:34:58.481463+00:00",
-    "expire_ts": 1787132098.481455
-  },
   "q_cosmic_microwave_background": {
     "published_at": "2026-08-04T13:50:07.214497+00:00",
     "expire_ts": 1817387407.214493
@@ -360,8 +356,8 @@
     "expire_ts": 1788892038.085931
   },
   "launch_landing_cff704ab-8098-4f65-899e-50adaf908e59": {
-    "published_at": "2026-08-19T09:24:59.229440+00:00",
-    "expire_ts": 1787736299.229437
+    "published_at": "2026-08-19T12:26:23.043430+00:00",
+    "expire_ts": 1787747183.043427
   },
   "q_subsurface_ocean_enceladus": {
     "published_at": "2026-08-10T12:46:48.078143+00:00",
@@ -388,8 +384,8 @@
     "expire_ts": 1788979434.100414
   },
   "launch_landing_b89ab080-66c3-4831-85a9-38d85da71d30": {
-    "published_at": "2026-08-19T09:24:59.226993+00:00",
-    "expire_ts": 1787736299.22699
+    "published_at": "2026-08-19T12:26:23.041716+00:00",
+    "expire_ts": 1787747183.041714
   },
   "q_neutron_star_density": {
     "published_at": "2026-08-18T12:26:37.356258+00:00",
@@ -404,8 +400,8 @@
     "expire_ts": 1818082286.330605
   },
   "launch_landing_36ab6924-bb36-416a-b71d-cda9e88004be": {
-    "published_at": "2026-08-19T09:24:59.224466+00:00",
-    "expire_ts": 1787736299.224463
+    "published_at": "2026-08-19T12:26:23.039896+00:00",
+    "expire_ts": 1787747183.039894
   },
   "rss_61a53c3b94bf189eadae71767383573f": {
     "published_at": "2026-08-11T18:49:13.814392+00:00",
@@ -416,8 +412,8 @@
     "expire_ts": 1789066153.81697
   },
   "launch_landing_6f94dbe4-1318-4ffb-a53d-351bbdcba733": {
-    "published_at": "2026-08-19T09:24:59.222367+00:00",
-    "expire_ts": 1787736299.222363
+    "published_at": "2026-08-19T12:26:23.038110+00:00",
+    "expire_ts": 1787747183.038108
   },
   "q_hawking_radiation": {
     "published_at": "2026-08-12T12:46:37.952193+00:00",
@@ -480,16 +476,16 @@
     "expire_ts": 1789409775.614167
   },
   "launch_landing_b0e7d1cc-24dd-4da4-bb60-b15b6791d08e": {
-    "published_at": "2026-08-19T09:24:59.215542+00:00",
-    "expire_ts": 1787736299.215539
+    "published_at": "2026-08-19T12:26:23.032414+00:00",
+    "expire_ts": 1787747183.032412
   },
   "launch_landing_55b79515-ddbf-4198-8a59-29a12ed21330": {
-    "published_at": "2026-08-19T09:24:59.217742+00:00",
-    "expire_ts": 1787736299.217738
+    "published_at": "2026-08-19T12:26:23.034259+00:00",
+    "expire_ts": 1787747183.034256
   },
   "launch_landing_be8b4b0d-1989-48a5-a96d-e8e4d59ed8b3": {
-    "published_at": "2026-08-19T09:24:59.219937+00:00",
-    "expire_ts": 1787736299.219934
+    "published_at": "2026-08-19T12:26:23.036289+00:00",
+    "expire_ts": 1787747183.036287
   },
   "rss_f4d53a92d9a8d3fbb53cf2c60d039e1c": {
     "published_at": "2026-08-16T18:16:13.198950+00:00",
@@ -500,16 +496,12 @@
     "expire_ts": 1789496173.202331
   },
   "launch_landing_cb6f4df1-c045-423b-904c-e63bf1ee5168": {
-    "published_at": "2026-08-19T09:24:59.200588+00:00",
-    "expire_ts": 1787736299.200586
+    "published_at": "2026-08-19T12:26:23.020468+00:00",
+    "expire_ts": 1787747183.020466
   },
   "q_first_exoplanet_discovered": {
     "published_at": "2026-08-17T12:24:51.663374+00:00",
     "expire_ts": 1818505491.663369
-  },
-  "quiz_daily_2026-08-17": {
-    "published_at": "2026-08-17T12:24:51.666551+00:00",
-    "expire_ts": 1787142291.666548
   },
   "hist_daily_2026-08-17": {
     "published_at": "2026-08-17T14:18:40.720633+00:00",
@@ -546,5 +538,13 @@
   "launch_landing_ef02e2cf-e617-4b38-a526-951ac9204b0a": {
     "published_at": "2026-08-19T07:31:32.169979+00:00",
     "expire_ts": 1787729492.16997
+  },
+  "q_black_hole_time_dilation": {
+    "published_at": "2026-08-19T12:26:27.011025+00:00",
+    "expire_ts": 1818678387.011022
+  },
+  "quiz_daily_2026-08-19": {
+    "published_at": "2026-08-19T12:26:27.013904+00:00",
+    "expire_ts": 1787315187.013902
   }
 }
