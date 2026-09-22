@@ -1,0 +1,61 @@
+name: Cosmic Alerts
+
+# Verifică sursele de descoperiri și trimite notificări push (FCM data-only).
+# Rulează la fiecare 10 minute; GitHub poate întârzia câteva minute la ore aglomerate.
+#
+# Locație: acest fișier se copiază în repo-ul Cosmic_Bots la
+#   .github/workflows/cosmic-alerts.yml
+# iar codul robotului stă în folderul:
+#   cosmic-alerts/
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cosmic-alerts
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: cosmic-alerts
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: cosmic-alerts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check sources and send alerts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TNS_BOT_ID: ${{ secrets.TNS_BOT_ID }}
+          TNS_BOT_NAME: ${{ secrets.TNS_BOT_NAME }}
+          TNS_API_KEY: ${{ secrets.TNS_API_KEY }}
+        run: node src/index.mjs
+
+      - name: Persist seen state
+        working-directory: .
+        run: |
+          git config user.name "cosmic-alerts-bot"
+          git config user.email "cosmic-alerts-bot@users.noreply.github.com"
+          git add cosmic-alerts/.state/seen.json
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(alerts): update seen state"
+            git push
+          fi

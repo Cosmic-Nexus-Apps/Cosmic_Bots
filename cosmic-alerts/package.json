@@ -1,0 +1,16 @@
+{
+  "name": "cosmic-alerts-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cosmic Atlas discovery alerts robot (MPC/TNS -> FCM topics)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}
