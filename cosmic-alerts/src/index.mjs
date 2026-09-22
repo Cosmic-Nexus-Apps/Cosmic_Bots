@@ -37,13 +37,44 @@ function saveState(state) {
 
 function initFirebase() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT is missing');
+  if (!raw) {
+    throw new Error(
+      'Secretele nu conțin FIREBASE_SERVICE_ACCOUNT. Adaugă secretul în GitHub: ' +
+        'Settings -> Secrets and variables -> Actions.'
+    );
+  }
+
   let credentials;
   try {
     credentials = JSON.parse(raw);
   } catch {
-    credentials = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
+    try {
+      credentials = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
+    } catch {
+      throw new Error(
+        'FIREBASE_SERVICE_ACCOUNT nu este JSON valid. Lipește conținutul COMPLET al ' +
+          'fișierului descărcat din Firebase Console -> Project settings -> Service accounts ' +
+          '-> Generate new private key.'
+      );
+    }
   }
+
+  if (credentials?.type === 'service_account' && typeof credentials?.project_id === 'string') {
+    // Cheia corectă.
+  } else if (credentials?.project_info) {
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT conține google-services.json (configurația aplicației), ' +
+        'NU cheia de service account. Deschide Firebase Console -> Project settings -> ' +
+        'Service accounts -> Generate new private key și lipește acel fișier în secret.'
+    );
+  } else {
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT nu arată ca o cheie de service account validă ' +
+        '(lipsește "type": "service_account" / "project_id"). Regenerează cheia din ' +
+        'Firebase Console -> Project settings -> Service accounts -> Generate new private key.'
+    );
+  }
+
   admin.initializeApp({ credential: admin.credential.cert(credentials) });
   return admin.messaging();
 }
