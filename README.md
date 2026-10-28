@@ -1,64 +1,69 @@
 <div align="center">
-
-# 🌌 Cosmic Nexus — Bots
-
-**Ecosistemul automatizat de boți astronomici din spatele Cosmic Atlas.**
-Python · Node.js · SQLite · GitHub Actions — fără server propriu, fără intervenție manuală.
-
-[![Website](https://img.shields.io/badge/Website-cosmic--atlas.app-B493FF?style=for-the-badge&logo=googlechrome&logoColor=white)](https://cosmic-atlas.app/)
-[![Google Play](https://img.shields.io/badge/Google_Play-Cosmic_Atlas-34D399?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.cosmic.atlas)
-[![Discord](https://img.shields.io/badge/Discord-Join_the_server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/JvPSgHA2jB)
-
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-22-339933?style=flat-square&logo=nodedotjs&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-state-003B57?style=flat-square&logo=sqlite&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-automated-2088FF?style=flat-square&logo=githubactions&logoColor=white)
-
+  <img src="assets/banner.svg" alt="Cosmic Nexus — autonomous astronomy bots for Cosmic Atlas" width="100%" />
 </div>
 
+<p align="center">
+  <a href="https://cosmic-atlas.app/"><img src="https://img.shields.io/badge/Website-cosmic--atlas.app-B493FF?style=flat-square&logo=googlechrome&logoColor=white" alt="Website" /></a>
+  <a href="https://play.google.com/store/apps/details?id=com.cosmic.atlas"><img src="https://img.shields.io/badge/Google%20Play-Cosmic%20Atlas-34D399?style=flat-square&logo=googleplay&logoColor=white" alt="Google Play" /></a>
+  <a href="https://discord.com/invite/JvPSgHA2jB"><img src="https://img.shields.io/badge/Discord-Join%20the%20server-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
+</p>
+
+# Cosmic Nexus — Bots
+
+**The automation layer behind [Cosmic Atlas](https://cosmic-atlas.app/)** — an astrophotography planner for Android.
+
+This repository runs a small fleet of bots that watch the sky, the news and the newest discoveries,
+then turn them into two things people actually use:
+
+- **Daily Discord content** — conjunctions, meteor showers, aurora alerts, NASA APOD, telescope imagery, quizzes and space history.
+- **Live data for the Cosmic Atlas app** — comets, interstellar visitors and **TNS supernovae**, delivered as a public feed and as push notifications.
+
+Everything runs on **GitHub Actions**. There is no server to maintain: state lives in the repo as SQLite caches and JSON snapshots.
+
 ---
 
-## Ce face acest repo
+## What is Cosmic Atlas?
 
-Un singur repo care ține în viață două lucruri:
+[Cosmic Atlas](https://cosmic-atlas.app/) is a mobile planner for astrophotography. It combines weather, Moon phase,
+catalog visibility and equipment profiles to answer one question: *what can I photograph tonight, and when?*
 
-1. **Conținutul zilnic de pe serverul de Discord** — evenimente astronomice calculate cu efemeride NASA JPL, știri spațiale, poza zilei, quiz și istorie.
-2. **Datele live din aplicația Cosmic Atlas** — comete, obiecte interstelare și **supernove TNS**, livrate ca feed public și ca notificări push.
+The app is available on **[Google Play](https://play.google.com/store/apps/details?id=com.cosmic.atlas)**, and the community
+lives on **[Discord](https://discord.com/invite/JvPSgHA2jB)**.
 
-Totul rulează pe **GitHub Actions**, cu starea persistată în repo (SQLite cache + JSON), fără un server care trebuie întreținut.
-
-> 🔭 Site: **[cosmic-atlas.app](https://cosmic-atlas.app/)** · 📱 App: **[Google Play](https://play.google.com/store/apps/details?id=com.cosmic.atlas)** · 💬 Community: **[Discord](https://discord.com/invite/JvPSgHA2jB)**
+This repo provides the *live discovery* half of that experience: comets from the Minor Planet Center and
+transients from the Transient Name Server (TNS), plus the content engine for the Discord community.
 
 ---
 
-## Boții
+## The bots
 
-| Modul | Limbaj | Ce publică | Program |
+| Module | Runtime | What it publishes | Schedule |
 | :--- | :---: | :--- | :--- |
-| **`astro-events-bot`** | Python | Conjuncții ≤1°, alinieri planetare (≥4 planete), opoziții, ocultații lunare, ploi de meteoriți (preaviz 7 zile + 24 h), sezoane Deep-Sky, furtuni geomagnetice NOAA (Kp ≥ 5, cu harta ovalului auroral), comete din COBS/MPC | zilnic, 07:00 & 09:00 UTC |
-| **`deep-space-bot`** | Python | NASA APOD, imagini JWST / Hubble / Euclid / Chandra / Rubin, echipajul ISS & Tiangong, exoplanete noi, lansări de rachete (T-60 / T-15 / T-0) | zilnic, 14:00 & 18:00 UTC |
-| **`space-quiz-bot`** | Python | Quiz spațial zilnic generat cu Gemini AI, 6 categorii, fără repetiții (SQLite) | zilnic, 12:00 UTC |
-| **`space-history-bot`** | Python | „Azi în istoria spațiului” — Apollo, Voyager, Shuttle, Artemis, cu imagini verificate | zilnic, 16:00 UTC |
-| **`cosmic-alerts`** | Node.js | Comete MPC + **descoperiri TNS** (supernove, nove, AT-uri) → notificări push FCM pentru Cosmic Atlas + feed public JSON | la fiecare 10 minute |
+| **`astro-events-bot`** | Python | Conjunctions ≤ 1°, planetary alignments (≥ 4 planets), oppositions, lunar occultations, meteor showers (7-day and 24-hour notice), deep-sky seasons, NOAA geomagnetic storms (Kp ≥ 5 with the aurora oval map), comets from COBS/MPC | daily, 07:00 & 09:00 UTC |
+| **`deep-space-bot`** | Python | NASA APOD, JWST / Hubble / Euclid / Chandra / Rubin imagery, ISS & Tiangong crew, new exoplanets, rocket launches (T-60 / T-15 / T-0) | daily, 14:00 & 18:00 UTC |
+| **`space-quiz-bot`** | Python | A daily astronomy quiz generated with Gemini AI — 6 categories, no repeats (SQLite) | daily, 12:00 UTC |
+| **`space-history-bot`** | Python | “Today in space history” — Apollo, Voyager, Shuttle, Artemis, with verified imagery | daily, 16:00 UTC |
+| **`cosmic-alerts`** | Node.js | MPC comets + **TNS discoveries** (supernovae, novae, transients) → FCM push for Cosmic Atlas + the public JSON feed | every 10 minutes |
 
-**Orchestratorul** (`main_orchestrator.py`) rulează cele patru boți Python în sloturile de mai sus, izolat (`run_safe`), cu `scheduler.db` pentru a preveni rulările premature.
+The Python bots are coordinated by `main_orchestrator.py`, which runs each module in isolation (`run_safe`) and
+uses `scheduler.db` to avoid premature runs.
 
 ---
 
-## Cum circulă informația
+## How the data flows
 
 ```mermaid
 flowchart LR
-    subgraph Surse
+    subgraph Sources
         JPL[NASA JPL / Skyfield]
         MPC[IAU Minor Planet Center]
-        TNS[TNS — CSV staged]
+        TNS[TNS - staged CSV]
         NOAA[NOAA SWPC]
         RSS[NASA / ESA / ESO / RSS]
         AI[Google Gemini]
     end
 
-    subgraph Boți
+    subgraph Bots
         EV[astro-events-bot]
         DS[deep-space-bot]
         QZ[space-quiz-bot]
@@ -77,108 +82,130 @@ flowchart LR
     MPC --> AL
     TNS --> AL
 
-    EV -->|webhook| DISC[💬 Discord]
+    EV -->|webhook| DISC[Discord]
     DS -->|webhook| DISC
     QZ -->|webhook| DISC
     HI -->|webhook| DISC
 
-    AL -->|FCM data-only| APP[📱 Cosmic Atlas]
+    AL -->|FCM data-only| APP[Cosmic Atlas app]
     AL -->|alerts/feed.json| RAW[GitHub raw] --> APP
 ```
 
-Aplicația **nu** vorbește niciodată cu TNS, NASA sau MPC. Cere doar feed-ul public (~60 KB), deci nu are nevoie de chei și nu depinde de disponibilitatea serviciilor externe.
+The app **never** talks to TNS, NASA or the MPC directly. It downloads a single public JSON feed (~60 KB), so it
+needs no API keys, no accounts and no external authentication.
+
+### Inside `cosmic-alerts`
+
+- **Comets** come from the MPC `CometEls.txt` list, filtered by absolute magnitude and perihelion window.
+- **Transients** come from the public **TNS staged CSVs** (the officially recommended method), never from the
+  per-object search API. On the first run the full catalogue is imported once; afterwards only yesterday’s delta
+  plus the last few hourly deltas are fetched.
+- Records are filtered locally: optical transients only, valid coordinates, magnitude ≤ 20, discovery within
+  30 days. Supernovae are prioritised over faint unclassified transients.
+- The feed keeps at most 300 objects. The app filters it down to what is visible tonight and shows the best 15.
 
 ---
 
-## Structura repo-ului
+## Repository layout
 
 ```text
 Cosmic_Bots/
-├── main_orchestrator.py          # rulează boții Python pe sloturi, izolat
-├── google_ai_helper.py           # wrapper Gemini AI (știri, quiz, clasificare urgență)
-├── persistent_history.py         # persistență globală (fără duplicate)
-├── published_history.json        # stare versionată: ce s-a publicat deja
+├── main_orchestrator.py          # schedules and runs the Python modules safely
+├── google_ai_helper.py           # Gemini wrapper (news, quiz, urgency classification)
+├── persistent_history.py         # global persistence, prevents duplicate posts
+├── published_history.json        # committed state: what has already been published
+├── assets/banner.svg             # repository banner (README header)
 │
-├── astro-events-bot/             # evenimente astronomice + vreme spațială
-├── deep-space-bot/               # APOD, telescoape, ISS, lansări, exoplanete
-├── space-quiz-bot/               # quiz zilnic
-├── space-history-bot/            # azi în istoria spațiului
+├── astro-events-bot/             # astronomical events + space weather
+├── deep-space-bot/               # APOD, telescopes, ISS, launches, exoplanets
+├── space-quiz-bot/               # daily quiz
+├── space-history-bot/            # today in space history
 │
-├── cosmic-alerts/                # Node.js: MPC + TNS → FCM + feed public
-│   ├── src/index.mjs             # orchestrare + feed + notificări
-│   ├── src/mpc.mjs               # comete MPC
-│   ├── src/tnsCsv.mjs            # descărcare CSV staged TNS (ZIP, fără dependențe)
-│   ├── src/tns.mjs               # filtrare, prioritizare, feed
-│   ├── src/verify-tns.mjs        # test local al accesului TNS
-│   ├── alerts/feed.json          # feed-ul public citit de aplicație
-│   └── .state/seen.json          # stare: comete și descoperiri deja publicate
+├── cosmic-alerts/                # Node.js: MPC + TNS -> FCM + public feed
+│   ├── src/index.mjs             # orchestration, feed writing, notifications
+│   ├── src/mpc.mjs               # MPC comet list
+│   ├── src/tnsCsv.mjs            # TNS staged CSV download (ZIP, zero dependencies)
+│   ├── src/tns.mjs               # filtering, prioritisation, feed building
+│   ├── src/verify-tns.mjs        # local TNS access check
+│   ├── alerts/feed.json          # public feed consumed by the app
+│   └── .state/seen.json          # comets and discoveries already published
 │
 └── .github/workflows/
-    ├── astronomy_cron.yml        # 6 rulări/zi pentru boții Python
-    └── cosmic-alerts.yml         # la 10 minute: comete + TNS + feed
+    ├── astronomy_cron.yml        # six runs per day for the Python bots
+    └── cosmic-alerts.yml         # every 10 minutes: comets + TNS + feed
 ```
 
 ---
 
-## Securitate
+## Security model
 
-Repo-ul este proiectat să poată fi public fără să expună nimic sensibil:
+This repository is public on purpose, and it is designed to stay safe that way:
 
-- **Nicio cheie în cod.** Webhook-urile Discord, `GEMINI_API_KEY`, `NASA_API_KEY`, `FIREBASE_SERVICE_ACCOUNT` și credențialele TNS stau exclusiv în **GitHub Actions Secrets**.
-- **`.env`, bazele SQLite și efemeridele `.bsp` sunt ignorate** (`.gitignore`) — nu ajung niciodată în git.
-- **Niciun secret în istoric.** Auditul repo-ului nu găsește chei, token-uri, webhook-uri sau chei private în niciun commit.
-- **Acces TNS fără API.** Doar CSV-urile staged publice, cu marker de acces; zero interogări per obiect.
-- **Push cu reîncercare** — workflow-urile fac `pull --rebase` înainte de push, ca să nu se calce cu alți boți din repo.
+- **No credentials in code.** Discord webhooks, `GEMINI_API_KEY`, `NASA_API_KEY`,
+  `FIREBASE_SERVICE_ACCOUNT` and the TNS credentials live exclusively in **GitHub Actions Secrets**.
+  Only the secret *names* appear in the workflow files.
+- **No secrets in history.** The repository has been audited: no keys, tokens, webhooks or private keys
+  in any commit.
+- **`.env`, SQLite databases and JPL `.bsp` ephemerides are git-ignored.**
+- **TNS access without the API.** Only the public staged CSVs, with an access marker; no per-object queries.
+- **Push retries.** Workflows rebase before pushing, so they never collide with the other bots that commit state.
 
-Recomandat după publicare: **Settings → Code security → Secret scanning + Push protection**.
+Recommended after publication: **Settings → Code security → Secret scanning + Push protection**.
 
 ---
 
-## Rulare locală
+## Local development
 
-### Boții Python
+### Python bots
 
 ```bash
 pip install -r astro-events-bot/requirements.txt
-cp .env.example .env            # sau exportă variabilele manual
+cp .env.example .env     # fill in the webhooks and API keys
 python main_orchestrator.py
 ```
 
-Variabile citite: `EVENTS_BOT_DISCORD_WEBHOOK_URL`, `DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL`, `SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL`, `SPACE_HISTORY_BOT_DISCORD_WEBHOOK_URL` (+ rolurile aferente), `GEMINI_API_KEY`, `NASA_API_KEY`, `TEST_MODE`.
+Environment variables: `EVENTS_BOT_DISCORD_WEBHOOK_URL`, `DEEP_SPACE_BOT_DISCORD_WEBHOOK_URL`,
+`SPACE_QUIZ_BOT_DISCORD_WEBHOOK_URL`, `SPACE_HISTORY_BOT_DISCORD_WEBHOOK_URL` (plus the matching role IDs),
+`GEMINI_API_KEY`, `NASA_API_KEY`, `TEST_MODE`.
 
 ### `cosmic-alerts` (Node.js)
 
 ```bash
 cd cosmic-alerts
 npm ci
-$env:TNS_USER_ID="..."; $env:TNS_USER_NAME="..."   # PowerShell
-node src/verify-tns.mjs      # testează doar accesul la CSV-urile TNS
-node src/index.mjs           # bootstrap + feed + (opțional) notificări
+
+# TNS access: user marker (no API key) or bot marker
+export TNS_USER_ID=...
+export TNS_USER_NAME=...
+
+node src/verify-tns.mjs   # checks CSV access only
+node src/index.mjs        # bootstrap, feed, optional push notifications
 ```
 
-`FIREBASE_SERVICE_ACCOUNT` este **opțional**: fără el, feed-ul se actualizează normal, iar notificările push sunt omise.
+`FIREBASE_SERVICE_ACCOUNT` is **optional**: without it the public feed is still updated and only push
+notifications are skipped.
 
 ---
 
-## Documentație
+## Documentation
 
-| Document | Conținut |
+| Document | Contents |
 | :--- | :--- |
-| [`DOCUMENTATIE_ECOSISTEM.md`](DOCUMENTATIE_ECOSISTEM.md) | arhitectura completă, orarul de transmisie, canale & roluri Discord |
-| [`astro-events-bot/DOCUMENTATIE_BOT.md`](astro-events-bot/DOCUMENTATIE_BOT.md) | cele 8 module astronomice, praguri, efemeride |
-| [`deep-space-bot/DOCUMENTATIE_DEEP_SPACE.md`](deep-space-bot/DOCUMENTATIE_DEEP_SPACE.md) | lansări, telescoape, APOD, ISS |
-| [`space-quiz-bot/DOCUMENTATIE_QUIZ.md`](space-quiz-bot/DOCUMENTATIE_QUIZ.md) | generarea quiz-ului și anti-repetiție |
-| [`space-history-bot/DOCUMENTATIE_HISTORY.md`](space-history-bot/DOCUMENTATIE_HISTORY.md) | selecția evenimentelor istorice |
-| [`cosmic-alerts/README.md`](cosmic-alerts/README.md) | TNS/MPC, feed-ul public, notificările |
+| [`DOCUMENTATIE_ECOSISTEM.md`](DOCUMENTATIE_ECOSISTEM.md) | full ecosystem architecture, broadcast schedule, Discord channels and roles |
+| [`astro-events-bot/DOCUMENTATIE_BOT.md`](astro-events-bot/DOCUMENTATIE_BOT.md) | the eight astronomy modules, thresholds and ephemerides |
+| [`deep-space-bot/DOCUMENTATIE_DEEP_SPACE.md`](deep-space-bot/DOCUMENTATIE_DEEP_SPACE.md) | launches, telescopes, APOD, ISS |
+| [`space-quiz-bot/DOCUMENTATIE_QUIZ.md`](space-quiz-bot/DOCUMENTATIE_QUIZ.md) | quiz generation and anti-repetition |
+| [`space-history-bot/DOCUMENTATIE_HISTORY.md`](space-history-bot/DOCUMENTATIE_HISTORY.md) | historical event selection |
+| [`cosmic-alerts/README.md`](cosmic-alerts/README.md) | TNS/MPC pipeline, public feed, notifications |
 
 ---
 
 <div align="center">
 
-**Cosmic Atlas** — planificator de astrofotografie pentru cerul de mâine.
+**Cosmic Nexus** powers the live layer of **Cosmic Atlas** — the astrophotography planner for tomorrow’s sky.
 
-[🌐 cosmic-atlas.app](https://cosmic-atlas.app/) · [📱 Google Play](https://play.google.com/store/apps/details?id=com.cosmic.atlas) · [💬 Discord](https://discord.com/invite/JvPSgHA2jB)
+[Website](https://cosmic-atlas.app/) · [Google Play](https://play.google.com/store/apps/details?id=com.cosmic.atlas) · [Discord](https://discord.com/invite/JvPSgHA2jB)
 
-<sub>Date: NASA/JPL · IAU MPC · TNS · NOAA SWPC · ESA · Google Gemini</sub>
+<sub>Data: NASA/JPL · IAU MPC · TNS · NOAA SWPC · ESA · Google Gemini</sub>
 
 </div>

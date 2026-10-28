@@ -1,0 +1,297 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="bannerTitle bannerDesc">
+  <title id="bannerTitle">Cosmic Nexus - Bots</title>
+  <desc id="bannerDesc">Autonomous astronomy and discovery engine for Cosmic Atlas.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05070b"/>
+      <stop offset="0.48" stop-color="#0c0f15"/>
+      <stop offset="1" stop-color="#07090d"/>
+    </linearGradient>
+
+    <radialGradient id="violetGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#B493FF" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#B493FF" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#B493FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="cyanGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#38BDF8" stop-opacity="0.26"/>
+      <stop offset="0.6" stop-color="#38BDF8" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="band" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#B493FF" stop-opacity="0"/>
+      <stop offset="0.35" stop-color="#B493FF" stop-opacity="0.12"/>
+      <stop offset="0.62" stop-color="#38BDF8" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.58" stop-color="#F1ECFF"/>
+      <stop offset="1" stop-color="#B493FF"/>
+    </linearGradient>
+
+    <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B493FF" stop-opacity="0"/>
+      <stop offset="0.28" stop-color="#B493FF" stop-opacity="0.55"/>
+      <stop offset="0.62" stop-color="#38BDF8" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    </linearGradient>
+
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFF7E8"/>
+      <stop offset="0.45" stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </radialGradient>
+
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FBBF24" stop-opacity="0.38"/>
+      <stop offset="0.5" stop-color="#FBBF24" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="planetGold" cx="34%" cy="30%" r="72%">
+      <stop offset="0" stop-color="#FFE9A8"/>
+      <stop offset="0.55" stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#B45309"/>
+    </radialGradient>
+
+    <radialGradient id="planetCyan" cx="34%" cy="30%" r="72%">
+      <stop offset="0" stop-color="#D7F5FF"/>
+      <stop offset="0.55" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#0E7490"/>
+    </radialGradient>
+
+    <radialGradient id="planetEmerald" cx="34%" cy="30%" r="72%">
+      <stop offset="0" stop-color="#D8FFF1"/>
+      <stop offset="0.55" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#047857"/>
+    </radialGradient>
+
+    <radialGradient id="planetViolet" cx="34%" cy="30%" r="72%">
+      <stop offset="0" stop-color="#F2EAFF"/>
+      <stop offset="0.55" stop-color="#B493FF"/>
+      <stop offset="1" stop-color="#5B21B6"/>
+    </radialGradient>
+
+    <filter id="softGlow" x="-160%" y="-160%" width="420%" height="420%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <style>
+      .orbit { animation: drift 32s linear infinite; }
+      @keyframes drift { to { stroke-dashoffset: -120; } }
+      .twinkle { animation: tw 6s ease-in-out infinite alternate; }
+      @keyframes tw { from { opacity: 0.14; } to { opacity: 0.82; } }
+      .core { animation: pulse 7s ease-in-out infinite; transform-origin: 1010px 172px; }
+      @keyframes pulse { 0%, 100% { opacity: 0.92; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .orbit, .twinkle, .core { animation: none; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1280" height="360" fill="url(#bg)"/>
+  <ellipse cx="250" cy="60" rx="520" ry="300" fill="url(#violetGlow)"/>
+  <ellipse cx="1130" cy="300" rx="460" ry="260" fill="url(#cyanGlow)"/>
+  <ellipse cx="660" cy="170" rx="720" ry="150" fill="url(#band)" transform="rotate(-9 660 170)" opacity="0.5"/>
+
+  <g>
+    <circle cx="572.2" cy="306.1" r="1.89" fill="#E8ECF5" opacity="0.33"/>
+    <circle cx="198.1" cy="125.6" r="0.85" fill="#E8ECF5" opacity="0.23"/>
+    <circle cx="616.3" cy="116.3" r="0.71" fill="#E8ECF5" opacity="0.35"/>
+    <circle cx="996" cy="235.7" r="1.81" fill="#E8ECF5" opacity="0.7"/>
+    <circle cx="826" cy="173.9" r="0.92" fill="#E8ECF5" opacity="0.14"/>
+    <circle cx="312.6" cy="221.2" r="0.51" fill="#E8ECF5" opacity="0.4"/>
+    <circle cx="99" cy="203.9" r="0.71" fill="#E8ECF5" opacity="0.19"/>
+    <circle cx="521" cy="159" r="1.63" fill="#E8ECF5" opacity="0.35"/>
+    <circle cx="675" cy="317.4" r="0.5" fill="#E8ECF5" opacity="0.64"/>
+    <circle cx="237.3" cy="183" r="1.23" fill="#E8ECF5" opacity="0.63"/>
+    <circle cx="1093.7" cy="202.9" r="0.69" fill="#E8ECF5" opacity="0.23"/>
+    <circle cx="158.9" cy="212.6" r="0.79" fill="#E8ECF5" opacity="0.39"/>
+    <circle cx="629.3" cy="47.2" r="0.88" fill="#E8ECF5" opacity="0.51"/>
+    <circle cx="169.8" cy="295.3" r="0.46" fill="#E8ECF5" opacity="0.22" class="twinkle" style="animation-delay:-2.1s"/>
+    <circle cx="141.1" cy="123.1" r="0.6" fill="#E8ECF5" opacity="0.34"/>
+    <circle cx="971.3" cy="85.1" r="0.81" fill="#E8ECF5" opacity="0.42"/>
+    <circle cx="1239.8" cy="171.7" r="1.58" fill="#E8ECF5" opacity="0.58"/>
+    <circle cx="779.8" cy="163.4" r="0.65" fill="#E8ECF5" opacity="0.64"/>
+    <circle cx="871.1" cy="134.3" r="0.59" fill="#E8ECF5" opacity="0.71" class="twinkle" style="animation-delay:-3.5s"/>
+    <circle cx="990.5" cy="134.1" r="0.62" fill="#E8ECF5" opacity="0.27"/>
+    <circle cx="494.9" cy="113" r="0.53" fill="#E8ECF5" opacity="0.14"/>
+    <circle cx="467" cy="132.1" r="1.06" fill="#E8ECF5" opacity="0.4"/>
+    <circle cx="720.4" cy="258.4" r="0.45" fill="#E8ECF5" opacity="0.48"/>
+    <circle cx="677.6" cy="164.2" r="1.54" fill="#E8ECF5" opacity="0.25"/>
+    <circle cx="1218.6" cy="4.2" r="0.81" fill="#E8ECF5" opacity="0.15" class="twinkle" style="animation-delay:-0.2s"/>
+    <circle cx="697.9" cy="330.8" r="0.85" fill="#E8ECF5" opacity="0.28" class="twinkle" style="animation-delay:-2.3s"/>
+    <circle cx="449.7" cy="253.7" r="0.46" fill="#E8ECF5" opacity="0.21"/>
+    <circle cx="1099.5" cy="279" r="0.68" fill="#E8ECF5" opacity="0.39"/>
+    <circle cx="307.8" cy="242.1" r="0.45" fill="#E8ECF5" opacity="0.2" class="twinkle" style="animation-delay:-2.3s"/>
+    <circle cx="224.4" cy="82.6" r="1.84" fill="#E8ECF5" opacity="0.67"/>
+    <circle cx="621.3" cy="33.8" r="0.53" fill="#E8ECF5" opacity="0.54"/>
+    <circle cx="1226.7" cy="43.5" r="0.78" fill="#E8ECF5" opacity="0.72"/>
+    <circle cx="769.7" cy="206.9" r="0.46" fill="#E8ECF5" opacity="0.56"/>
+    <circle cx="1220.1" cy="70.5" r="0.52" fill="#E8ECF5" opacity="0.69"/>
+    <circle cx="396.7" cy="279.1" r="0.65" fill="#E8ECF5" opacity="0.41"/>
+    <circle cx="750.9" cy="63.4" r="0.57" fill="#E8ECF5" opacity="0.64" class="twinkle" style="animation-delay:-2.7s"/>
+    <circle cx="479.4" cy="252.2" r="1.17" fill="#E8ECF5" opacity="0.48"/>
+    <circle cx="458.6" cy="78.7" r="0.85" fill="#E8ECF5" opacity="0.64"/>
+    <circle cx="1214.1" cy="161.7" r="0.51" fill="#E8ECF5" opacity="0.16"/>
+    <circle cx="741.9" cy="164" r="1.5" fill="#E8ECF5" opacity="0.44"/>
+    <circle cx="1177.6" cy="125" r="0.52" fill="#E8ECF5" opacity="0.29"/>
+    <circle cx="90.8" cy="176.2" r="0.95" fill="#E8ECF5" opacity="0.51"/>
+    <circle cx="1265.7" cy="51.9" r="0.46" fill="#E8ECF5" opacity="0.42" class="twinkle" style="animation-delay:-4s"/>
+    <circle cx="865.8" cy="327.9" r="0.56" fill="#E8ECF5" opacity="0.2" class="twinkle" style="animation-delay:-4.6s"/>
+    <circle cx="587.5" cy="314.3" r="0.45" fill="#E8ECF5" opacity="0.43"/>
+    <circle cx="902.4" cy="210.3" r="0.93" fill="#E8ECF5" opacity="0.63"/>
+    <circle cx="1255.6" cy="312.5" r="0.46" fill="#E8ECF5" opacity="0.37"/>
+    <circle cx="842.3" cy="285.5" r="1.34" fill="#E8ECF5" opacity="0.15"/>
+    <circle cx="933" cy="172.4" r="1.13" fill="#E8ECF5" opacity="0.49" class="twinkle" style="animation-delay:-0.9s"/>
+    <circle cx="1091.2" cy="7.1" r="1.2" fill="#E8ECF5" opacity="0.33" class="twinkle" style="animation-delay:-3.5s"/>
+    <circle cx="956.6" cy="285.1" r="0.96" fill="#E8ECF5" opacity="0.37" class="twinkle" style="animation-delay:-2.2s"/>
+    <circle cx="1021.9" cy="152.6" r="0.52" fill="#E8ECF5" opacity="0.19"/>
+    <circle cx="575.9" cy="332.2" r="0.47" fill="#E8ECF5" opacity="0.2" class="twinkle" style="animation-delay:-5.1s"/>
+    <circle cx="564.8" cy="276.3" r="1" fill="#E8ECF5" opacity="0.47"/>
+    <circle cx="648.6" cy="205.4" r="0.49" fill="#E8ECF5" opacity="0.31"/>
+    <circle cx="803.7" cy="64.2" r="1.49" fill="#E8ECF5" opacity="0.4"/>
+    <circle cx="773.1" cy="186.6" r="1.25" fill="#E8ECF5" opacity="0.41" class="twinkle" style="animation-delay:-5.3s"/>
+    <circle cx="518.3" cy="117.3" r="0.94" fill="#E8ECF5" opacity="0.34"/>
+    <circle cx="1035.4" cy="232.8" r="0.82" fill="#E8ECF5" opacity="0.52" class="twinkle" style="animation-delay:-1.3s"/>
+    <circle cx="12.8" cy="170.4" r="0.81" fill="#E8ECF5" opacity="0.62" class="twinkle" style="animation-delay:-0s"/>
+    <circle cx="674.6" cy="7.1" r="1.67" fill="#E8ECF5" opacity="0.44"/>
+    <circle cx="851.2" cy="19.8" r="0.93" fill="#E8ECF5" opacity="0.27"/>
+    <circle cx="362.5" cy="13.9" r="1.63" fill="#E8ECF5" opacity="0.74"/>
+    <circle cx="677.9" cy="313.4" r="0.45" fill="#E8ECF5" opacity="0.41"/>
+    <circle cx="1040.9" cy="176.2" r="1.27" fill="#E8ECF5" opacity="0.36"/>
+    <circle cx="545.5" cy="96.5" r="0.46" fill="#E8ECF5" opacity="0.43"/>
+    <circle cx="254.5" cy="148.9" r="1.63" fill="#E8ECF5" opacity="0.51"/>
+    <circle cx="248.5" cy="65.9" r="1.91" fill="#E8ECF5" opacity="0.57"/>
+    <circle cx="40.2" cy="269.8" r="0.7" fill="#E8ECF5" opacity="0.28"/>
+    <circle cx="1003" cy="47.5" r="1.22" fill="#E8ECF5" opacity="0.51"/>
+    <circle cx="1072.7" cy="88.1" r="0.83" fill="#E8ECF5" opacity="0.74" class="twinkle" style="animation-delay:-5.3s"/>
+    <circle cx="572.9" cy="160.8" r="1.04" fill="#E8ECF5" opacity="0.68"/>
+    <circle cx="326.1" cy="43.3" r="0.77" fill="#E8ECF5" opacity="0.23"/>
+    <circle cx="822.6" cy="173.1" r="1.45" fill="#E8ECF5" opacity="0.34"/>
+    <circle cx="872.4" cy="325" r="0.97" fill="#E8ECF5" opacity="0.38"/>
+    <circle cx="635.3" cy="178.8" r="1.37" fill="#E8ECF5" opacity="0.74"/>
+    <circle cx="515.2" cy="266.3" r="0.93" fill="#E8ECF5" opacity="0.18"/>
+    <circle cx="1218.1" cy="12.4" r="0.85" fill="#E8ECF5" opacity="0.34"/>
+    <circle cx="520.7" cy="335.3" r="0.54" fill="#E8ECF5" opacity="0.62" class="twinkle" style="animation-delay:-4.9s"/>
+    <circle cx="1213.3" cy="19.8" r="0.95" fill="#E8ECF5" opacity="0.61"/>
+    <circle cx="504.4" cy="331.5" r="1.06" fill="#E8ECF5" opacity="0.57"/>
+    <circle cx="315.5" cy="82.1" r="0.47" fill="#E8ECF5" opacity="0.35"/>
+    <circle cx="893.9" cy="128.7" r="0.46" fill="#E8ECF5" opacity="0.38"/>
+    <circle cx="975.5" cy="28.6" r="0.88" fill="#E8ECF5" opacity="0.49"/>
+    <circle cx="148.5" cy="158.5" r="0.52" fill="#E8ECF5" opacity="0.56"/>
+    <circle cx="650.5" cy="216.9" r="1.26" fill="#E8ECF5" opacity="0.13"/>
+    <circle cx="1114.7" cy="283.3" r="0.55" fill="#E8ECF5" opacity="0.52"/>
+    <circle cx="659.4" cy="114.2" r="1.81" fill="#E8ECF5" opacity="0.47"/>
+    <circle cx="257.8" cy="238.5" r="0.51" fill="#E8ECF5" opacity="0.51"/>
+    <circle cx="426.2" cy="325" r="0.46" fill="#E8ECF5" opacity="0.18"/>
+    <circle cx="390.2" cy="119.5" r="0.71" fill="#E8ECF5" opacity="0.14"/>
+    <circle cx="1248.1" cy="260.2" r="0.47" fill="#E8ECF5" opacity="0.43"/>
+    <circle cx="795.4" cy="161.8" r="1.58" fill="#E8ECF5" opacity="0.3"/>
+    <circle cx="530.5" cy="138.6" r="0.47" fill="#E8ECF5" opacity="0.39" class="twinkle" style="animation-delay:-7.8s"/>
+    <circle cx="888.8" cy="171.1" r="0.56" fill="#E8ECF5" opacity="0.17"/>
+    <circle cx="1268.3" cy="29.5" r="1.87" fill="#E8ECF5" opacity="0.31"/>
+    <circle cx="114.6" cy="73.2" r="0.45" fill="#E8ECF5" opacity="0.67"/>
+    <circle cx="433.3" cy="12.2" r="0.56" fill="#E8ECF5" opacity="0.36" class="twinkle" style="animation-delay:-1.5s"/>
+    <circle cx="138.5" cy="60.8" r="0.46" fill="#E8ECF5" opacity="0.37"/>
+    <circle cx="887.8" cy="142.8" r="0.81" fill="#E8ECF5" opacity="0.69"/>
+    <circle cx="357" cy="267.8" r="1.58" fill="#E8ECF5" opacity="0.33"/>
+    <circle cx="884.6" cy="32.4" r="1.05" fill="#E8ECF5" opacity="0.6"/>
+    <circle cx="1103.5" cy="329" r="0.45" fill="#E8ECF5" opacity="0.57"/>
+    <circle cx="12.9" cy="316.3" r="0.47" fill="#E8ECF5" opacity="0.66"/>
+    <circle cx="1089.3" cy="295.1" r="1.71" fill="#E8ECF5" opacity="0.52"/>
+    <circle cx="611.4" cy="175" r="1.72" fill="#E8ECF5" opacity="0.45"/>
+    <circle cx="262.4" cy="10.6" r="0.46" fill="#E8ECF5" opacity="0.16" class="twinkle" style="animation-delay:-4.2s"/>
+    <circle cx="626" cy="199.1" r="1.79" fill="#E8ECF5" opacity="0.38" class="twinkle" style="animation-delay:-5s"/>
+    <circle cx="381.2" cy="307.9" r="0.46" fill="#E8ECF5" opacity="0.3" class="twinkle" style="animation-delay:-7.1s"/>
+    <circle cx="1095.6" cy="140.7" r="0.48" fill="#E8ECF5" opacity="0.59"/>
+    <circle cx="1045.4" cy="216.5" r="0.71" fill="#E8ECF5" opacity="0.71"/>
+    <circle cx="562.8" cy="331.2" r="0.47" fill="#E8ECF5" opacity="0.19"/>
+    <circle cx="762.6" cy="209.3" r="0.84" fill="#E8ECF5" opacity="0.61"/>
+    <circle cx="231.4" cy="239.6" r="0.82" fill="#E8ECF5" opacity="0.43"/>
+    <circle cx="151.7" cy="43" r="1.06" fill="#E8ECF5" opacity="0.52"/>
+    <circle cx="490.1" cy="46.1" r="0.96" fill="#E8ECF5" opacity="0.21"/>
+    <circle cx="861.7" cy="17.7" r="0.55" fill="#E8ECF5" opacity="0.24"/>
+    <circle cx="462.6" cy="243.7" r="0.79" fill="#E8ECF5" opacity="0.68"/>
+    <circle cx="507.5" cy="196.5" r="0.93" fill="#E8ECF5" opacity="0.46"/>
+    <circle cx="1043.4" cy="181.7" r="0.96" fill="#E8ECF5" opacity="0.15"/>
+    <circle cx="881.6" cy="83.3" r="0.96" fill="#E8ECF5" opacity="0.57"/>
+    <circle cx="680.5" cy="313.7" r="0.51" fill="#E8ECF5" opacity="0.2"/>
+    <circle cx="942.6" cy="312.8" r="0.86" fill="#E8ECF5" opacity="0.45"/>
+    <circle cx="364" cy="340.8" r="1.59" fill="#E8ECF5" opacity="0.15"/>
+    <circle cx="158.7" cy="127.3" r="0.69" fill="#E8ECF5" opacity="0.39"/>
+    <circle cx="40.9" cy="236.7" r="0.68" fill="#E8ECF5" opacity="0.51"/>
+    <circle cx="988.9" cy="231.4" r="1.02" fill="#E8ECF5" opacity="0.39"/>
+    <circle cx="996.7" cy="277.7" r="0.48" fill="#E8ECF5" opacity="0.15"/>
+    <circle cx="879.6" cy="185" r="0.54" fill="#E8ECF5" opacity="0.73"/>
+    <circle cx="902.1" cy="53.7" r="0.62" fill="#E8ECF5" opacity="0.26"/>
+    <circle cx="317.3" cy="93.3" r="0.83" fill="#E8ECF5" opacity="0.48"/>
+    <circle cx="547.4" cy="279" r="1.83" fill="#E8ECF5" opacity="0.12"/>
+    <circle cx="38.7" cy="30.7" r="0.53" fill="#E8ECF5" opacity="0.37" class="twinkle" style="animation-delay:-3.8s"/>
+    <circle cx="642" cy="23.8" r="0.71" fill="#E8ECF5" opacity="0.42"/>
+    <circle cx="495.3" cy="289.5" r="0.79" fill="#E8ECF5" opacity="0.32"/>
+    <circle cx="660.6" cy="198.6" r="0.68" fill="#E8ECF5" opacity="0.15"/>
+    <circle cx="355.9" cy="162.7" r="1.13" fill="#E8ECF5" opacity="0.73"/>
+    <circle cx="515.9" cy="268.2" r="1.06" fill="#E8ECF5" opacity="0.66"/>
+    <circle cx="104.5" cy="234.5" r="1.4" fill="#E8ECF5" opacity="0.61"/>
+    <circle cx="1036.7" cy="224.1" r="1.95" fill="#E8ECF5" opacity="0.14" class="twinkle" style="animation-delay:-0.6s"/>
+    <circle cx="474.1" cy="244.9" r="1.13" fill="#E8ECF5" opacity="0.24"/>
+    <circle cx="833.7" cy="94.1" r="1.64" fill="#E8ECF5" opacity="0.33"/>
+    <circle cx="1138.2" cy="66.7" r="0.54" fill="#E8ECF5" opacity="0.4"/>
+    <circle cx="249.7" cy="296.1" r="1.45" fill="#E8ECF5" opacity="0.56"/>
+    <circle cx="276.5" cy="135.2" r="0.62" fill="#E8ECF5" opacity="0.54"/>
+    <circle cx="377.7" cy="74.6" r="0.45" fill="#E8ECF5" opacity="0.45"/>
+    <circle cx="1078.8" cy="149.2" r="0.66" fill="#E8ECF5" opacity="0.13" class="twinkle" style="animation-delay:-3s"/>
+    <circle cx="804.4" cy="233" r="1.84" fill="#E8ECF5" opacity="0.41" class="twinkle" style="animation-delay:-3.1s"/>
+    <circle cx="844" cy="79.3" r="0.5" fill="#E8ECF5" opacity="0.29"/>
+    <circle cx="60" cy="47.5" r="1.13" fill="#E8ECF5" opacity="0.47"/>
+  </g>
+
+  <g transform="rotate(-16 1010 172)">
+    <ellipse cx="1010" cy="172" rx="196" ry="76" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1" stroke-dasharray="3 8" class="orbit"/>
+    <ellipse cx="1010" cy="172" rx="146" ry="56" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="1" stroke-dasharray="3 8" class="orbit" style="animation-duration: 26s; animation-direction: reverse;"/>
+    <ellipse cx="1010" cy="172" rx="98" ry="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1" stroke-dasharray="3 8" class="orbit" style="animation-duration: 20s;"/>
+
+    <circle cx="1010" cy="172" r="74" fill="url(#halo)" class="core"/>
+    <circle cx="1010" cy="172" r="11" fill="url(#core)" filter="url(#softGlow)"/>
+
+    <circle cx="1191.7" cy="200.5" r="9" fill="url(#planetEmerald)" filter="url(#softGlow)"/>
+    <circle cx="874.6" cy="193" r="7.5" fill="url(#planetCyan)" filter="url(#softGlow)"/>
+    <circle cx="979.7" cy="135.9" r="6" fill="url(#planetGold)" filter="url(#softGlow)"/>
+    <circle cx="1074" cy="222.3" r="3.2" fill="url(#planetViolet)"/>
+  </g>
+
+  <g font-family="Inter, 'Segoe UI', system-ui, -apple-system, sans-serif">
+    <text x="80" y="126" fill="#8A93A6" font-size="12.5" font-weight="700" letter-spacing="8">COSMIC NEXUS</text>
+
+    <text x="76" y="216" fill="url(#titleGrad)" font-size="88" font-weight="900" letter-spacing="-2">BOTS</text>
+
+    <text x="80" y="252" fill="#9AA4B6" font-size="17" font-weight="500" letter-spacing="0.2">Autonomous astronomy &amp; discovery engine for Cosmic Atlas</text>
+
+    <g transform="translate(80 286)">
+      <rect x="0" y="-14" width="132" height="26" rx="13" fill="#12151C" stroke="#FFFFFF" stroke-opacity="0.10"/>
+      <text x="16" y="3.5" fill="#B493FF" font-size="10.5" font-weight="800" letter-spacing="1.6">DISCORD DAILY</text>
+
+      <rect x="144" y="-14" width="150" height="26" rx="13" fill="#12151C" stroke="#FFFFFF" stroke-opacity="0.10"/>
+      <text x="160" y="3.5" fill="#38BDF8" font-size="10.5" font-weight="800" letter-spacing="1.6">LIVE PUSH ALERTS</text>
+
+      <rect x="306" y="-14" width="142" height="26" rx="13" fill="#12151C" stroke="#FFFFFF" stroke-opacity="0.10"/>
+      <text x="322" y="3.5" fill="#34D399" font-size="10.5" font-weight="800" letter-spacing="1.6">PUBLIC FEED</text>
+    </g>
+  </g>
+
+  <rect x="80" y="326" width="1120" height="1" fill="url(#rule)"/>
+  <g font-family="Inter, 'Segoe UI', system-ui, -apple-system, sans-serif">
+    <text x="80" y="348" fill="#7C8598" font-size="11.5" font-weight="600" letter-spacing="1.2">cosmic-atlas.app</text>
+    <text x="1200" y="348" fill="#5F6878" font-size="10.5" font-weight="600" letter-spacing="1.2" text-anchor="end">PYTHON &#183; NODE.JS &#183; SQLITE &#183; GITHUB ACTIONS</text>
+  </g>
+</svg>
