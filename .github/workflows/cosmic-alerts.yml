@@ -58,7 +58,19 @@ jobs:
           git config user.name "cosmic-alerts-bot"
           git config user.email "cosmic-alerts-bot@users.noreply.github.com"
           git add cosmic-alerts/.state/seen.json cosmic-alerts/alerts/feed.json
-          if ! git diff --staged --quiet; then
-            git commit -m "chore(alerts): update state and live feed"
-            git push
+          if git diff --staged --quiet; then
+            echo "Nicio modificare de publicat."
+            exit 0
           fi
+          git commit -m "chore(alerts): update state and live feed"
+          # Alți roboți din repo fac push frecvent: reîncercăm cu rebase,
+          # altfel un push respins (fetch first) oprește tot jobul.
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push origin HEAD:main; then
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          echo "Push eșuat după 3 încercări." >&2
+          exit 1
