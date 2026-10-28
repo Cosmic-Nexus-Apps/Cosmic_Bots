@@ -12,4 +12,5 @@ astro-events-bot/events.db
 !cosmic-alerts/package.json
 !cosmic-alerts/package-lock.json
 !cosmic-alerts/.state/seen.json
+!cosmic-alerts/alerts/feed.json
 cosmic-alerts/node_modules/

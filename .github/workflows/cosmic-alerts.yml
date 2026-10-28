@@ -47,6 +47,9 @@ jobs:
           TNS_BOT_ID: ${{ secrets.TNS_BOT_ID }}
           TNS_BOT_NAME: ${{ secrets.TNS_BOT_NAME }}
           TNS_API_KEY: ${{ secrets.TNS_API_KEY }}
+          # Alternativa fără bot/API key: marker de user (TNS_USER_ID + TNS_USER_NAME).
+          TNS_USER_ID: ${{ secrets.TNS_USER_ID }}
+          TNS_USER_NAME: ${{ secrets.TNS_USER_NAME }}
         run: node src/index.mjs
 
       - name: Persist seen state
@@ -54,8 +57,8 @@ jobs:
         run: |
           git config user.name "cosmic-alerts-bot"
           git config user.email "cosmic-alerts-bot@users.noreply.github.com"
-          git add cosmic-alerts/.state/seen.json
+          git add cosmic-alerts/.state/seen.json cosmic-alerts/alerts/feed.json
           if ! git diff --staged --quiet; then
-            git commit -m "chore(alerts): update seen state"
+            git commit -m "chore(alerts): update state and live feed"
             git push
           fi

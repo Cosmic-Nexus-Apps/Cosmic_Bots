@@ -18,10 +18,40 @@ Codul robotului **nu** stă în repo-ul aplicației. Locul recomandat:
 | Sursă | Ce urmărește | Stare |
 |---|---|---|
 | MPC (CometEls.txt) | comete noi / la periheliu, magnitudine absolută ≤ 12 | ✅ activ |
-| TNS (`wis-tns.org`) | supernove, nove, tranzienți noi | ⏳ după aprobarea contului de bot |
+| TNS (`wis-tns.org`) — **CSV staged** | supernove, nove, AT-uri publice (mag ≤ 20, cu coordonate) | ✅ activ (cont de bot aprobat) |
 
 Robotul rulează la fiecare 10 minute, compară lista cu ultima stare salvată în
 `cosmic-alerts/.state/seen.json` și trimite notificări doar pentru obiectele noi.
+
+> **TNS — de ce CSV, nu API:** TNS recomandă oficial menținerea listei local din
+> fișierele staged (`tns_public_objects.csv.zip`, delta zilnică și orară). API-ul
+> de *search* întoarce doar nume, nu coordonate, iar interogările per obiect ar
+> însemna sute de cereri. Robotul descarcă o singură dată catalogul complet, apoi
+> doar delta de ieri + orele încheiate.
+>
+> Descărcarea CSV nu folosește API-ul TNS, dar cere un marker de acces. Sunt
+> acceptate două variante (prima e recomandată pentru automatizări):
+> - **bot** — `TNS_BOT_ID`, `TNS_BOT_NAME`, `TNS_API_KEY` (secrete GitHub);
+> - **user** — `TNS_USER_ID`, `TNS_USER_NAME`, fără API key (exact ca exemplul
+>   din documentația TNS pentru descărcarea CSV).
+> Credențialele rămân exclusiv în GitHub Secrets.
+
+## Verificare locală (fără GitHub, fără Firebase)
+
+```powershell
+cd Cosmic_Bots/cosmic-alerts
+$env:TNS_USER_ID="4590"          # ID-ul contului (din URL-ul /user/<id>/edit)
+$env:TNS_USER_NAME="username"    # numele de LOGIN TNS
+node src/verify-tns.mjs
+```
+
+Scriptul descarcă doar delta de ieri / orară și afișează câte rânduri vin și 3
+exemple. Nu tipărește niciodată chei. `403` = marker neacceptat (username greșit
+sau bot inactiv); `404` = fișierul acelei zile/ore încă nu există.
+
+> `FIREBASE_SERVICE_ACCOUNT` este **opțional**: fără el, `feed.json` se
+> actualizează normal (deci supernovele apar în aplicație), doar notificările
+> push sunt omise.
 
 ## Instalare
 
