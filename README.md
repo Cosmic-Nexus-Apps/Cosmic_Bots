@@ -114,7 +114,7 @@ Cosmic_Bots/
 ├── google_ai_helper.py           # Gemini wrapper (news, quiz, urgency classification)
 ├── persistent_history.py         # global persistence, prevents duplicate posts
 ├── published_history.json        # committed state: what has already been published
-├── assets/banner.svg             # repository banner (README header)
+├── assets/cosmic-bots.svg        # repository banner (README header)
 │
 ├── astro-events-bot/             # astronomical events + space weather
 ├── deep-space-bot/               # APOD, telescopes, ISS, launches, exoplanets
