@@ -8,7 +8,7 @@
 
 **Cosmic Nexus** este o platformă multi-bot complet automatizată, proiectată să monitorizeze universul, lansările spatiale, vremea spațială NOAA și descoperirile astronomice în timp real, distribuind informații spectaculoase și interactive pe Discord.
 
-Ecosistemul funcționează **24/7** sub un orchestrator master (`main_orchestrator.py`) care rulează la fiecare **5 minute**, executând sarcini în timp real și sarcini programate pe parcursul celor 24 de ore.
+Ecosistemul rulează automat prin **GitHub Actions**, în **6 sloturi fixe pe zi** (07:00, 09:00, 12:00, 14:00, 16:00 și 18:00 UTC). Verificările „în timp real” (lansări, furtuni geomagnetice, erupții solare, comete/tranzienți) rulează la fiecare declanșare a orchestratorului, cu dedublare prin `scheduler.db`.
 
 ---
 
@@ -29,12 +29,12 @@ Transmisiile pe server sunt împărțite în două categorii: **Alerte în Timp 
 
 | Slot Orar | Ora UTC | Ora României (EEST / UTC+3) | Bot / Modul Responsabil | Conținut Transmis |
 | :---: | :---: | :---: | :---: | :--- |
-| **Slot 1** | **07:00 UTC** | **10:00 EEST** | `astro-events-bot` | 📰 **Știrea Zilei (Daily Top Story):** Cea mai importantă știre spațială a zilei selectată de Gemini AI cu rezumat extins și imaginea originală din articol. |
-| **Slot 2** | **09:00 UTC** | **12:00 EEST** | `astro-events-bot` | 🔭 **Evenimente Astronomice:** Conjuncții planetare (Skyfield JPL), Alinieri planetare ($\ge 4$ planete), Comete noi, Ploi de meteoriți & Supernove. |
+| **Slot 1** | **07:00 UTC** | **10:00 EEST** | `deep-space-bot` | 📸 **Poza Zilei NASA (APOD):** Astronomy Picture of the Day de la NASA. |
+| **Slot 2** | **09:00 UTC** | **12:00 EEST** | `astro-events-bot` | 🔭 **Evenimente Astronomice:** Conjuncții planetare (Skyfield JPL), alinieri planetare (≥ 4 planete), comete noi, ploi de meteoriți & supernove. |
 | **Slot 3** | **12:00 UTC** | **15:00 EEST** | `space-quiz-bot` | 🧠 **Quiz-ul Spațial Zilnic:** Întrebare interactivă de astronomie generată dinamic cu Gemini AI + căutare imagini relevante via Wikipedia API. |
-| **Slot 4** | **14:00 UTC** | **17:00 EEST** | `deep-space-bot` | 📸 **Poza Zilei NASA (APOD):** Slot 100% dedicat pentru Astronomy Picture of the Day de la NASA. |
-| **Slot 5** | **16:00 UTC** | **19:00 EEST** | `space-history-bot` | 📜 **Azi în Istoria Spațiului:** Eveniment istoric (Apollo, Voyager, Kepler, Galileo) cu portrete/imagini verificate via Wikipedia API. |
-| **Slot 6** | **18:00 UTC** | **21:00 EEST** | `deep-space-bot` | 🌌 **Deep Space & Telemetrie ISS:** Imagini telescoape JWST/Hubble + Echipajul uman de pe ISS + Exoplanete noi. |
+| **Slot 4** | **14:00 UTC** | **17:00 EEST** | `space-history-bot` | 📜 **Azi în Istoria Spațiului:** Eveniment istoric (Apollo, Voyager, Kepler, Galileo) cu portrete/imagini verificate via Wikipedia API. |
+| **Slot 5** | **16:00 UTC** | **19:00 EEST** | `deep-space-bot` | 🌌 **Telemetrie ISS & Exoplanete:** Echipajul uman de pe ISS/Tiangong + descoperiri noi de exoplanete. |
+| **Slot 6** | **18:00 UTC** | **21:00 EEST** | `astro-events-bot` | 📰 **Știrea Zilei (Daily Top Story):** cea mai importantă știre spațială a zilei, selectată și rezumată de Gemini AI. |
 
 ---
 

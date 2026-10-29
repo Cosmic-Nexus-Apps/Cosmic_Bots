@@ -38,4 +38,4 @@
 ## 🗄️ 3. Arhitectură & Persistență SQLite
 
 * **Bază de Date SQLite (`deep_space.db`):** Evită duplicarea postărilor.
-* **GitHub Actions Cache:** Baza de date SQLite este păstrată între rulările de 6 ore prin `.github/workflows/deep_space_cron.yml`.
+* **GitHub Actions Cache:** Baza de date SQLite este păstrată între rulările programate din `.github/workflows/astronomy_cron.yml`.

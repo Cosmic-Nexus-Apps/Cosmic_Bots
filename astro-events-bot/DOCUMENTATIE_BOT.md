@@ -86,5 +86,5 @@ Orarul este împărțit pe **3 regiuni globale** (9 fuse orare strategice), con�
 ## 🗄️ 4. Arhitectura Tehnică & Baza de Date
 
 * **Bază de Date SQLite (`events.db`):** Stochează istoricul alertelor și previne duplicarea mesajelor.
-* **Persistență prin GitHub Actions Cache:** Păstrează baza de date SQLite între rulările automate de la fiecare 3 ore prin `actions/cache@v4`.
+* **Persistență prin GitHub Actions Cache:** Păstrează baza de date SQLite între rulările programate (6 sloturi pe zi) prin `actions/cache@v4`.
 * **NASA JPL Ephemeris:** Setul de date orbital de ultimă generație descărcat automat de modulul `skyfield`.
