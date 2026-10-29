@@ -193,7 +193,7 @@ async function run() {
     });
 
     // The complete catalog may be unavailable (maintenance / timeout): rebuild
-    // the 30-day window from previous daily deltas.
+    // the 21-day window from previous daily deltas.
     if (bootstrap && result.records.length === 0) {
       const fallback = planTnsFallbackFiles({
         nowMs,

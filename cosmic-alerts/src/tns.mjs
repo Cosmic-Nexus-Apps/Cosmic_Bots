@@ -12,8 +12,8 @@ import { fetchTnsCsv, parseTnsCsv, tnsConfigured } from './tnsCsv.mjs';
 const DAY_MS = 24 * 3600000;
 const HOUR_MS = 3600000;
 
-/** Keep discoveries in the feed for 30 days (matching the app). */
-export const TNS_FEED_MAX_AGE_DAYS = 30;
+/** Keep discoveries in the feed for 21 days (a typical supernova fades within 2-3 weeks). */
+export const TNS_FEED_MAX_AGE_DAYS = 21;
 /** Practical limit: beyond mag ~20, objects are no longer realistic amateur targets. */
 export const TNS_MAX_FEED_MAGNITUDE = 20;
 /** Safety limit for the public feed size. */
@@ -171,7 +171,7 @@ export function normalizeTnsRecord(row, nowIso = new Date().toISOString()) {
 
 /**
  * A record is included in the feed if it has coordinates, is an optical source,
- * meets the magnitude threshold, and falls within the 30-day window. Filter
+ * meets the magnitude threshold, and falls within the 21-day window. Filter
  * early (including while parsing the full catalog) to keep memory and state small.
  */
 export function isFeedEligible(record, nowMs = Date.now()) {
