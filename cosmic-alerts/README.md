@@ -1,82 +1,85 @@
 # Cosmic Alerts Bot
 
-Robot care verifică sursele oficiale de descoperiri astronomice și trimite
-notificări push (FCM, data-only) către aplicația Cosmic Atlas. **Nu atinge serverul
-central** și nu stochează date personale: trimite doar la topic-uri, iar aplicația
-decide local dacă afișează notificarea (locație, oră, preferințe).
+A bot that checks official astronomical discovery sources and sends push
+notifications (FCM, data-only) to the Cosmic Atlas app. It **does not contact
+the central server** and stores no personal data: it sends messages only to
+topics, and the app decides locally whether to display a notification
+(location, time, preferences).
 
-## Unde stă
+## Repository location
 
-Codul robotului **nu** stă în repo-ul aplicației. Locul recomandat:
+The bot code does **not** belong in the app repository. Recommended locations:
 
-- repo-ul **Cosmic_Bots** → folderul `cosmic-alerts/`
-- workflow-ul → `Cosmic_Bots/.github/workflows/cosmic-alerts.yml`
-  (copiază `workflow/alerts.yml` cu acest nume)
+- **Cosmic_Bots** repository → `cosmic-alerts/` folder
+- Workflow → `Cosmic_Bots/.github/workflows/cosmic-alerts.yml`
+  (copy `workflow/alerts.yml` to this path)
 
-## Ce face
+## What it does
 
-| Sursă | Ce urmărește | Stare |
+| Source | What it tracks | Status |
 |---|---|---|
-| MPC (CometEls.txt) | comete noi / la periheliu, magnitudine absolută ≤ 12 | ✅ activ |
-| TNS (`wis-tns.org`) — **CSV staged** | supernove, nove, AT-uri publice (mag ≤ 20, cu coordonate) | ✅ activ (cont de bot aprobat) |
+| MPC (`CometEls.txt`) | New comets / comets at perihelion, absolute magnitude ≤ 12 | ✅ active |
+| TNS (`wis-tns.org`) — **staged CSV** | Public supernovae, novae, and ATs (mag ≤ 20, with coordinates) | ✅ active (approved bot account) |
 
-Robotul rulează la fiecare 10 minute, compară lista cu ultima stare salvată în
-`cosmic-alerts/.state/seen.json` și trimite notificări doar pentru obiectele noi.
+The bot runs every 10 minutes, compares the results with the last saved state
+in `cosmic-alerts/.state/seen.json`, and sends notifications only for new objects.
 
-> **TNS — de ce CSV, nu API:** TNS recomandă oficial menținerea listei local din
-> fișierele staged (`tns_public_objects.csv.zip`, delta zilnică și orară). API-ul
-> de *search* întoarce doar nume, nu coordonate, iar interogările per obiect ar
-> însemna sute de cereri. Robotul descarcă o singură dată catalogul complet, apoi
-> doar delta de ieri + orele încheiate.
+> **TNS — why CSV instead of the API:** TNS officially recommends maintaining
+> the list locally from staged files (`tns_public_objects.csv.zip`, plus daily
+> and hourly deltas). The *search* API returns names only, not coordinates, and
+> querying each object individually would require hundreds of requests. The bot
+> downloads the complete catalog once, then only yesterday's delta and completed
+> hourly deltas.
 >
-> Descărcarea CSV nu folosește API-ul TNS, dar cere un marker de acces. Sunt
-> acceptate două variante (prima e recomandată pentru automatizări):
-> - **bot** — `TNS_BOT_ID`, `TNS_BOT_NAME`, `TNS_API_KEY` (secrete GitHub);
-> - **user** — `TNS_USER_ID`, `TNS_USER_NAME`, fără API key (exact ca exemplul
->   din documentația TNS pentru descărcarea CSV).
-> Credențialele rămân exclusiv în GitHub Secrets.
+> CSV downloads do not use the TNS API, but they require an access marker. Two
+> options are supported (the first is recommended for automation):
+> - **bot** — `TNS_BOT_ID`, `TNS_BOT_NAME`, `TNS_API_KEY` (GitHub secrets);
+> - **user** — `TNS_USER_ID`, `TNS_USER_NAME`, without an API key (exactly as in
+>   the TNS documentation example for downloading CSV files).
+> Credentials remain exclusively in GitHub Secrets.
 
-## Verificare locală (fără GitHub, fără Firebase)
+## Local verification (without GitHub or Firebase)
 
 ```powershell
 cd Cosmic_Bots/cosmic-alerts
-$env:TNS_USER_ID="4590"          # ID-ul contului (din URL-ul /user/<id>/edit)
-$env:TNS_USER_NAME="username"    # numele de LOGIN TNS
+$env:TNS_USER_ID="4590"          # Account ID (from the /user/<id>/edit URL)
+$env:TNS_USER_NAME="username"    # TNS login name
 node src/verify-tns.mjs
 ```
 
-Scriptul descarcă doar delta de ieri / orară și afișează câte rânduri vin și 3
-exemple. Nu tipărește niciodată chei. `403` = marker neacceptat (username greșit
-sau bot inactiv); `404` = fișierul acelei zile/ore încă nu există.
+The script downloads only yesterday's/hourly deltas and prints the row count
+and 3 examples. It never prints keys. `403` = unrecognized marker (incorrect
+username or inactive bot); `404` = that day's/hour's file does not exist yet.
 
-> `FIREBASE_SERVICE_ACCOUNT` este **opțional**: fără el, `feed.json` se
-> actualizează normal (deci supernovele apar în aplicație), doar notificările
-> push sunt omise.
+> `FIREBASE_SERVICE_ACCOUNT` is **optional**: without it, `feed.json` is still
+> updated normally (so supernovae appear in the app); only push notifications
+> are skipped.
 
-## Instalare
+## Installation
 
-1. În repo-ul **Cosmic_Bots**, creează folderul `cosmic-alerts/` și copiază:
+1. In the **Cosmic_Bots** repository, create the `cosmic-alerts/` folder and copy:
    - `package.json`, `package-lock.json`
-   - `src/` (index.mjs, mpc.mjs, tns.mjs)
+   - `src/` (`index.mjs`, `mpc.mjs`, `tns.mjs`)
    - `.gitignore`
-2. Copiază `workflow/alerts.yml` → `Cosmic_Bots/.github/workflows/cosmic-alerts.yml`.
-3. În repo: **Settings → Secrets and variables → Actions → New repository secret**:
-   - `FIREBASE_SERVICE_ACCOUNT` = conținutul fișierului JSON descărcat din
+2. Copy `workflow/alerts.yml` to `Cosmic_Bots/.github/workflows/cosmic-alerts.yml`.
+3. In the repository, open **Settings → Secrets and variables → Actions → New repository secret**:
+   - `FIREBASE_SERVICE_ACCOUNT` = contents of the JSON file downloaded from
      Firebase Console → Project settings → Service accounts → Generate new private key.
-   - (după aprobarea TNS) `TNS_BOT_ID`, `TNS_BOT_NAME`, `TNS_API_KEY`.
-4. **Actions → Cosmic Alerts → Run workflow** — prima rulare doar înregistrează
-   starea, nu trimite nimic (nu spam-ează cu ce e deja pe cer).
+   - (after TNS approval) `TNS_BOT_ID`, `TNS_BOT_NAME`, `TNS_API_KEY`.
+4. Open **Actions → Cosmic Alerts → Run workflow** — the first run only records
+   the current state; it does not send notifications for objects that are
+   already in the sky.
 
-## Secrete
+## Secrets
 
-Niciodată în cod. Doar GitHub Secrets (pentru robot) sau folderul securizat
-`d:/projects/security/{test|prod}/` (pentru build-ul aplicației).
+Never put secrets in code. Use GitHub Secrets (for the bot) or the secured
+`d:/projects/security/{test|prod}/` folder (for the app build).
 
-## Topic-uri FCM
+## FCM topics
 
-- `alerts_comet` — comete noi / la periheliu
-- `alerts_supernova` — supernove (după activarea TNS)
-- `alerts_transient` — alte tranzienți (după activarea TNS)
+- `alerts_comet` — new comets / comets at perihelion
+- `alerts_supernova` — supernovae (after TNS activation)
+- `alerts_transient` — other transients (after TNS activation)
 
-Aplicația se abonează la topic-urile alese de utilizator și afișează notificarea
-local doar dacă obiectul e vizibil de la locația lui.
+The app subscribes to the topics chosen by the user and displays a notification
+locally only if the object is visible from their location.

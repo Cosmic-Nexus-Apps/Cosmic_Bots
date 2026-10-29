@@ -191,11 +191,11 @@ notifications are skipped.
 
 | Document | Contents |
 | :--- | :--- |
-| [`DOCUMENTATIE_ECOSISTEM.md`](DOCUMENTATIE_ECOSISTEM.md) | full ecosystem architecture, broadcast schedule, Discord channels and roles |
-| [`astro-events-bot/DOCUMENTATIE_BOT.md`](astro-events-bot/DOCUMENTATIE_BOT.md) | the eight astronomy modules, thresholds and ephemerides |
-| [`deep-space-bot/DOCUMENTATIE_DEEP_SPACE.md`](deep-space-bot/DOCUMENTATIE_DEEP_SPACE.md) | launches, telescopes, APOD, ISS |
-| [`space-quiz-bot/DOCUMENTATIE_QUIZ.md`](space-quiz-bot/DOCUMENTATIE_QUIZ.md) | quiz generation and anti-repetition |
-| [`space-history-bot/DOCUMENTATIE_HISTORY.md`](space-history-bot/DOCUMENTATIE_HISTORY.md) | historical event selection |
+| [Ecosystem documentation](ECOSYSTEM_DOCUMENTATION.md) | full ecosystem architecture, broadcast schedule, Discord channels and roles |
+| [Astro-events bot documentation](astro-events-bot/ASTRO_EVENTS_DOCUMENTATION.md) | the eight astronomy modules, thresholds and ephemerides |
+| [Deep-space bot documentation](deep-space-bot/DEEP_SPACE_DOCUMENTATION.md) | launches, telescopes, APOD, ISS |
+| [Space quiz bot documentation](space-quiz-bot/SPACE_QUIZ_DOCUMENTATION.md) | quiz generation and anti-repetition |
+| [Space history bot documentation](space-history-bot/SPACE_HISTORY_DOCUMENTATION.md) | historical event selection |
 | [`cosmic-alerts/README.md`](cosmic-alerts/README.md) | TNS/MPC pipeline, public feed, notifications |
 
 ---

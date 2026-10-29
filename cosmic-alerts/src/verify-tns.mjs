@@ -1,11 +1,11 @@
-// verify-tns.mjs — test local, fără Firebase și fără GitHub.
+// verify-tns.mjs — local test without Firebase or GitHub.
 //
-// Verifică dacă markerul TNS (user sau bot) este acceptat pentru descărcarea
-// CSV-urilor staged și arată câte rânduri vin. Nu afișează niciodată chei.
+// Checks whether the TNS marker (user or bot) is accepted for downloading
+// staged CSVs and reports how many rows are returned. Never prints keys.
 //
-// Utilizare (PowerShell, din folderul cosmic-alerts/):
+// Usage (PowerShell, from the cosmic-alerts/ folder):
 //   $env:TNS_USER_ID="4590"; $env:TNS_USER_NAME="username"; node src/verify-tns.mjs
-// sau, pentru bot:
+// Or, for a bot:
 //   $env:TNS_BOT_ID="..."; $env:TNS_BOT_NAME="..."; $env:TNS_API_KEY="..."; node src/verify-tns.mjs
 
 import { fetchTnsCsv, parseTnsCsv, tnsAuthMode } from './tnsCsv.mjs';
@@ -27,8 +27,8 @@ if (!mode) {
 
 const now = Date.now();
 const candidates = [
-  `tns_public_objects_${dayKey(new Date(now - DAY_MS))}.csv.zip`, // delta de ieri
-  `tns_public_objects_${pad(new Date(now - 2 * HOUR_MS).getUTCHours())}.csv.zip`, // delta orară
+  `tns_public_objects_${dayKey(new Date(now - DAY_MS))}.csv.zip`, // yesterday's delta
+  `tns_public_objects_${pad(new Date(now - 2 * HOUR_MS).getUTCHours())}.csv.zip`, // hourly delta
   `tns_public_objects_${pad(new Date(now - HOUR_MS).getUTCHours())}.csv.zip`,
 ];
 

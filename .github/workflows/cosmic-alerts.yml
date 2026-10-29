@@ -1,11 +1,11 @@
 name: Cosmic Alerts
 
-# Verifică sursele de descoperiri și trimite notificări push (FCM data-only).
-# Rulează la fiecare 10 minute; GitHub poate întârzia câteva minute la ore aglomerate.
+# Checks discovery sources and sends push notifications (FCM data-only).
+# Runs every 10 minutes; GitHub may be delayed by a few minutes during busy periods.
 #
-# Locație: acest fișier se copiază în repo-ul Cosmic_Bots la
+# Location: copy this file into the Cosmic_Bots repository at
 #   .github/workflows/cosmic-alerts.yml
-# iar codul robotului stă în folderul:
+# and the bot code is in the:
 #   cosmic-alerts/
 
 on:
@@ -47,7 +47,7 @@ jobs:
           TNS_BOT_ID: ${{ secrets.TNS_BOT_ID }}
           TNS_BOT_NAME: ${{ secrets.TNS_BOT_NAME }}
           TNS_API_KEY: ${{ secrets.TNS_API_KEY }}
-          # Alternativa fără bot/API key: marker de user (TNS_USER_ID + TNS_USER_NAME).
+          # Alternative without a bot/API key: user marker (TNS_USER_ID + TNS_USER_NAME).
           TNS_USER_ID: ${{ secrets.TNS_USER_ID }}
           TNS_USER_NAME: ${{ secrets.TNS_USER_NAME }}
         run: node src/index.mjs
@@ -63,8 +63,8 @@ jobs:
             exit 0
           fi
           git commit -m "chore(alerts): update state and live feed"
-          # Alți roboți din repo fac push frecvent: reîncercăm cu rebase,
-          # altfel un push respins (fetch first) oprește tot jobul.
+          # Other bots in the repository push frequently: retry with rebase,
+          # otherwise a rejected push (fetch first) would stop the entire job.
           for attempt in 1 2 3; do
             if git pull --rebase --autostash origin main && git push origin HEAD:main; then
               exit 0

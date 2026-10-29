@@ -1,24 +1,24 @@
-// tns.mjs — orchestrarea listelor publice TNS (CSV staged) pentru feed-ul aplicației.
+// tns.mjs — orchestrates public TNS lists (staged CSVs) for the app feed.
 //
-// Sursa de date este exclusiv CSV-ul staged, recomandat oficial de TNS (vezi
-// tnsCsv.mjs). Nu se fac interogări per obiect: catalogul complet se descarcă o
-// singură dată (bootstrap), iar apoi se aplică doar delta zilei + delta orelor.
+// The only data source is the staged CSV, officially recommended by TNS (see
+// tnsCsv.mjs). No per-object queries are made: the complete catalog is downloaded
+// once during bootstrap, then only daily and hourly deltas are applied.
 //
-// Rezultatul este un "record" normalizat per obiect public, ținut local în starea
-// robotului, din care se generează feed-ul citit de aplicație.
+// The result is one normalized record per public object, stored in the bot's
+// local state and used to generate the feed consumed by the app.
 
 import { fetchTnsCsv, parseTnsCsv, tnsConfigured } from './tnsCsv.mjs';
 
 const DAY_MS = 24 * 3600000;
 const HOUR_MS = 3600000;
 
-/** Feed-ul păstrează descoperirile 30 de zile (ca în aplicație). */
+/** Keep discoveries in the feed for 30 days (matching the app). */
 export const TNS_FEED_MAX_AGE_DAYS = 30;
-/** Cap practic: dincolo de mag ~20 nu mai e realist pentru echipamente amatoare. */
+/** Practical limit: beyond mag ~20, objects are no longer realistic amateur targets. */
 export const TNS_MAX_FEED_MAGNITUDE = 20;
-/** Limită de siguranță pentru dimensiunea feed-ului public. */
+/** Safety limit for the public feed size. */
 export const TNS_MAX_FEED_OBJECTS = 300;
-/** Câte zile de delta se descarcă dacă bootstrap-ul pe catalogul complet eșuează. */
+/** Number of daily deltas to download if the full-catalog bootstrap fails. */
 const BOOTSTRAP_FALLBACK_DAYS = 14;
 
 function pad(value) {
@@ -44,10 +44,10 @@ function hourlyFile(date) {
 const FULL_FILE = 'tns_public_objects.csv.zip';
 
 /**
- * Listează fișierele de descărcat:
- *  - bootstrap: catalogul complet o singură dată (vezi `planTnsFallbackFiles`);
- *  - rulare normală: delta de ieri + delta ultimelor 3 ore încheiate.
- * Cheile deja procesate nu se mai descarcă.
+ * Lists the files to download:
+ *  - bootstrap: the complete catalog once (see `planTnsFallbackFiles`);
+ *  - normal run: yesterday's delta plus the last 3 completed hourly deltas.
+ * Files that have already been processed are not downloaded again.
  */
 export function planTnsFiles({ nowMs = Date.now(), bootstrap = false, processed = [] } = {}) {
   const processedSet = new Set(processed);
@@ -74,8 +74,8 @@ export function planTnsFiles({ nowMs = Date.now(), bootstrap = false, processed 
 }
 
 /**
- * Rezervă pentru bootstrap: dacă descărcarea catalogului complet eșuează,
- * reconstruim fereastra din delta zilelor anterioare.
+ * Bootstrap fallback: if downloading the complete catalog fails, rebuild the
+ * window from previous daily deltas.
  */
 export function planTnsFallbackFiles({ nowMs = Date.now(), processed = [] } = {}) {
   const processedSet = new Set(processed);
@@ -88,7 +88,7 @@ export function planTnsFallbackFiles({ nowMs = Date.now(), processed = [] } = {}
   return files;
 }
 
-/** TNS trimite timpii în UT, fără fus: îi normalizăm la ISO cu "Z". */
+/** TNS timestamps are in UT without a time-zone suffix; normalize them to ISO with "Z". */
 function toIsoUtc(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
@@ -105,10 +105,10 @@ function toNumberOrNull(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-/** Exclude sursele ne-optice (FRB, unde gravitaționale, neutrini, GRB). */
+/** Exclude non-optical sources (FRBs, gravitational waves, neutrinos, GRBs). */
 export function isOpticalTransient(type) {
   const normalized = String(type || '').toLowerCase();
-  if (!normalized) return true; // AT neclasificat: poate deveni orice, inclusiv SN
+  if (!normalized) return true; // Unclassified AT: it could become anything, including an SN.
   if (
     normalized.includes('frb') ||
     normalized.includes('gravitational') ||
@@ -127,7 +127,7 @@ export function isOpticalTransient(type) {
   );
 }
 
-/** Topic FCM: supernovele au canal dedicat, restul intră pe tranzienți. */
+/** FCM topic: supernovae have a dedicated channel; other objects use the transient topic. */
 export function tnsTopicFor(type) {
   return String(type || '').toUpperCase().includes('SN')
     ? 'alerts_supernova'
@@ -135,9 +135,9 @@ export function tnsTopicFor(type) {
 }
 
 /**
- * Prioritatea în feed: supernovele clasificate primele, apoi novele, apoi
- * AT-urile neclasificate. Fără asta, zecile de AT-uri slabe de mag 19–20
- * (publicate zilnic) ar împinge supernovele reale în afara ferestrei feed-ului.
+ * Feed priority: classified supernovae first, then novae, then unclassified ATs.
+ * Otherwise, dozens of faint mag 19–20 ATs (published daily) would push real
+ * supernovae out of the feed window.
  */
 export function transientPriority(record) {
   const type = String(record?.type || '').toUpperCase();
@@ -147,7 +147,7 @@ export function transientPriority(record) {
   return 2;
 }
 
-/** Normalizează un rând CSV TNS într-un record stabil. */
+/** Normalize a TNS CSV row into a stable record. */
 export function normalizeTnsRecord(row, nowIso = new Date().toISOString()) {
   const name = String(row?.name || '').trim();
   if (!name) return null;
@@ -170,9 +170,9 @@ export function normalizeTnsRecord(row, nowIso = new Date().toISOString()) {
 }
 
 /**
- * Un record intră în feed dacă: are coordonate, e sursă optică, respectă pragul
- * de magnitudine și fereastra de 30 zile. Filtrarea se face devreme (și în timpul
- * parsării catalogului complet), ca memoria și starea să rămână mici.
+ * A record is included in the feed if it has coordinates, is an optical source,
+ * meets the magnitude threshold, and falls within the 30-day window. Filter
+ * early (including while parsing the full catalog) to keep memory and state small.
  */
 export function isFeedEligible(record, nowMs = Date.now()) {
   if (!record || !record.name) return false;
@@ -184,8 +184,8 @@ export function isFeedEligible(record, nowMs = Date.now()) {
 }
 
 /**
- * Descarcă fișierele planificate și întoarce recordurile normalizate.
- * Fișierele inexistente (404) sunt marcate ca procesate.
+ * Downloads the planned files and returns normalized records.
+ * Missing files (404) are marked as processed.
  */
 export async function fetchTnsRecords(files, { onProgress, nowMs = Date.now() } = {}) {
   if (!tnsConfigured()) {
@@ -197,7 +197,7 @@ export async function fetchTnsRecords(files, { onProgress, nowMs = Date.now() } 
 
   for (const item of files) {
     try {
-      // Catalogul complet are ~110 MB: îi dăm un timeout mai mare.
+      // The full catalog is ~110 MB, so give it a longer timeout.
       const isFullCatalog = item.file === FULL_FILE;
       const csv = await fetchTnsCsv(item.file, {
         timeoutMs: isFullCatalog ? 300000 : 120000,
@@ -226,7 +226,7 @@ export async function fetchTnsRecords(files, { onProgress, nowMs = Date.now() } 
   return { records, processed };
 }
 
-/** Construiește feed-ul public citit de aplicație. */
+/** Builds the public feed consumed by the app. */
 export function buildTnsFeed(records, nowMs = Date.now()) {
   const list = Object.values(records || {})
     .filter(record => isFeedEligible(record, nowMs))
@@ -252,7 +252,7 @@ export function buildTnsFeed(records, nowMs = Date.now()) {
   };
 }
 
-/** Elimină din starea locală obiectele mai vechi decât fereastra feed-ului. */
+/** Removes objects older than the feed window from local state. */
 export function pruneTnsRecords(records, nowMs = Date.now(), maxAgeDays = 60) {
   const cutoff = nowMs - maxAgeDays * DAY_MS;
   const pruned = {};

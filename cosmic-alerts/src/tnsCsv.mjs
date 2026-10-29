@@ -1,13 +1,13 @@
-// tnsCsv.mjs — citirea listelor publice TNS din CSV-urile staged (oficial recomandate).
+// tnsCsv.mjs — reads public TNS lists from officially recommended staged CSVs.
 //
-// TNS (Ofer Yaron) recomandă explicit menținerea listei local, din fișierele
-// "tns_public_objects*.csv.zip", în locul interogărilor repetate ale API-ului:
-//   • tns_public_objects.csv.zip              — catalogul complet (rescris zilnic)
-//   • tns_public_objects_YYYYMMDD.csv.zip     — delta zilei (disponibil a doua zi)
-//   • tns_public_objects_HH.csv.zip           — delta orei (ciclu de 24 h)
+// TNS (Ofer Yaron) explicitly recommends maintaining the list locally from
+// "tns_public_objects*.csv.zip" files instead of repeatedly querying the API:
+//   • tns_public_objects.csv.zip              — complete catalog (rewritten daily)
+//   • tns_public_objects_YYYYMMDD.csv.zip     — daily delta (available the next day)
+//   • tns_public_objects_HH.csv.zip           — hourly delta (24-hour cycle)
 //
-// Descărcarea cere markerul de bot + api_key (POST, form-urlencoded). Implementarea
-// de mai jos nu are dependențe: dezarhivarea ZIP se face cu `node:zlib`.
+// Downloads require a bot marker + api_key (POST, form-urlencoded). The
+// implementation below has no dependencies: ZIP extraction uses `node:zlib`.
 
 import { inflateRawSync } from 'node:zlib';
 
@@ -17,8 +17,8 @@ export function tnsAuthMode() {
   if (process.env.TNS_BOT_ID && process.env.TNS_BOT_NAME && process.env.TNS_API_KEY) {
     return 'bot';
   }
-  // Alternativa documentată de TNS pentru descărcarea CSV: marker de user,
-  // fără API key. Utilă dacă nu vrei să creezi un bot separat.
+  // TNS-documented alternative for CSV downloads: a user marker without an API
+  // key. Useful if you do not want to create a separate bot.
   if (process.env.TNS_USER_ID && process.env.TNS_USER_NAME) {
     return 'user';
   }
@@ -41,11 +41,11 @@ export function tnsMarkerHeader() {
 }
 
 /**
- * Descarcă un CSV TNS (împachetat ZIP) și îl întoarce ca text.
- * Returnează `null` pentru 404 (fișier încă negenerat / expirat).
+ * Downloads a TNS CSV (packaged as a ZIP) and returns it as text.
+ * Returns `null` for 404 (the file has not been generated yet or has expired).
  *
- * Mod `bot`: marker de bot + `api_key` în body (recomandat pentru automatizări).
- * Mod `user`: doar marker de user, fără API key (exact ca exemplul din documentația TNS).
+ * `bot` mode: bot marker + `api_key` in the body (recommended for automation).
+ * `user` mode: user marker only, without an API key (as in the TNS documentation example).
  */
 export async function fetchTnsCsv(fileName, { timeoutMs = 120000 } = {}) {
   const mode = tnsAuthMode();
@@ -114,7 +114,7 @@ function readCentralDirectory(buffer) {
   return entries;
 }
 
-/** Extrage primul fișier CSV dintr-un ZIP cu o singură intrare (stored sau deflate). */
+/** Extracts the first CSV file from a ZIP with one entry (stored or deflate). */
 export function unzipFirstFile(buffer) {
   const entries = readCentralDirectory(buffer);
   if (entries.length === 0) throw new Error('ZIP gol');
@@ -136,7 +136,7 @@ export function unzipFirstFile(buffer) {
   throw new Error(`ZIP: metodă de compresie nesuportată (${entry.method})`);
 }
 
-/** Parser CSV cu suport pentru câmpuri între ghilimele (rapoarte, nume multiple). */
+/** CSV parser with support for quoted fields (reports, multiple names). */
 export function parseCsvLine(line) {
   const fields = [];
   let current = '';
@@ -169,16 +169,16 @@ export function parseCsvLine(line) {
 }
 
 /**
- * Parsează un CSV TNS. Prima linie conține intervalul acoperit, a doua este
- * headerul (începe cu "objid"). Sunt tolerate linii goale / BOM.
+ * Parses a TNS CSV. The first line contains the covered date range; the second
+ * is the header (starts with "objid"). Blank lines and a BOM are allowed.
  */
 export function parseTnsCsv(text) {
   const lines = String(text || '')
     .replace(/^\uFEFF/, '')
     .split(/\r?\n/);
 
-  // Prima linie conține intervalul; headerul începe cu "objid" și este pus
-  // între ghilimele ("objid","name_prefix",...), deci îl detectăm pe celule.
+  // The first line contains the date range; the header starts with "objid" and
+  // is quoted ("objid","name_prefix",...), so detect it by parsing the cells.
   let headerIndex = -1;
   let header = [];
   const probeLimit = Math.min(lines.length, 5);

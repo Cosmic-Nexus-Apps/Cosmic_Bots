@@ -1,11 +1,11 @@
-// index.mjs — robotul de alerte Cosmic Atlas.
+// index.mjs — Cosmic Atlas alerts bot.
 //
-// Flux: citește sursele (MPC; listele publice staged TNS) → compară cu starea
-// salvată → trimite notificări FCM data-only la topic-uri → scrie feed-ul public
-// citit de aplicație → salvează starea.
+// Flow: reads the sources (MPC; public staged TNS lists) → compares them with
+// saved state → sends data-only FCM notifications to topics → writes the public
+// feed consumed by the app → saves state.
 //
-// Secretele vin EXCLUSIV din variabile de mediu (GitHub Secrets). Nimic nu se
-// scrie în cod și nu se trimit date personale: doar topic-uri, fără token-uri.
+// Secrets come EXCLUSIVELY from environment variables (GitHub Secrets). Nothing
+// is written into the code, and no personal data is sent: only topics, no tokens.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -25,14 +25,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATE_PATH = join(__dirname, '..', '.state', 'seen.json');
 const FEED_PATH = join(__dirname, '..', 'alerts', 'feed.json');
 const MAX_NOTIFICATIONS_PER_RUN = 5;
-// Notificările push se trimit doar pentru descoperiri foarte recente.
+// Push notifications are sent only for very recent discoveries.
 const ALERT_MAX_AGE_MS = 48 * 3600000;
 const MAX_PROCESSED_FILES = 400;
 
 function loadState() {
   try {
     const parsed = JSON.parse(readFileSync(STATE_PATH, 'utf8'));
-    // Migrare din formatul vechi, în care `transients` era doar o listă de nume.
+    // Migrate from the old format, where `transients` was only a list of names.
     const legacyAlerted = Array.isArray(parsed.transients) ? parsed.transients : [];
     return {
       initialized: parsed.initialized === true,
@@ -63,7 +63,7 @@ function saveState(state) {
   writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + '\n');
 }
 
-/** Scrie feed-ul public citit de aplicație (fără secrete, doar date publice). */
+/** Writes the public feed consumed by the app (public data only; no secrets). */
 function writeLiveFeed(feed) {
   mkdirSync(dirname(FEED_PATH), { recursive: true });
   writeFileSync(FEED_PATH, JSON.stringify(feed, null, 2) + '\n');
@@ -73,8 +73,8 @@ function writeLiveFeed(feed) {
 function initFirebase() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) {
-    // Feed-ul public (supernove/comete în carusel) NU depinde de Firebase.
-    // Notificările push sunt opționale: fără cheie, robotul doar nu le trimite.
+    // The public feed (supernovae/comets in the carousel) does NOT depend on Firebase.
+    // Push notifications are optional: without a key, the bot simply skips them.
     console.warn(
       '[firebase] FIREBASE_SERVICE_ACCOUNT lipsește: feed-ul se actualizează normal, dar nu se trimit notificări push.'
     );
@@ -97,7 +97,7 @@ function initFirebase() {
   }
 
   if (credentials?.type === 'service_account' && typeof credentials?.project_id === 'string') {
-    // Cheia corectă.
+    // This is the correct key.
   } else if (credentials?.project_info) {
     throw new Error(
       'FIREBASE_SERVICE_ACCOUNT conține google-services.json (configurația aplicației), ' +
@@ -117,7 +117,7 @@ function initFirebase() {
 }
 
 async function sendCometAlert(messaging, comet) {
-  // Data-only: aplicația decide local dacă afișează notificarea (locație, oră, prefs).
+  // Data-only: the app decides locally whether to display the notification (location, time, preferences).
   const data = {
     type: 'comet_alert',
     source: 'MPC',
@@ -159,7 +159,7 @@ async function run() {
   const nowMs = Date.now();
   const state = loadState();
 
-  // Preflight vizibil în log (fără valori secrete), ca diagnosticarea să fie imediată.
+  // Log a visible preflight check (without secret values) for immediate diagnostics.
   console.log(
     `[env] FIREBASE_SERVICE_ACCOUNT: ${
       process.env.FIREBASE_SERVICE_ACCOUNT ? 'setat' : 'LIPSĂ'
@@ -173,8 +173,9 @@ async function run() {
   const freshComets = comets.filter(comet => !seenComets.has(comet.key));
 
   // ── TNS: liste publice staged (CSV) ───────────────────────────────────────
-  // Prima rulare descarcă tot catalogul public; apoi doar delta de ieri + orele
-  // încheiate. Astfel nu se fac interogări per obiect și nu se încarcă API-ul.
+  // The first run downloads the complete public catalog; later runs fetch only
+  // yesterday's delta and completed hourly deltas. This avoids per-object queries
+  // and reduces API load.
   const hasTnsRecords = Object.keys(state.tns).length > 0;
   const bootstrap = !state.initialized || !hasTnsRecords;
   let tnsRecords = state.tns;
@@ -191,8 +192,8 @@ async function run() {
       onProgress: message => console.log(`[tns] ${message}`),
     });
 
-    // Catalogul complet poate fi indisponibil (mentenanță / timeout): reconstruim
-    // fereastra de 30 de zile din delta zilelor anterioare.
+    // The complete catalog may be unavailable (maintenance / timeout): rebuild
+    // the 30-day window from previous daily deltas.
     if (bootstrap && result.records.length === 0) {
       const fallback = planTnsFallbackFiles({
         nowMs,
@@ -225,9 +226,9 @@ async function run() {
   tnsRecords = pruneTnsRecords(tnsRecords, nowMs);
   const feed = buildTnsFeed(tnsRecords, nowMs);
 
-  // Starea rămâne mica: păstrăm doar recordurile care intră în feed-ul public
-  // (max 300). Altfel, catalogul complet ar însemna un fișier de stare de MB-uri
-  // comis în git la fiecare rulare.
+  // Keep the state small by retaining only records included in the public feed
+  // (up to 300). Otherwise, the full catalog would create a multi-megabyte state
+  // file committed to git on every run.
   const feedNames = new Set(feed.transients.map(transient => transient.name));
   tnsRecords = Object.fromEntries(
     Object.entries(tnsRecords).filter(([name]) => feedNames.has(name))
@@ -243,8 +244,8 @@ async function run() {
   writeLiveFeed(feed);
 
   if (!state.initialized || bootstrap) {
-    // Prima rulare: doar înregistrăm starea, ca să nu trimitem alerte pentru
-    // obiectele care sunt deja pe cer de mult timp.
+    // On the first run, only record the current state; do not alert for objects
+    // that have already been in the sky for a long time.
     console.log(
       `[bootstrap] ${comets.length} comete, ${feed.transients.length} descoperiri TNS înregistrate, fără notificări.`
     );

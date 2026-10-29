@@ -1,6 +1,6 @@
-// mpc.mjs — comete din lista oficială MPC (CometEls.txt).
-// Aceeași logică de selecție ca în aplicație (src/lib/mpcComets.ts), ca robotul
-// să anunțe exact cometele care pot apărea în catalog.
+// mpc.mjs — comets from the official MPC list (CometEls.txt).
+// Uses the same selection logic as the app (src/lib/mpcComets.ts), so the bot
+// announces exactly the comets that may appear in the catalog.
 
 export const PERIHELION_PAST_MS = 365 * 24 * 3600000;
 export const PERIHELION_FUTURE_MS = 730 * 24 * 3600000;
