@@ -39,7 +39,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          events-bot/events.db
+          astro-events-bot/events.db
           deep-space-bot/deep_space.db
           space-quiz-bot/quiz.db
           space-history-bot/history.db

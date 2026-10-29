@@ -39,10 +39,10 @@ transients from the Transient Name Server (TNS), plus the content engine for the
 
 | Module | Runtime | What it publishes | Schedule |
 | :--- | :---: | :--- | :--- |
-| **`astro-events-bot`** | Python | Conjunctions ≤ 1°, planetary alignments (≥ 4 planets), oppositions, lunar occultations, meteor showers (7-day and 24-hour notice), deep-sky seasons, NOAA geomagnetic storms (Kp ≥ 5 with the aurora oval map), comets from COBS/MPC | daily, 07:00 & 09:00 UTC |
-| **`deep-space-bot`** | Python | NASA APOD, JWST / Hubble / Euclid / Chandra / Rubin imagery, ISS & Tiangong crew, new exoplanets, rocket launches (T-60 / T-15 / T-0) | daily, 14:00 & 18:00 UTC |
+| **`astro-events-bot`** | Python | Conjunctions ≤ 1°, planetary alignments (≥ 4 planets), oppositions, lunar occultations, meteor showers (7-day and 24-hour notice), deep-sky seasons, NOAA geomagnetic storms (Kp ≥ 5 with the aurora oval map), comets from COBS/MPC, breaking space news | daily, 09:00 & 18:00 UTC, plus real-time checks on every cycle |
+| **`deep-space-bot`** | Python | NASA APOD, JWST / Hubble / Euclid / Chandra / Rubin imagery, ISS & Tiangong crew, new exoplanets, rocket launches (T-60 / T-15 / T-0) | daily, 07:00 & 16:00 UTC, plus launch tracking on every cycle |
 | **`space-quiz-bot`** | Python | A daily astronomy quiz generated with Gemini AI — 6 categories, no repeats (SQLite) | daily, 12:00 UTC |
-| **`space-history-bot`** | Python | “Today in space history” — Apollo, Voyager, Shuttle, Artemis, with verified imagery | daily, 16:00 UTC |
+| **`space-history-bot`** | Python | “Today in space history” — Apollo, Voyager, Shuttle, Artemis, with verified imagery | daily, 14:00 UTC |
 | **`cosmic-alerts`** | Node.js | MPC comets + **TNS discoveries** (supernovae, novae, transients) → FCM push for Cosmic Atlas + the public JSON feed | every 10 minutes |
 
 The Python bots are coordinated by `main_orchestrator.py`, which runs each module in isolation (`run_safe`) and
