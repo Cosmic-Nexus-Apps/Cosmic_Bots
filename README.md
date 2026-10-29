@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/banner.svg" alt="Cosmic Nexus — autonomous astronomy bots for Cosmic Atlas" width="100%" />
+  <img src="assets/cosmic-bots.svg" alt="Cosmic Bots — astronomy and space discoveries delivered to Discord" width="100%" />
 </div>
 
 <p align="center">
