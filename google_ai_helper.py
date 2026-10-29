@@ -15,18 +15,59 @@ NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
 import socket
 socket.setdefaulttimeout(8.0)
 
-# Active Gemini free-tier models (tried in order — fastest first)
-PREFERRED_GEMINI_MODELS = [
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+# Gemini API free-tier models, tried in order.
+#
+# Checked against the official docs on 2026-10-28:
+#   • gemini-2.0-flash  -> SHUT DOWN (listed under "Previous models")
+#   • gemini-2.5-*      -> limited to accounts that already used them
+#   • gemini-1.5-flash  -> retired (no longer listed)
+# Current free-tier Flash models: 3.8 Flash, 3.6 Flash, 3.5 Flash-Lite, 3.1 Flash-Lite.
+# Override the first choice at runtime with GEMINI_MODEL.
+DEFAULT_GEMINI_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
 ]
+
+
+def _preferred_gemini_models():
+    """Returns the model chain, honouring an explicit GEMINI_MODEL override."""
+    override = (os.getenv("GEMINI_MODEL") or "").strip()
+    models = [override] if override else []
+    for model in DEFAULT_GEMINI_MODELS:
+        if model not in models:
+            models.append(model)
+    return models
+
+
+def _extract_response_text(candidates):
+    """
+    Returns the visible answer text, skipping "thought" parts.
+
+    Gemini 3 models may return reasoning parts before the final answer; taking
+    parts[0] blindly would feed the chain-of-thought to the JSON parser.
+    """
+    if not candidates:
+        return ""
+    parts = candidates[0].get("content", {}).get("parts", []) or []
+    visible = [
+        part.get("text", "")
+        for part in parts
+        if isinstance(part, dict) and not part.get("thought")
+    ]
+    if not visible:
+        visible = [part.get("text", "") for part in parts if isinstance(part, dict)]
+    return "".join(text for text in visible if text).strip()
+
 
 def call_gemini_flash_multi_model(prompt_text, max_tokens=2048):
     """
-    Tries Google AI Studio free-tier models in order until one succeeds:
-    1. gemini-2.0-flash (fastest)
-    2. gemini-1.5-flash
-    Returns raw text response or None on failure.
+    Tries the current free-tier Gemini models in order until one succeeds.
+    Returns the raw text response or None on failure.
+
+    The chain is defined in DEFAULT_GEMINI_MODELS and can be overridden with
+    GEMINI_MODEL. HTTP errors are logged with their message so quota or
+    model-availability problems are visible in the workflow output.
     """
     if not GEMINI_API_KEY:
         return None
@@ -38,29 +79,33 @@ def call_gemini_flash_multi_model(prompt_text, max_tokens=2048):
         }],
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": max_tokens,
+            "maxOutputTokens": max(max_tokens, 4096),
             "responseMimeType": "application/json"
         }
     }
 
-    for model_name in PREFERRED_GEMINI_MODELS:
+    for model_name in _preferred_gemini_models():
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         try:
-            res = requests.post(url, json=payload, headers=headers, timeout=5)
+            res = requests.post(url, json=payload, headers=headers, timeout=12)
             if res.status_code == 200:
-                data = res.json()
-                candidates = data.get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        text_out = parts[0].get("text", "").strip()
-                        if text_out:
-                            print(f"[GEMINI AI] Responded using model '{model_name}'.")
-                            return text_out
+                text_out = _extract_response_text(res.json().get("candidates", []))
+                if text_out:
+                    print(f"[GEMINI AI] Responded using model '{model_name}'.")
+                    return text_out
+                print(f"[GEMINI AI] Model '{model_name}' returned no visible text.")
+            else:
+                message = ""
+                try:
+                    message = res.json().get("error", {}).get("message", "")
+                except Exception:
+                    pass
+                print(f"[GEMINI AI] Model '{model_name}' HTTP {res.status_code}: {message[:180]}")
         except Exception as e:
             print(f"[GEMINI AI] Model '{model_name}' notice: {e}")
             continue
 
+    print("[GEMINI AI] All configured models failed. Set GEMINI_MODEL or check the API quota.")
     return None
 
 # ==============================================================================
@@ -415,21 +460,24 @@ def enhance_news_summary(title, source_name, raw_summary):
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024}
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
         }
-        for model_name in PREFERRED_GEMINI_MODELS:
+        for model_name in _preferred_gemini_models():
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
-            res = requests.post(url, json=payload, headers=headers, timeout=8)
+            res = requests.post(url, json=payload, headers=headers, timeout=12)
             if res.status_code == 200:
-                candidates = res.json().get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        text_out = parts[0].get("text", "").strip()
-                        if text_out and len(text_out) > 50:
-                            clean_out = re.sub(r'^```[\w]*\n?', '', text_out)
-                            clean_out = re.sub(r'\n?```$', '', clean_out).strip(' "')
-                            return clean_out
+                text_out = _extract_response_text(res.json().get("candidates", []))
+                if text_out and len(text_out) > 50:
+                    clean_out = re.sub(r'^```[\w]*\n?', '', text_out)
+                    clean_out = re.sub(r'\n?```$', '', clean_out).strip(' "')
+                    return clean_out
+            else:
+                message = ""
+                try:
+                    message = res.json().get("error", {}).get("message", "")
+                except Exception:
+                    pass
+                print(f"[AI NEWS SUMMARY] Model '{model_name}' HTTP {res.status_code}: {message[:180]}")
     except Exception as e:
         print(f"[AI NEWS SUMMARY WARNING] {e}")
 

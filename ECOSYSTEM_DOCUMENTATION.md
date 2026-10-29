@@ -86,7 +86,7 @@ Server broadcasts are divided into two categories: **Real-Time Alerts (polling e
 - Uses `scheduler.db` to track each module's last run and prevent premature execution.
 
 ### 🧠 Gemini AI Module (`google_ai_helper.py`)
-- Connected to Google AI Studio models (`gemini-2.0-flash`, `gemini-1.5-flash`, `gemini-1.5-pro`).
+- Connected to the Google AI Studio free-tier models: `gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite` (fallback chain; the first one can be overridden with `GEMINI_MODEL`).
 - Cleans and summarizes RSS news.
 - Classifies news urgency (`check_for_extraordinary_news`) to decide whether a story is more important than the APOD picture of the day.
 
