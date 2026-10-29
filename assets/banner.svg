@@ -4,8 +4,8 @@
 
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#05070b"/>
-      <stop offset="0.48" stop-color="#0c0f15"/>
+      <stop offset="0" stop-color="#0D0F12"/>
+      <stop offset="0.48" stop-color="#121418"/>
       <stop offset="1" stop-color="#07090d"/>
     </linearGradient>
 
@@ -15,17 +15,17 @@
       <stop offset="1" stop-color="#B493FF" stop-opacity="0"/>
     </radialGradient>
 
-    <radialGradient id="cyanGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#38BDF8" stop-opacity="0.26"/>
-      <stop offset="0.6" stop-color="#38BDF8" stop-opacity="0.06"/>
-      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    <radialGradient id="violetGlowSecondary" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#B493FF" stop-opacity="0.2"/>
+      <stop offset="0.6" stop-color="#B493FF" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#B493FF" stop-opacity="0"/>
     </radialGradient>
 
     <radialGradient id="band" cx="50%" cy="50%" r="50%">
       <stop offset="0" stop-color="#B493FF" stop-opacity="0"/>
       <stop offset="0.35" stop-color="#B493FF" stop-opacity="0.12"/>
-      <stop offset="0.62" stop-color="#38BDF8" stop-opacity="0.09"/>
-      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+      <stop offset="0.62" stop-color="#CBB2FF" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#CBB2FF" stop-opacity="0"/>
     </radialGradient>
 
     <linearGradient id="titleGrad" x1="0" y1="0" x2="0.85" y2="1">
@@ -37,38 +37,20 @@
     <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#B493FF" stop-opacity="0"/>
       <stop offset="0.28" stop-color="#B493FF" stop-opacity="0.55"/>
-      <stop offset="0.62" stop-color="#38BDF8" stop-opacity="0.45"/>
-      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+      <stop offset="0.62" stop-color="#CBB2FF" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#CBB2FF" stop-opacity="0"/>
     </linearGradient>
 
     <radialGradient id="core" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#FFF7E8"/>
-      <stop offset="0.45" stop-color="#FBBF24"/>
-      <stop offset="1" stop-color="#F59E0B"/>
+      <stop offset="0" stop-color="#F2EAFF"/>
+      <stop offset="0.45" stop-color="#B493FF"/>
+      <stop offset="1" stop-color="#5B21B6"/>
     </radialGradient>
 
     <radialGradient id="halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#FBBF24" stop-opacity="0.38"/>
-      <stop offset="0.5" stop-color="#FBBF24" stop-opacity="0.08"/>
-      <stop offset="1" stop-color="#FBBF24" stop-opacity="0"/>
-    </radialGradient>
-
-    <radialGradient id="planetGold" cx="34%" cy="30%" r="72%">
-      <stop offset="0" stop-color="#FFE9A8"/>
-      <stop offset="0.55" stop-color="#FBBF24"/>
-      <stop offset="1" stop-color="#B45309"/>
-    </radialGradient>
-
-    <radialGradient id="planetCyan" cx="34%" cy="30%" r="72%">
-      <stop offset="0" stop-color="#D7F5FF"/>
-      <stop offset="0.55" stop-color="#38BDF8"/>
-      <stop offset="1" stop-color="#0E7490"/>
-    </radialGradient>
-
-    <radialGradient id="planetEmerald" cx="34%" cy="30%" r="72%">
-      <stop offset="0" stop-color="#D8FFF1"/>
-      <stop offset="0.55" stop-color="#34D399"/>
-      <stop offset="1" stop-color="#047857"/>
+      <stop offset="0" stop-color="#B493FF" stop-opacity="0.32"/>
+      <stop offset="0.5" stop-color="#B493FF" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#B493FF" stop-opacity="0"/>
     </radialGradient>
 
     <radialGradient id="planetViolet" cx="34%" cy="30%" r="72%">
@@ -100,7 +82,7 @@
 
   <rect width="1280" height="360" fill="url(#bg)"/>
   <ellipse cx="250" cy="60" rx="520" ry="300" fill="url(#violetGlow)"/>
-  <ellipse cx="1130" cy="300" rx="460" ry="260" fill="url(#cyanGlow)"/>
+  <ellipse cx="1130" cy="300" rx="460" ry="260" fill="url(#violetGlowSecondary)"/>
   <ellipse cx="660" cy="170" rx="720" ry="150" fill="url(#band)" transform="rotate(-9 660 170)" opacity="0.5"/>
 
   <g>
@@ -264,9 +246,9 @@
     <circle cx="1010" cy="172" r="74" fill="url(#halo)" class="core"/>
     <circle cx="1010" cy="172" r="11" fill="url(#core)" filter="url(#softGlow)"/>
 
-    <circle cx="1191.7" cy="200.5" r="9" fill="url(#planetEmerald)" filter="url(#softGlow)"/>
-    <circle cx="874.6" cy="193" r="7.5" fill="url(#planetCyan)" filter="url(#softGlow)"/>
-    <circle cx="979.7" cy="135.9" r="6" fill="url(#planetGold)" filter="url(#softGlow)"/>
+    <circle cx="1191.7" cy="200.5" r="9" fill="url(#planetViolet)" filter="url(#softGlow)"/>
+    <circle cx="874.6" cy="193" r="7.5" fill="url(#planetViolet)" filter="url(#softGlow)"/>
+    <circle cx="979.7" cy="135.9" r="6" fill="url(#planetViolet)" filter="url(#softGlow)"/>
     <circle cx="1074" cy="222.3" r="3.2" fill="url(#planetViolet)"/>
   </g>
 
@@ -282,10 +264,10 @@
       <text x="16" y="3.5" fill="#B493FF" font-size="10.5" font-weight="800" letter-spacing="1.6">DISCORD DAILY</text>
 
       <rect x="144" y="-14" width="150" height="26" rx="13" fill="#12151C" stroke="#FFFFFF" stroke-opacity="0.10"/>
-      <text x="160" y="3.5" fill="#38BDF8" font-size="10.5" font-weight="800" letter-spacing="1.6">LIVE PUSH ALERTS</text>
+      <text x="160" y="3.5" fill="#CBB2FF" font-size="10.5" font-weight="800" letter-spacing="1.6">LIVE PUSH ALERTS</text>
 
       <rect x="306" y="-14" width="142" height="26" rx="13" fill="#12151C" stroke="#FFFFFF" stroke-opacity="0.10"/>
-      <text x="322" y="3.5" fill="#34D399" font-size="10.5" font-weight="800" letter-spacing="1.6">PUBLIC FEED</text>
+      <text x="322" y="3.5" fill="#B493FF" font-size="10.5" font-weight="800" letter-spacing="1.6">PUBLIC FEED</text>
     </g>
   </g>
 
