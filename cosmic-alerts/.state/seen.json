@@ -585,17 +585,6 @@
       "updatedAt": "2026-10-25T07:25:47.000Z",
       "topic": "alerts_supernova"
     },
-    "2026afpf": {
-      "name": "2026afpf",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.442,
-      "ra": 92.6721285,
-      "dec": -70.470677,
-      "discoveryDate": "2026-10-09T01:43:39.072Z",
-      "updatedAt": "2026-10-25T07:25:47.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afnj": {
       "name": "2026afnj",
       "namePrefix": "SN",
@@ -892,17 +881,6 @@
       "discoveryDate": "2026-10-18T07:20:09.888Z",
       "updatedAt": "2026-10-28T19:59:25.000Z",
       "topic": "alerts_supernova"
-    },
-    "2026afxn": {
-      "name": "2026afxn",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.244,
-      "ra": 124.581084286,
-      "dec": -53.2261642857,
-      "discoveryDate": "2026-10-09T02:13:03.360Z",
-      "updatedAt": "2026-10-20T12:27:09.000Z",
-      "topic": "alerts_transient"
     },
     "2026afxm": {
       "name": "2026afxm",
@@ -1410,17 +1388,6 @@
       "updatedAt": "2026-10-11T20:56:15.000Z",
       "topic": "alerts_transient"
     },
-    "2026affl": {
-      "name": "2026affl",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.543,
-      "ra": 227.3994617,
-      "dec": 10.9722914,
-      "discoveryDate": "2026-10-09T02:22:10.004Z",
-      "updatedAt": "2026-10-11T17:55:39.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afef": {
       "name": "2026afef",
       "namePrefix": "AT",
@@ -1473,17 +1440,6 @@
       "ra": 176.37086615002,
       "dec": 28.08206835,
       "discoveryDate": "2026-10-09T12:44:08.998Z",
-      "updatedAt": "2026-10-11T12:34:45.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026aevu": {
-      "name": "2026aevu",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.624,
-      "ra": 127.904323333,
-      "dec": -59.7774066667,
-      "discoveryDate": "2026-10-09T02:10:25.248Z",
       "updatedAt": "2026-10-11T12:34:45.000Z",
       "topic": "alerts_transient"
     },
