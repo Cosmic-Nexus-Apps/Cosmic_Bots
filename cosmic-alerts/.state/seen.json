@@ -1432,17 +1432,6 @@
       "updatedAt": "2026-10-11T06:10:58.000Z",
       "topic": "alerts_transient"
     },
-    "2026aezg": {
-      "name": "2026aezg",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.916,
-      "ra": 315.7156675,
-      "dec": 10.497375,
-      "discoveryDate": "2026-10-09T19:48:20.736Z",
-      "updatedAt": "2026-10-10T10:15:08.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahar": {
       "name": "2026ahar",
       "namePrefix": "AT",
