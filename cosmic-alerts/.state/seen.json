@@ -1399,17 +1399,6 @@
       "updatedAt": "2026-10-11T14:14:57.000Z",
       "topic": "alerts_transient"
     },
-    "2026afcv": {
-      "name": "2026afcv",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.352,
-      "ra": 244.0028375,
-      "dec": -60.7982083333,
-      "discoveryDate": "2026-10-10T00:25:24.096Z",
-      "updatedAt": "2026-10-11T12:34:45.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afdf": {
       "name": "2026afdf",
       "namePrefix": "AT",
