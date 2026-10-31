@@ -608,17 +608,6 @@
       "updatedAt": "2026-10-25T07:25:47.000Z",
       "topic": "alerts_supernova"
     },
-    "2026afcx": {
-      "name": "2026afcx",
-      "namePrefix": "SN",
-      "type": "SN Ia-91bg-like",
-      "magnitude": 17.73,
-      "ra": 139.179117,
-      "dec": 18.95325,
-      "discoveryDate": "2026-10-10T19:55:23.232Z",
-      "updatedAt": "2026-10-25T07:25:47.000Z",
-      "topic": "alerts_supernova"
-    },
     "2026afvp": {
       "name": "2026afvp",
       "namePrefix": "AT",
