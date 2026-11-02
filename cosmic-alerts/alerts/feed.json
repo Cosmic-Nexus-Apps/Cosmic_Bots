@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02T08:23:24.070Z",
+  "generatedAt": "2026-11-02T18:41:26.176Z",
   "transients": [
     {
       "name": "2026afsg",
@@ -360,15 +360,6 @@
       "ra": 126.9462267,
       "dec": 32.7641617,
       "discoveryDate": "2026-10-18T11:44:52.998Z"
-    },
-    {
-      "name": "2026afim",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 20,
-      "ra": 61.546442820757,
-      "dec": 5.6798148921572,
-      "discoveryDate": "2026-10-12T12:04:58.944Z"
     },
     {
       "name": "2026afvp",

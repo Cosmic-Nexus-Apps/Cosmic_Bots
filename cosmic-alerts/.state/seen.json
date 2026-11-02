@@ -157,17 +157,6 @@
       "updatedAt": "2026-10-27T09:13:51.000Z",
       "topic": "alerts_transient"
     },
-    "2026afim": {
-      "name": "2026afim",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 20,
-      "ra": 61.546442820757,
-      "dec": 5.6798148921572,
-      "discoveryDate": "2026-10-12T12:04:58.944Z",
-      "updatedAt": "2026-10-27T01:05:37.000Z",
-      "topic": "alerts_supernova"
-    },
     "2026agwh": {
       "name": "2026agwh",
       "namePrefix": "AT",
