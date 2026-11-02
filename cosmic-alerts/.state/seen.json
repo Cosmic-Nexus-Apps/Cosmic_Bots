@@ -806,17 +806,6 @@
       "updatedAt": "2026-10-28T19:59:25.000Z",
       "topic": "alerts_supernova"
     },
-    "2026afxm": {
-      "name": "2026afxm",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.008,
-      "ra": 129.46613,
-      "dec": -57.4593325,
-      "discoveryDate": "2026-10-12T07:28:31.872Z",
-      "updatedAt": "2026-10-20T12:23:48.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afxl": {
       "name": "2026afxl",
       "namePrefix": "AT",
@@ -1388,17 +1377,6 @@
       "discoveryDate": "2026-10-29T13:01:07.999Z",
       "updatedAt": "2026-10-29T16:39:19.000Z",
       "topic": "alerts_transient"
-    },
-    "2026afgg": {
-      "name": "2026afgg",
-      "namePrefix": "SN",
-      "type": "SN II",
-      "magnitude": 19.81,
-      "ra": 62.294458903321,
-      "dec": -5.9946321823693,
-      "discoveryDate": "2026-10-12T03:20:04.416Z",
-      "updatedAt": "2026-10-29T15:58:52.000Z",
-      "topic": "alerts_supernova"
     },
     "2026afru": {
       "name": "2026afru",
