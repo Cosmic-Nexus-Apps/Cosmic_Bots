@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02T18:41:26.176Z",
+  "generatedAt": "2026-11-03T01:19:10.280Z",
   "transients": [
     {
       "name": "2026afsg",
@@ -1278,15 +1278,6 @@
       "ra": 87.907516,
       "dec": -40.076156,
       "discoveryDate": "2026-10-26T16:42:59.328Z"
-    },
-    {
-      "name": "2026afjn",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.03,
-      "ra": 289.135471,
-      "dec": 46.639816,
-      "discoveryDate": "2026-10-12T20:26:12.192Z"
     },
     {
       "name": "2026afol",

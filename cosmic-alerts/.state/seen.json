@@ -1147,17 +1147,6 @@
       "updatedAt": "2026-10-13T19:55:11.000Z",
       "topic": "alerts_transient"
     },
-    "2026afjn": {
-      "name": "2026afjn",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.03,
-      "ra": 289.135471,
-      "dec": 46.639816,
-      "discoveryDate": "2026-10-12T20:26:12.192Z",
-      "updatedAt": "2026-10-13T15:17:45.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahar": {
       "name": "2026ahar",
       "namePrefix": "AT",
