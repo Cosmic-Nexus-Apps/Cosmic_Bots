@@ -927,17 +927,6 @@
       "updatedAt": "2026-10-19T16:37:18.000Z",
       "topic": "alerts_supernova"
     },
-    "2026afqs": {
-      "name": "2026afqs",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 19.73,
-      "ra": 115.35432204022,
-      "dec": 21.037915571856,
-      "discoveryDate": "2026-10-13T04:22:30.720Z",
-      "updatedAt": "2026-10-19T16:21:07.000Z",
-      "topic": "alerts_supernova"
-    },
     "2026afvv": {
       "name": "2026afvv",
       "namePrefix": "AT",
