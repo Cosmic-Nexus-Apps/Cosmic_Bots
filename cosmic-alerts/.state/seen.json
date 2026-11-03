@@ -1037,17 +1037,6 @@
       "updatedAt": "2026-10-16T20:24:21.000Z",
       "topic": "alerts_transient"
     },
-    "2026afpv": {
-      "name": "2026afpv",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.776,
-      "ra": 283.49173,
-      "dec": 34.4060475,
-      "discoveryDate": "2026-10-13T20:40:52.608Z",
-      "updatedAt": "2026-10-16T20:19:25.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afps": {
       "name": "2026afps",
       "namePrefix": "AT",
@@ -1123,17 +1112,6 @@
       "dec": 33.820969262,
       "discoveryDate": "2026-10-14T05:08:58.848Z",
       "updatedAt": "2026-10-14T19:02:14.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026afjv": {
-      "name": "2026afjv",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.08,
-      "ra": 27.170242,
-      "dec": -64.310891,
-      "discoveryDate": "2026-10-13T16:51:17.856Z",
-      "updatedAt": "2026-10-13T19:55:11.000Z",
       "topic": "alerts_transient"
     },
     "2026ahar": {
