@@ -974,28 +974,6 @@
       "updatedAt": "2026-10-16T17:35:27.000Z",
       "topic": "alerts_transient"
     },
-    "2026afom": {
-      "name": "2026afom",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.9,
-      "ra": 297.298125,
-      "dec": -35.514861,
-      "discoveryDate": "2026-10-14T17:40:48.288Z",
-      "updatedAt": "2026-10-15T19:16:46.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026afol": {
-      "name": "2026afol",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.039,
-      "ra": 287.40082,
-      "dec": -63.64733,
-      "discoveryDate": "2026-10-14T18:43:07.680Z",
-      "updatedAt": "2026-10-15T18:30:29.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahar": {
       "name": "2026ahar",
       "namePrefix": "AT",
