@@ -556,17 +556,6 @@
       "updatedAt": "2026-10-25T03:21:28.000Z",
       "topic": "alerts_transient"
     },
-    "2026agtv": {
-      "name": "2026agtv",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.15,
-      "ra": 277.804203,
-      "dec": 8.270303,
-      "discoveryDate": "2026-10-16T02:45:19.584Z",
-      "updatedAt": "2026-10-25T02:57:27.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afrr": {
       "name": "2026afrr",
       "namePrefix": "SN",
@@ -906,17 +895,6 @@
       "dec": 30.261556,
       "discoveryDate": "2026-10-17T18:45:47.520Z",
       "updatedAt": "2026-10-18T09:47:59.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026afps": {
-      "name": "2026afps",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.787,
-      "ra": 336.20534,
-      "dec": -52.84262,
-      "discoveryDate": "2026-10-16T00:28:23.808Z",
-      "updatedAt": "2026-10-16T18:06:31.000Z",
       "topic": "alerts_transient"
     },
     "2026ahar": {
