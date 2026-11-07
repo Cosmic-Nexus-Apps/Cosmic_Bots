@@ -512,17 +512,6 @@
       "updatedAt": "2026-10-29T15:57:10.000Z",
       "topic": "alerts_supernova"
     },
-    "2026afqe": {
-      "name": "2026afqe",
-      "namePrefix": "AT",
-      "type": "Nova",
-      "magnitude": 18.61,
-      "ra": 10.878448490658,
-      "dec": 41.448744276865,
-      "discoveryDate": "2026-10-17T13:33:47.232Z",
-      "updatedAt": "2026-10-25T07:25:47.000Z",
-      "topic": "alerts_transient"
-    },
     "2026afvp": {
       "name": "2026afvp",
       "namePrefix": "AT",
@@ -3327,6 +3316,17 @@
       "discoveryDate": "2026-10-28T04:20:39.998Z",
       "updatedAt": "2026-11-07T05:32:11.000Z",
       "topic": "alerts_supernova"
+    },
+    "2026aimn": {
+      "name": "2026aimn",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.23,
+      "ra": 73.3005,
+      "dec": 29.507028,
+      "discoveryDate": "2026-11-06T21:56:00.096Z",
+      "updatedAt": "2026-11-07T13:02:55.000Z",
+      "topic": "alerts_transient"
     }
   },
   "alerted": [
@@ -3921,7 +3921,8 @@
     "2026ahno",
     "2026ahaa",
     "2026agyb",
-    "2026aihl"
+    "2026aihl",
+    "2026aimn"
   ],
   "processedTnsFiles": [
     "full:20261028",
@@ -3956,6 +3957,9 @@
     "daily:20261106",
     "hourly:20261107T07",
     "hourly:20261107T06",
-    "hourly:20261107T05"
+    "hourly:20261107T05",
+    "hourly:20261107T14",
+    "hourly:20261107T13",
+    "hourly:20261107T12"
   ]
 }
