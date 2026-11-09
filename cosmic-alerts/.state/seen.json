@@ -25,7 +25,8 @@
     "2025 V2",
     "510P",
     "2P",
-    "84P"
+    "84P",
+    "2026 V1"
   ],
   "tns": {
     "2026agpv": {
@@ -796,17 +797,6 @@
       "dec": 34.500138,
       "discoveryDate": "2026-10-29T01:40:57.504Z",
       "updatedAt": "2026-10-29T02:11:18.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026agzt": {
-      "name": "2026agzt",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.61,
-      "ra": 5.3682,
-      "dec": 1.66757666667,
-      "discoveryDate": "2026-10-19T22:35:18.816Z",
-      "updatedAt": "2026-10-29T00:04:39.000Z",
       "topic": "alerts_transient"
     },
     "2026ahfo": {
