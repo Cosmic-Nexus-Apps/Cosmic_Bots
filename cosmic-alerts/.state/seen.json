@@ -205,17 +205,6 @@
       "updatedAt": "2026-10-26T13:44:26.000Z",
       "topic": "alerts_transient"
     },
-    "2026agvy": {
-      "name": "2026agvy",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.322,
-      "ra": 174.2527624,
-      "dec": -2.7957926,
-      "discoveryDate": "2026-10-20T13:02:50.003Z",
-      "updatedAt": "2026-10-26T13:44:16.000Z",
-      "topic": "alerts_transient"
-    },
     "2026agvs": {
       "name": "2026agvs",
       "namePrefix": "SN",
