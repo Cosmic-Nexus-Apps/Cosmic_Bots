@@ -491,17 +491,6 @@
       "updatedAt": "2026-10-22T02:13:15.000Z",
       "topic": "alerts_transient"
     },
-    "2026agft": {
-      "name": "2026agft",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.866,
-      "ra": 7.6927518,
-      "dec": -10.331183,
-      "discoveryDate": "2026-10-21T05:33:29.998Z",
-      "updatedAt": "2026-10-21T15:05:31.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahar": {
       "name": "2026ahar",
       "namePrefix": "AT",
