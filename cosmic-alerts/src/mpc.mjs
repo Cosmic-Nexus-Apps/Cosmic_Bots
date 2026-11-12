@@ -8,6 +8,35 @@ export const MAX_ABSOLUTE_MAGNITUDE = 12;
 export const MAX_CANDIDATES = 20;
 
 const MPC_URL = 'https://www.minorplanetcenter.net/iau/MPCORB/CometEls.txt';
+// MPC is occasionally slow or returns transient 5xx/connection resets, which
+// used to abort the whole workflow run. Retry a few times with a hard timeout.
+const MPC_TIMEOUT_MS = 30000;
+const MPC_MAX_ATTEMPTS = 3;
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchMpcText() {
+  let lastError;
+  for (let attempt = 1; attempt <= MPC_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(MPC_URL, {
+        headers: { 'User-Agent': 'CosmicAtlasAlertsBot/1.0 (+https://cosmic-atlas.app)' },
+        signal: AbortSignal.timeout(MPC_TIMEOUT_MS),
+      });
+      if (!response.ok) throw new Error(`MPC HTTP ${response.status}`);
+      return await response.text();
+    } catch (error) {
+      lastError = error;
+      console.warn(
+        `[mpc] attempt ${attempt}/${MPC_MAX_ATTEMPTS} failed: ${error.message}`
+      );
+      if (attempt < MPC_MAX_ATTEMPTS) await sleep(attempt * 5000);
+    }
+  }
+  throw lastError;
+}
 
 function normalizeDesignation(designation) {
   return designation
@@ -32,11 +61,7 @@ function parsePerihelionMs(line) {
 }
 
 export async function fetchMpcComets(nowMs = Date.now()) {
-  const response = await fetch(MPC_URL, {
-    headers: { 'User-Agent': 'CosmicAtlasAlertsBot/1.0 (+https://cosmic-atlas.app)' },
-  });
-  if (!response.ok) throw new Error(`MPC HTTP ${response.status}`);
-  const text = await response.text();
+  const text = await fetchMpcText();
   const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
   const candidates = [];
 

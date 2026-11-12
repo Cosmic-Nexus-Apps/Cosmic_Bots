@@ -27,12 +27,14 @@ defaults:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # The full TNS catalog can take a few minutes on the first (bootstrap) run.
+    timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm

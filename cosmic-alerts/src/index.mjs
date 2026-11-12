@@ -168,7 +168,18 @@ async function run() {
 
   const messaging = initFirebase();
 
-  const comets = await fetchMpcComets(nowMs);
+  // MPC is an external, occasionally unavailable source. A failure there must
+  // not fail the whole run: TNS and the public feed can still be updated.
+  let comets = [];
+  let mpcAvailable = true;
+  try {
+    comets = await fetchMpcComets(nowMs);
+  } catch (error) {
+    mpcAvailable = false;
+    console.warn(
+      `[mpc] unavailable after retries (${error.message}): skipping comets for this run.`
+    );
+  }
   const seenComets = new Set(state.comets);
   const freshComets = comets.filter(comet => !seenComets.has(comet.key));
 
@@ -284,9 +295,9 @@ async function run() {
   };
   saveState(nextState);
   console.log(
-    `[done] comete: ${comets.length}, comete noi: ${
+    `[done] MPC: ${mpcAvailable ? 'ok' : 'unavailable'}, comets: ${comets.length}, new comets: ${
       state.initialized ? freshComets.length : 0
-    }, TNS: ${tnsFetchNote}, feed: ${feed.transients.length}, alerte noi: ${
+    }, TNS: ${tnsFetchNote}, feed: ${feed.transients.length}, new alerts: ${
       state.initialized ? freshTransients.length : 0
     }`
   );
