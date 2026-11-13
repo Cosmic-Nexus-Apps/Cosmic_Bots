@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T23:52:31.365Z",
+  "generatedAt": "2026-11-13T05:22:31.532Z",
   "transients": [
     {
       "name": "2026ahvi",
@@ -225,15 +225,6 @@
       "ra": 85.0618,
       "dec": -55.5479127273,
       "discoveryDate": "2026-11-03T15:29:00.960Z"
-    },
-    {
-      "name": "2026agpk",
-      "namePrefix": "SN",
-      "type": "SN II",
-      "magnitude": 18.85,
-      "ra": 110.5360755,
-      "dec": 0.4624137,
-      "discoveryDate": "2026-10-23T01:36:00.288Z"
     },
     {
       "name": "2026ahxo",
@@ -540,15 +531,6 @@
       "ra": 188.9257748,
       "dec": -0.2144061,
       "discoveryDate": "2026-11-10T13:09:16.004Z"
-    },
-    {
-      "name": "2026agpl",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.8,
-      "ra": 163.218583,
-      "dec": -47.418528,
-      "discoveryDate": "2026-10-23T02:17:52.800Z"
     },
     {
       "name": "2026ahfo",
