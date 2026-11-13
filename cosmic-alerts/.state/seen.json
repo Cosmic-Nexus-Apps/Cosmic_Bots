@@ -26,7 +26,8 @@
     "510P",
     "2P",
     "84P",
-    "2026 V1"
+    "2026 V1",
+    "2026 L1"
   ],
   "tns": {
     "2026agpv": {
@@ -215,17 +216,6 @@
       "discoveryDate": "2026-10-24T07:47:24.576Z",
       "updatedAt": "2026-10-26T05:59:52.000Z",
       "topic": "alerts_supernova"
-    },
-    "2026agpq": {
-      "name": "2026agpq",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19,
-      "ra": 318.5198322,
-      "dec": 5.8961495,
-      "discoveryDate": "2026-10-23T20:19:46.848Z",
-      "updatedAt": "2026-10-26T05:09:24.000Z",
-      "topic": "alerts_transient"
     },
     "2026agvn": {
       "name": "2026agvn",
@@ -544,17 +534,6 @@
       "dec": 10.5876803,
       "discoveryDate": "2026-10-29T13:10:01.001Z",
       "updatedAt": "2026-10-29T13:28:45.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahaz": {
-      "name": "2026ahaz",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.747,
-      "ra": 339.580674762,
-      "dec": -77.4249014286,
-      "discoveryDate": "2026-10-23T20:13:56.064Z",
-      "updatedAt": "2026-10-29T11:56:23.000Z",
       "topic": "alerts_transient"
     },
     "2026ahay": {
@@ -1194,17 +1173,6 @@
       "discoveryDate": "2026-10-29T13:51:39.456Z",
       "updatedAt": "2026-11-10T16:24:17.000Z",
       "topic": "alerts_supernova"
-    },
-    "2026ahas": {
-      "name": "2026ahas",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.28,
-      "ra": 321.410960909,
-      "dec": 14.6243109091,
-      "discoveryDate": "2026-10-23T20:04:47.424Z",
-      "updatedAt": "2026-11-01T07:56:32.000Z",
-      "topic": "alerts_transient"
     },
     "2026ahrc": {
       "name": "2026ahrc",
@@ -3306,6 +3274,39 @@
       "discoveryDate": "2026-11-09T04:30:01.728Z",
       "updatedAt": "2026-11-12T08:14:14.000Z",
       "topic": "alerts_transient"
+    },
+    "2026ajop": {
+      "name": "2026ajop",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.71,
+      "ra": 84.767755,
+      "dec": -57.880848,
+      "discoveryDate": "2026-11-12T15:33:44.352Z",
+      "updatedAt": "2026-11-13T16:51:51.000Z",
+      "topic": "alerts_transient"
+    },
+    "2026ajoi": {
+      "name": "2026ajoi",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.73,
+      "ra": 151.51658749371,
+      "dec": 2.4358458317935,
+      "discoveryDate": "2026-11-11T07:54:33.984Z",
+      "updatedAt": "2026-11-13T16:43:05.000Z",
+      "topic": "alerts_transient"
+    },
+    "2026ajon": {
+      "name": "2026ajon",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.9898,
+      "ra": 167.9653916,
+      "dec": 2.4804151,
+      "discoveryDate": "2026-11-10T12:56:32.003Z",
+      "updatedAt": "2026-11-13T16:40:40.000Z",
+      "topic": "alerts_transient"
     }
   },
   "alerted": [
@@ -3984,7 +3985,10 @@
     "2026ajhk",
     "2026ajhm",
     "2026ajhp",
-    "2026ajhj"
+    "2026ajhj",
+    "2026ajop",
+    "2026ajoi",
+    "2026ajon"
   ],
   "processedTnsFiles": [
     "full:20261028",
@@ -4043,6 +4047,10 @@
     "hourly:20261111T23",
     "hourly:20261112T09",
     "hourly:20261112T08",
-    "hourly:20261112T07"
+    "hourly:20261112T07",
+    "daily:20261112",
+    "hourly:20261113T19",
+    "hourly:20261113T18",
+    "hourly:20261113T17"
   ]
 }

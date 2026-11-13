@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T13:20:23.260Z",
+  "generatedAt": "2026-11-13T20:32:38.106Z",
   "transients": [
     {
       "name": "2026ahvi",
@@ -1064,15 +1064,6 @@
       "discoveryDate": "2026-11-04T11:30:19.995Z"
     },
     {
-      "name": "2026ahaz",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.747,
-      "ra": 339.580674762,
-      "dec": -77.4249014286,
-      "discoveryDate": "2026-10-23T20:13:56.064Z"
-    },
-    {
       "name": "2026agpu",
       "namePrefix": "AT",
       "type": "",
@@ -1476,15 +1467,6 @@
       "ra": 117.5782174,
       "dec": 65.6846644,
       "discoveryDate": "2026-11-02T11:08:40.004Z"
-    },
-    {
-      "name": "2026agpq",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19,
-      "ra": 318.5198322,
-      "dec": 5.8961495,
-      "discoveryDate": "2026-10-23T20:19:46.848Z"
     },
     {
       "name": "2026aifu",
@@ -2090,15 +2072,6 @@
       "discoveryDate": "2026-11-01T16:12:54.432Z"
     },
     {
-      "name": "2026ahas",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.28,
-      "ra": 321.410960909,
-      "dec": 14.6243109091,
-      "discoveryDate": "2026-10-23T20:04:47.424Z"
-    },
-    {
       "name": "2026aiec",
       "namePrefix": "AT",
       "type": "",
@@ -2682,6 +2655,33 @@
       "ra": 304.298596667,
       "dec": -65.0379233333,
       "discoveryDate": "2026-11-06T01:31:48.864Z"
+    },
+    {
+      "name": "2026ajop",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.71,
+      "ra": 84.767755,
+      "dec": -57.880848,
+      "discoveryDate": "2026-11-12T15:33:44.352Z"
+    },
+    {
+      "name": "2026ajoi",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.73,
+      "ra": 151.51658749371,
+      "dec": 2.4358458317935,
+      "discoveryDate": "2026-11-11T07:54:33.984Z"
+    },
+    {
+      "name": "2026ajon",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.9898,
+      "ra": 167.9653916,
+      "dec": 2.4804151,
+      "discoveryDate": "2026-11-10T12:56:32.003Z"
     }
   ]
 }
