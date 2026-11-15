@@ -206,17 +206,6 @@
       "updatedAt": "2026-10-25T23:28:28.000Z",
       "topic": "alerts_transient"
     },
-    "2026aguv": {
-      "name": "2026aguv",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.7795,
-      "ra": 114.2689556,
-      "dec": 65.5951549,
-      "discoveryDate": "2026-10-25T08:53:19.000Z",
-      "updatedAt": "2026-10-25T11:43:49.000Z",
-      "topic": "alerts_transient"
-    },
     "2026aguu": {
       "name": "2026aguu",
       "namePrefix": "AT",
@@ -1899,17 +1888,6 @@
       "discoveryDate": "2026-11-03T12:53:54.997Z",
       "updatedAt": "2026-11-06T20:03:33.000Z",
       "topic": "alerts_transient"
-    },
-    "2026aguc": {
-      "name": "2026aguc",
-      "namePrefix": "SN",
-      "type": "SN Ia-91T-like",
-      "magnitude": 19.1849,
-      "ra": 69.517212654545,
-      "dec": -10.872097709091,
-      "discoveryDate": "2026-10-25T09:42:27.996Z",
-      "updatedAt": "2026-11-06T19:29:49.000Z",
-      "topic": "alerts_supernova"
     },
     "2026ahmz": {
       "name": "2026ahmz",
