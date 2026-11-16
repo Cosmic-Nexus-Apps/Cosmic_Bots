@@ -30,17 +30,6 @@
     "2026 L1"
   ],
   "tns": {
-    "2026agyg": {
-      "name": "2026agyg",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 16.67,
-      "ra": 115.816458,
-      "dec": -25.774611,
-      "discoveryDate": "2026-10-25T22:36:54.720Z",
-      "updatedAt": "2026-10-27T16:34:59.000Z",
-      "topic": "alerts_transient"
-    },
     "2026agxy": {
       "name": "2026agxy",
       "namePrefix": "AT",
