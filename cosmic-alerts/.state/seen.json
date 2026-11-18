@@ -1042,17 +1042,6 @@
       "updatedAt": "2026-11-03T11:12:04.000Z",
       "topic": "alerts_transient"
     },
-    "2026ahxs": {
-      "name": "2026ahxs",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 17.4987,
-      "ra": 31.545975800845,
-      "dec": 15.132757621452,
-      "discoveryDate": "2026-10-28T05:26:42.000Z",
-      "updatedAt": "2026-11-05T06:53:43.000Z",
-      "topic": "alerts_supernova"
-    },
     "2026ahxr": {
       "name": "2026ahxr",
       "namePrefix": "AT",
@@ -1438,17 +1427,6 @@
       "updatedAt": "2026-11-05T05:34:57.000Z",
       "topic": "alerts_transient"
     },
-    "2026aieb": {
-      "name": "2026aieb",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.3477,
-      "ra": 266.8211267,
-      "dec": 54.5476906,
-      "discoveryDate": "2026-10-28T02:51:01.995Z",
-      "updatedAt": "2026-11-05T05:34:42.000Z",
-      "topic": "alerts_transient"
-    },
     "2026aiea": {
       "name": "2026aiea",
       "namePrefix": "AT",
@@ -1735,17 +1713,6 @@
       "updatedAt": "2026-11-15T11:02:38.000Z",
       "topic": "alerts_supernova"
     },
-    "2026agyn": {
-      "name": "2026agyn",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 18.8909,
-      "ra": 278.4393041,
-      "dec": 36.5777736,
-      "discoveryDate": "2026-10-28T02:46:16.996Z",
-      "updatedAt": "2026-11-06T03:38:53.000Z",
-      "topic": "alerts_supernova"
-    },
     "2026ahnp": {
       "name": "2026ahnp",
       "namePrefix": "AT",
@@ -1756,17 +1723,6 @@
       "discoveryDate": "2026-10-29T21:24:40.032Z",
       "updatedAt": "2026-11-07T05:53:43.000Z",
       "topic": "alerts_transient"
-    },
-    "2026agyt": {
-      "name": "2026agyt",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 18.9876,
-      "ra": 1.9747814,
-      "dec": 48.6572299,
-      "discoveryDate": "2026-10-28T04:20:39.998Z",
-      "updatedAt": "2026-11-07T05:32:11.000Z",
-      "topic": "alerts_supernova"
     },
     "2026aimn": {
       "name": "2026aimn",
@@ -3208,6 +3164,50 @@
       "discoveryDate": "2026-11-05T05:09:11.998Z",
       "updatedAt": "2026-11-17T00:10:38.000Z",
       "topic": "alerts_supernova"
+    },
+    "2026akbo": {
+      "name": "2026akbo",
+      "namePrefix": "SN",
+      "type": "SN Ia",
+      "magnitude": 18.76,
+      "ra": 159.912128,
+      "dec": 25.320421,
+      "discoveryDate": "2026-11-17T06:06:39.168Z",
+      "updatedAt": "2026-11-18T07:37:21.000Z",
+      "topic": "alerts_supernova"
+    },
+    "2026akcn": {
+      "name": "2026akcn",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.43,
+      "ra": 92.939208,
+      "dec": 8.711361,
+      "discoveryDate": "2026-11-17T21:18:43.200Z",
+      "updatedAt": "2026-11-18T06:23:53.000Z",
+      "topic": "alerts_transient"
+    },
+    "2026ajsf": {
+      "name": "2026ajsf",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.68,
+      "ra": 8.1704461,
+      "dec": 3.8302038,
+      "discoveryDate": "2026-11-13T21:33:37.440Z",
+      "updatedAt": "2026-11-18T05:46:42.000Z",
+      "topic": "alerts_transient"
+    },
+    "2026ajrt": {
+      "name": "2026ajrt",
+      "namePrefix": "AT",
+      "type": "",
+      "magnitude": 19.654,
+      "ra": 37.8121202,
+      "dec": -13.6575439,
+      "discoveryDate": "2026-11-13T04:29:47.040Z",
+      "updatedAt": "2026-11-18T05:46:33.000Z",
+      "topic": "alerts_transient"
     }
   },
   "alerted": [
@@ -3960,7 +3960,11 @@
     "2026akaz",
     "2026akap",
     "2026ajya",
-    "2026akay"
+    "2026akay",
+    "2026akbo",
+    "2026akcn",
+    "2026ajrt",
+    "2026ajsf"
   ],
   "processedTnsFiles": [
     "full:20261028",
@@ -4042,6 +4046,10 @@
     "daily:20261116",
     "hourly:20261117T01",
     "hourly:20261117T00",
-    "hourly:20261116T23"
+    "hourly:20261116T23",
+    "daily:20261117",
+    "hourly:20261118T08",
+    "hourly:20261118T07",
+    "hourly:20261118T06"
   ]
 }
