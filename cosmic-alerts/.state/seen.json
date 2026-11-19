@@ -30,17 +30,6 @@
     "2026 L1"
   ],
   "tns": {
-    "2026ahar": {
-      "name": "2026ahar",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.28,
-      "ra": 331.4421532,
-      "dec": 37.0051992,
-      "discoveryDate": "2026-10-28T20:03:22.752Z",
-      "updatedAt": "2026-11-03T05:13:40.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahct": {
       "name": "2026ahct",
       "namePrefix": "AT",
@@ -50,17 +39,6 @@
       "dec": -44.938524,
       "discoveryDate": "2026-10-29T00:42:51.264Z",
       "updatedAt": "2026-10-29T23:10:33.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahcr": {
-      "name": "2026ahcr",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.43,
-      "ra": 351.251232,
-      "dec": 9.452189,
-      "discoveryDate": "2026-10-28T21:16:18.912Z",
-      "updatedAt": "2026-10-29T22:23:12.000Z",
       "topic": "alerts_transient"
     },
     "2026ahba": {
@@ -105,28 +83,6 @@
       "dec": -10.0928893,
       "discoveryDate": "2026-10-30T01:42:00.576Z",
       "updatedAt": "2026-11-03T09:18:17.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahda": {
-      "name": "2026ahda",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.47,
-      "ra": 30.0701127,
-      "dec": 41.1273792,
-      "discoveryDate": "2026-10-29T00:16:45.696Z",
-      "updatedAt": "2026-11-03T07:52:59.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahcy": {
-      "name": "2026ahcy",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.9,
-      "ra": 22.347536,
-      "dec": 35.216558,
-      "discoveryDate": "2026-10-28T23:45:09.216Z",
-      "updatedAt": "2026-10-30T09:00:17.000Z",
       "topic": "alerts_transient"
     },
     "2026ahra": {
@@ -424,17 +380,6 @@
       "dec": -37.4819988889,
       "discoveryDate": "2026-11-01T16:08:18.816Z",
       "updatedAt": "2026-11-03T19:57:19.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahat": {
-      "name": "2026ahat",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.23,
-      "ra": 355.67178659192,
-      "dec": 16.283167823426,
-      "discoveryDate": "2026-10-28T20:41:23.712Z",
-      "updatedAt": "2026-11-07T01:18:59.000Z",
       "topic": "alerts_transient"
     },
     "2026ahry": {

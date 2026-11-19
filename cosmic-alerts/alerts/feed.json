@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-18T18:11:04.827Z",
+  "generatedAt": "2026-11-19T00:30:26.251Z",
   "transients": [
     {
       "name": "2026ahvi",
@@ -344,15 +344,6 @@
       "discoveryDate": "2026-10-29T06:12:16.992Z"
     },
     {
-      "name": "2026ahar",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.28,
-      "ra": 331.4421532,
-      "dec": 37.0051992,
-      "discoveryDate": "2026-10-28T20:03:22.752Z"
-    },
-    {
       "name": "2026ajdr",
       "namePrefix": "AT",
       "type": "",
@@ -504,15 +495,6 @@
       "ra": 311.665396667,
       "dec": -51.1785666667,
       "discoveryDate": "2026-10-29T01:01:50.880Z"
-    },
-    {
-      "name": "2026ahat",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.23,
-      "ra": 355.67178659192,
-      "dec": 16.283167823426,
-      "discoveryDate": "2026-10-28T20:41:23.712Z"
     },
     {
       "name": "2026aicd",
@@ -675,15 +657,6 @@
       "ra": 268.050056667,
       "dec": 14.0446483333,
       "discoveryDate": "2026-11-06T05:00:24.768Z"
-    },
-    {
-      "name": "2026ahda",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.47,
-      "ra": 30.0701127,
-      "dec": 41.1273792,
-      "discoveryDate": "2026-10-29T00:16:45.696Z"
     },
     {
       "name": "2026ajrb",
@@ -1107,15 +1080,6 @@
       "ra": 337.94945875,
       "dec": -48.20758875,
       "discoveryDate": "2026-10-31T02:05:23.712Z"
-    },
-    {
-      "name": "2026ahcy",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.9,
-      "ra": 22.347536,
-      "dec": 35.216558,
-      "discoveryDate": "2026-10-28T23:45:09.216Z"
     },
     {
       "name": "2026ajrf",
@@ -2322,15 +2286,6 @@
       "ra": 20.360355,
       "dec": -27.457395,
       "discoveryDate": "2026-11-15T11:21:21.024Z"
-    },
-    {
-      "name": "2026ahcr",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.43,
-      "ra": 351.251232,
-      "dec": 9.452189,
-      "discoveryDate": "2026-10-28T21:16:18.912Z"
     },
     {
       "name": "2026akay",
