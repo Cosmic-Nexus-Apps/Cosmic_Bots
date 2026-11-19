@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T00:30:26.251Z",
+  "generatedAt": "2026-11-19T07:53:47.334Z",
   "transients": [
     {
       "name": "2026ahvi",
@@ -281,15 +281,6 @@
       "discoveryDate": "2026-11-06T03:50:24.000Z"
     },
     {
-      "name": "2026ahaw",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 13.98,
-      "ra": 8.817988,
-      "dec": 34.500138,
-      "discoveryDate": "2026-10-29T01:40:57.504Z"
-    },
-    {
       "name": "2026ajot",
       "namePrefix": "AT",
       "type": "",
@@ -333,15 +324,6 @@
       "ra": 157.9648394,
       "dec": -13.0323752,
       "discoveryDate": "2026-11-02T14:56:16.224Z"
-    },
-    {
-      "name": "2026ahqx",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.157,
-      "ra": 66.3805521053,
-      "dec": -63.0228989474,
-      "discoveryDate": "2026-10-29T06:12:16.992Z"
     },
     {
       "name": "2026ajdr",
@@ -488,15 +470,6 @@
       "discoveryDate": "2026-11-14T14:56:47.328Z"
     },
     {
-      "name": "2026ahax",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.225,
-      "ra": 311.665396667,
-      "dec": -51.1785666667,
-      "discoveryDate": "2026-10-29T01:01:50.880Z"
-    },
-    {
       "name": "2026aicd",
       "namePrefix": "AT",
       "type": "",
@@ -531,15 +504,6 @@
       "ra": 171.485602,
       "dec": 39.642764,
       "discoveryDate": "2026-11-03T14:39:22.752Z"
-    },
-    {
-      "name": "2026ahqt",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.304,
-      "ra": 343.938518,
-      "dec": -65.1845186667,
-      "discoveryDate": "2026-10-29T02:28:33.024Z"
     },
     {
       "name": "2026aict",
@@ -855,15 +819,6 @@
       "ra": 26.917281,
       "dec": 43.178758,
       "discoveryDate": "2026-11-04T23:23:17.664Z"
-    },
-    {
-      "name": "2026ahct",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.68,
-      "ra": 279.726258,
-      "dec": -44.938524,
-      "discoveryDate": "2026-10-29T00:42:51.264Z"
     },
     {
       "name": "2026ahti",
