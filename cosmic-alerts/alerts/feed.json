@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T07:53:47.334Z",
+  "generatedAt": "2026-11-19T17:05:43.679Z",
   "transients": [
     {
       "name": "2026ahvi",
@@ -207,15 +207,6 @@
       "ra": 97.2861309,
       "dec": -13.5216664,
       "discoveryDate": "2026-11-03T10:58:07.996Z"
-    },
-    {
-      "name": "2026ahmy",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 19.51,
-      "ra": 50.245045,
-      "dec": -45.2532425,
-      "discoveryDate": "2026-10-29T13:51:39.456Z"
     },
     {
       "name": "2026ahyd",
@@ -1100,15 +1091,6 @@
       "discoveryDate": "2026-11-13T05:26:39.840Z"
     },
     {
-      "name": "2026ahty",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.96,
-      "ra": 110.081671,
-      "dec": -57.233696,
-      "discoveryDate": "2026-10-29T15:53:19.392Z"
-    },
-    {
       "name": "2026aizo",
       "namePrefix": "AT",
       "type": "",
@@ -1197,15 +1179,6 @@
       "ra": 68.05701625,
       "dec": -29.0183725,
       "discoveryDate": "2026-11-13T10:35:15.360Z"
-    },
-    {
-      "name": "2026aiju",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.0249,
-      "ra": 157.8376667,
-      "dec": -6.8961635,
-      "discoveryDate": "2026-10-29T13:05:29.999Z"
     },
     {
       "name": "2026ajxs",
@@ -1314,15 +1287,6 @@
       "ra": 340.547822857,
       "dec": 12.7307528571,
       "discoveryDate": "2026-11-09T19:58:05.664Z"
-    },
-    {
-      "name": "2026ahba",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.1029,
-      "ra": 182.4214748,
-      "dec": 10.5876803,
-      "discoveryDate": "2026-10-29T13:10:01.001Z"
     },
     {
       "name": "2026aija",
@@ -1892,15 +1856,6 @@
       "discoveryDate": "2026-11-06T22:24:53.280Z"
     },
     {
-      "name": "2026ahsc",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.3,
-      "ra": 82.106087,
-      "dec": -48.994395,
-      "discoveryDate": "2026-10-29T15:50:53.376Z"
-    },
-    {
       "name": "2026ajfa",
       "namePrefix": "AT",
       "type": "",
@@ -2027,15 +1982,6 @@
       "discoveryDate": "2026-11-09T08:46:00.192Z"
     },
     {
-      "name": "2026ahtk",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.35,
-      "ra": 99.016047,
-      "dec": -23.267067,
-      "discoveryDate": "2026-10-29T16:31:09.984Z"
-    },
-    {
       "name": "2026aikb",
       "namePrefix": "AT",
       "type": "",
@@ -2117,15 +2063,6 @@
       "discoveryDate": "2026-11-03T10:11:33.000Z"
     },
     {
-      "name": "2026ahtj",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.39,
-      "ra": 97.472144,
-      "dec": -25.74718,
-      "discoveryDate": "2026-10-29T16:31:09.984Z"
-    },
-    {
       "name": "2026ajrv",
       "namePrefix": "AT",
       "type": "",
@@ -2160,15 +2097,6 @@
       "ra": 35.2080228571,
       "dec": 45.8180814286,
       "discoveryDate": "2026-10-30T00:30:23.904Z"
-    },
-    {
-      "name": "2026ahqj",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.41,
-      "ra": 48.79303375,
-      "dec": -52.69595,
-      "discoveryDate": "2026-10-29T13:59:41.568Z"
     },
     {
       "name": "2026ajhp",
@@ -2277,15 +2205,6 @@
       "ra": 27.311511142553,
       "dec": 34.151681632658,
       "discoveryDate": "2026-11-14T06:40:30.432Z"
-    },
-    {
-      "name": "2026aikm",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.45,
-      "ra": 103.268022,
-      "dec": -39.089259,
-      "discoveryDate": "2026-10-29T16:47:14.208Z"
     },
     {
       "name": "2026ajrt",
