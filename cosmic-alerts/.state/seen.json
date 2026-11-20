@@ -107,17 +107,6 @@
       "updatedAt": "2026-11-05T05:31:37.000Z",
       "topic": "alerts_supernova"
     },
-    "2026ahpf": {
-      "name": "2026ahpf",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.31,
-      "ra": 59.416894,
-      "dec": -59.741514,
-      "discoveryDate": "2026-10-30T14:43:45.408Z",
-      "updatedAt": "2026-10-31T10:54:38.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahof": {
       "name": "2026ahof",
       "namePrefix": "AT",
@@ -194,17 +183,6 @@
       "discoveryDate": "2026-11-01T10:53:54.240Z",
       "updatedAt": "2026-11-11T17:54:39.000Z",
       "topic": "alerts_supernova"
-    },
-    "2026ahtz": {
-      "name": "2026ahtz",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.06,
-      "ra": 77.8154925,
-      "dec": 2.56657,
-      "discoveryDate": "2026-10-30T14:40:46.560Z",
-      "updatedAt": "2026-11-03T19:15:58.000Z",
-      "topic": "alerts_transient"
     },
     "2026ahtu": {
       "name": "2026ahtu",
