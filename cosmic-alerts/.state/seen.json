@@ -85,17 +85,6 @@
       "updatedAt": "2026-11-04T18:04:15.000Z",
       "topic": "alerts_supernova"
     },
-    "2026ahqr": {
-      "name": "2026ahqr",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.813,
-      "ra": 294.593768333,
-      "dec": -73.7732316667,
-      "discoveryDate": "2026-10-31T00:49:11.424Z",
-      "updatedAt": "2026-10-31T20:03:26.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahqe": {
       "name": "2026ahqe",
       "namePrefix": "SN",
@@ -149,17 +138,6 @@
       "dec": -69.56796,
       "discoveryDate": "2026-10-31T03:22:29.568Z",
       "updatedAt": "2026-10-31T08:33:16.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahob": {
-      "name": "2026ahob",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.895,
-      "ra": 337.94945875,
-      "dec": -48.20758875,
-      "discoveryDate": "2026-10-31T02:05:23.712Z",
-      "updatedAt": "2026-10-31T08:30:18.000Z",
       "topic": "alerts_transient"
     },
     "2026ahtg": {
@@ -259,17 +237,6 @@
       "dec": 48.7242933333,
       "discoveryDate": "2026-11-01T05:47:32.640Z",
       "updatedAt": "2026-11-01T12:07:43.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahrq": {
-      "name": "2026ahrq",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.359,
-      "ra": 322.450894,
-      "dec": -51.059426,
-      "discoveryDate": "2026-10-31T01:25:28.704Z",
-      "updatedAt": "2026-11-01T11:44:16.000Z",
       "topic": "alerts_transient"
     },
     "2026ahrp": {
@@ -622,17 +589,6 @@
       "dec": -7.68013,
       "discoveryDate": "2026-11-03T05:05:52.224Z",
       "updatedAt": "2026-11-03T10:22:22.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ahxp": {
-      "name": "2026ahxp",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.265,
-      "ra": 328.579411667,
-      "dec": -60.99851,
-      "discoveryDate": "2026-10-31T01:48:39.744Z",
-      "updatedAt": "2026-11-03T10:19:35.000Z",
       "topic": "alerts_transient"
     },
     "2026ahxo": {
