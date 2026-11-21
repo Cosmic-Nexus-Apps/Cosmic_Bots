@@ -30,28 +30,6 @@
     "2026 L1"
   ],
   "tns": {
-    "2026ahqs": {
-      "name": "2026ahqs",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 18.611,
-      "ra": 138.0788409,
-      "dec": 46.0903332,
-      "discoveryDate": "2026-10-31T14:51:50.976Z",
-      "updatedAt": "2026-11-04T18:04:15.000Z",
-      "topic": "alerts_supernova"
-    },
-    "2026ahqe": {
-      "name": "2026ahqe",
-      "namePrefix": "SN",
-      "type": "SN II",
-      "magnitude": 18.321,
-      "ra": 29.898664,
-      "dec": 40.0953887,
-      "discoveryDate": "2026-10-31T10:43:50.304Z",
-      "updatedAt": "2026-11-05T05:31:37.000Z",
-      "topic": "alerts_supernova"
-    },
     "2026ahtg": {
       "name": "2026ahtg",
       "namePrefix": "AT",
