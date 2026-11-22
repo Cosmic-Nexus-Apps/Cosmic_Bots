@@ -1493,17 +1493,6 @@
       "updatedAt": "2026-11-11T18:11:59.000Z",
       "topic": "alerts_transient"
     },
-    "2026aiyc": {
-      "name": "2026aiyc",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.78,
-      "ra": 149.236852,
-      "dec": -16.566494,
-      "discoveryDate": "2026-11-01T17:54:07.488Z",
-      "updatedAt": "2026-11-11T08:45:34.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ajdw": {
       "name": "2026ajdw",
       "namePrefix": "AT",
