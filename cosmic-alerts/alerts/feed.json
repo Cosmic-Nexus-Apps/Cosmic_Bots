@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-22T09:54:10.904Z",
+  "generatedAt": "2026-11-22T17:38:10.801Z",
   "transients": [
     {
       "name": "2026ajdg",
@@ -126,15 +126,6 @@
       "ra": 126.13938322758,
       "dec": -1.8788253112675,
       "discoveryDate": "2026-11-03T11:33:40.996Z"
-    },
-    {
-      "name": "2026ahsn",
-      "namePrefix": "SN",
-      "type": "SN II",
-      "magnitude": 18.71,
-      "ra": 3.1673708768934,
-      "dec": -0.036875755708001,
-      "discoveryDate": "2026-11-01T10:53:54.240Z"
     },
     {
       "name": "2026aibs",
@@ -794,15 +785,6 @@
       "discoveryDate": "2026-11-04T23:23:17.664Z"
     },
     {
-      "name": "2026ahti",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.69,
-      "ra": 102.908686667,
-      "dec": -37.4819988889,
-      "discoveryDate": "2026-11-01T16:08:18.816Z"
-    },
-    {
       "name": "2026akhg",
       "namePrefix": "AT",
       "type": "",
@@ -1406,15 +1388,6 @@
       "discoveryDate": "2026-11-16T06:07:10.272Z"
     },
     {
-      "name": "2026ahtu",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.16,
-      "ra": 98.094824,
-      "dec": -51.627794,
-      "discoveryDate": "2026-11-01T15:10:08.256Z"
-    },
-    {
       "name": "2026aicf",
       "namePrefix": "AT",
       "type": "",
@@ -1649,15 +1622,6 @@
       "discoveryDate": "2026-11-03T10:46:45.998Z"
     },
     {
-      "name": "2026ahtg",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.25,
-      "ra": 53.238713,
-      "dec": -22.474669,
-      "discoveryDate": "2026-11-01T12:49:51.168Z"
-    },
-    {
       "name": "2026aijh",
       "namePrefix": "AT",
       "type": "",
@@ -1773,15 +1737,6 @@
       "ra": 139.2465825,
       "dec": -6.376315,
       "discoveryDate": "2026-11-13T06:20:34.656Z"
-    },
-    {
-      "name": "2026aiau",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.28,
-      "ra": 123.404672,
-      "dec": -16.313276,
-      "discoveryDate": "2026-11-01T16:12:54.432Z"
     },
     {
       "name": "2026aiec",
