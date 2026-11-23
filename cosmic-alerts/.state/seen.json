@@ -305,17 +305,6 @@
       "updatedAt": "2026-11-03T11:19:01.000Z",
       "topic": "alerts_supernova"
     },
-    "2026ahxu": {
-      "name": "2026ahxu",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 17.942,
-      "ra": 290.119928889,
-      "dec": -63.5014955556,
-      "discoveryDate": "2026-11-02T00:13:40.800Z",
-      "updatedAt": "2026-11-03T11:12:04.000Z",
-      "topic": "alerts_transient"
-    },
     "2026ahxr": {
       "name": "2026ahxr",
       "namePrefix": "AT",
