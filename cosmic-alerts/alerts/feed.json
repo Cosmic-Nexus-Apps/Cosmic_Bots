@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-23T13:11:48.090Z",
+  "generatedAt": "2026-11-24T01:00:09.040Z",
   "transients": [
     {
       "name": "2026ajdg",
@@ -9,15 +9,6 @@
       "ra": 90.9560135294,
       "dec": -33.1912991176,
       "discoveryDate": "2026-11-09T21:50:24.000Z"
-    },
-    {
-      "name": "2026ahvi",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 16.1,
-      "ra": 183.460177143,
-      "dec": 13.4239557143,
-      "discoveryDate": "2026-11-02T19:55:53.000Z"
     },
     {
       "name": "2026aicg",
@@ -126,15 +117,6 @@
       "ra": 85.0618,
       "dec": -55.5479127273,
       "discoveryDate": "2026-11-03T15:29:00.960Z"
-    },
-    {
-      "name": "2026ahxo",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 18.875,
-      "ra": 355.472256,
-      "dec": 28.5747,
-      "discoveryDate": "2026-11-03T00:17:28.896Z"
     },
     {
       "name": "2026aijm",
@@ -252,15 +234,6 @@
       "ra": 282.8768301,
       "dec": -20.3408695,
       "discoveryDate": "2026-11-07T02:00:30.997Z"
-    },
-    {
-      "name": "2026ahvd",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 16.98,
-      "ra": 157.9648394,
-      "dec": -13.0323752,
-      "discoveryDate": "2026-11-02T14:56:16.224Z"
     },
     {
       "name": "2026ajdr",
@@ -495,15 +468,6 @@
       "ra": 287.302812667,
       "dec": -50.2293313333,
       "discoveryDate": "2026-11-06T00:25:33.600Z"
-    },
-    {
-      "name": "2026ahvf",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.358,
-      "ra": 161.5501713,
-      "dec": -14.0996394,
-      "discoveryDate": "2026-11-02T14:53:00.096Z"
     },
     {
       "name": "2026ajcq",
@@ -999,15 +963,6 @@
       "ra": 351.156418889,
       "dec": -34.3075544444,
       "discoveryDate": "2026-11-03T07:59:52.800Z"
-    },
-    {
-      "name": "2026aiap",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.981,
-      "ra": 337.1976019,
-      "dec": 40.012097,
-      "discoveryDate": "2026-11-03T00:08:34.944Z"
     },
     {
       "name": "2026aiel",
