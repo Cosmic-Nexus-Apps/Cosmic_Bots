@@ -34,17 +34,6 @@
     "128P"
   ],
   "tns": {
-    "2026aice": {
-      "name": "2026aice",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.279,
-      "ra": 124.6160162,
-      "dec": 54.7494385,
-      "discoveryDate": "2026-11-04T03:38:19.968Z",
-      "updatedAt": "2026-11-06T13:26:12.000Z",
-      "topic": "alerts_transient"
-    },
     "2026aicd": {
       "name": "2026aicd",
       "namePrefix": "AT",
@@ -495,28 +484,6 @@
       "discoveryDate": "2026-11-05T02:16:57.996Z",
       "updatedAt": "2026-11-07T21:20:25.000Z",
       "topic": "alerts_transient"
-    },
-    "2026ainc": {
-      "name": "2026ainc",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.142,
-      "ra": 137.221058333,
-      "dec": 61.2990816667,
-      "discoveryDate": "2026-11-04T03:44:02.976Z",
-      "updatedAt": "2026-11-07T20:20:37.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026ainb": {
-      "name": "2026ainb",
-      "namePrefix": "SN",
-      "type": "SN Ia",
-      "magnitude": 18.12,
-      "ra": 99.0704236,
-      "dec": 74.3446308,
-      "discoveryDate": "2026-11-04T02:25:45.408Z",
-      "updatedAt": "2026-11-14T21:32:59.000Z",
-      "topic": "alerts_supernova"
     },
     "2026aina": {
       "name": "2026aina",
