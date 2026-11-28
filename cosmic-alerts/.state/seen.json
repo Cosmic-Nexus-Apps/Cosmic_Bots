@@ -254,17 +254,6 @@
       "updatedAt": "2026-11-10T08:56:35.000Z",
       "topic": "alerts_transient"
     },
-    "2026aizl": {
-      "name": "2026aizl",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.61,
-      "ra": 74.6590599,
-      "dec": 12.575872,
-      "discoveryDate": "2026-11-07T09:35:04.000Z",
-      "updatedAt": "2026-11-10T08:26:45.000Z",
-      "topic": "alerts_transient"
-    },
     "2026aizc": {
       "name": "2026aizc",
       "namePrefix": "AT",
@@ -308,17 +297,6 @@
       "discoveryDate": "2026-11-09T12:55:38.997Z",
       "updatedAt": "2026-11-11T13:31:38.000Z",
       "topic": "alerts_transient"
-    },
-    "2026airg": {
-      "name": "2026airg",
-      "namePrefix": "SN",
-      "type": "SN II",
-      "magnitude": 19.9319,
-      "ra": 72.9951006,
-      "dec": 6.5875963,
-      "discoveryDate": "2026-11-07T09:34:22.998Z",
-      "updatedAt": "2026-11-11T18:18:24.000Z",
-      "topic": "alerts_supernova"
     },
     "2026aivg": {
       "name": "2026aivg",
@@ -1706,17 +1684,6 @@
       "updatedAt": "2026-11-21T14:54:04.000Z",
       "topic": "alerts_transient"
     },
-    "2026aklc": {
-      "name": "2026aklc",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 19.8744,
-      "ra": 151.5612953,
-      "dec": 9.5926329,
-      "discoveryDate": "2026-11-07T11:49:34.999Z",
-      "updatedAt": "2026-11-21T14:53:42.000Z",
-      "topic": "alerts_transient"
-    },
     "2026aklb": {
       "name": "2026aklb",
       "namePrefix": "AT",
@@ -1935,17 +1902,6 @@
       "dec": 8.9344135,
       "discoveryDate": "2026-11-12T21:10:24.672Z",
       "updatedAt": "2026-11-24T07:27:44.000Z",
-      "topic": "alerts_transient"
-    },
-    "2026akqc": {
-      "name": "2026akqc",
-      "namePrefix": "AT",
-      "type": "",
-      "magnitude": 18.9913,
-      "ra": 195.1706791,
-      "dec": 19.2002426,
-      "discoveryDate": "2026-11-07T13:03:32.996Z",
-      "updatedAt": "2026-11-24T16:48:58.000Z",
       "topic": "alerts_transient"
     },
     "2026akqe": {
